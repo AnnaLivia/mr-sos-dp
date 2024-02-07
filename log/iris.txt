@@ -1,0 +1,91 @@
+
+DATA_PATH, SOL_PATH, n, d, k: ../datasets/iris.txt ../datasets/iris.txt 150 4 3
+LOG_PATH: ../log/iris.txt
+
+BRANCH_AND_BOUND_TOL: 0.0001
+BRANCH_AND_BOUND_PARALLEL: 16
+BRANCH_AND_BOUND_MAX_NODES: 200
+BRANCH_AND_BOUND_VISITING_STRATEGY: 0
+
+SDP_SOLVER_SESSION_THREADS_ROOT: 16
+SDP_SOLVER_SESSION_THREADS: 1
+SDP_SOLVER_FOLDER: /home/aelle/SDP/mr-sos-sdp-main/SDPNAL
+SDP_SOLVER_TOL: 1e-05
+SDP_SOLVER_VERBOSE: 0
+SDP_SOLVER_MAX_CP_ITER_ROOT: 80
+SDP_SOLVER_MAX_CP_ITER: 40
+SDP_SOLVER_CP_TOL: 1e-06
+SDP_SOLVER_MAX_INEQ: 100000
+SDP_SOLVER_INHERIT_PERC: 1
+SDP_SOLVER_EPS_INEQ: 0.0001
+SDP_SOLVER_EPS_ACTIVE: 1e-06
+SDP_SOLVER_MAX_PAIR_INEQ: 100000
+SDP_SOLVER_PAIR_PERC: 0.05
+SDP_SOLVER_MAX_TRIANGLE_INEQ: 100000
+SDP_SOLVER_TRIANGLE_PERC: 0.05
+
+RAY 0.9:
+
+|    N| NODE_PAR|    NODE|      LB_PAR|          LB|  FLAG|  TIME (s)| CP_ITER| CP_FLAG|   CP_INEQ|     PAIR  TRIANGLE    CLIQUE|          UB|         GUB|     I      J|     NODE_GAP|          GAP|  OPEN|
+Infeasibility: k is too large
+
+WALL_TIME: 10 sec
+N_NODES: 0
+AVG_INEQ: -nan
+AVG_CP_ITER: -nan
+ROOT_GAP: 0
+GAP: 0
+BEST: inf
+
+RAY 0.1:
+
+|    N| NODE_PAR|    NODE|      LB_PAR|          LB|  FLAG|  TIME (s)| CP_ITER| CP_FLAG|   CP_INEQ|     PAIR  TRIANGLE    CLIQUE|          UB|         GUB|     I      J|     NODE_GAP|          GAP|  OPEN|
+Infeasibility: k is too large
+
+WALL_TIME: 4 sec
+N_NODES: 0
+AVG_INEQ: -nan
+AVG_CP_ITER: -nan
+ROOT_GAP: 0
+GAP: 0
+BEST: inf
+
+RAY 0.7:
+
+|    N| NODE_PAR|    NODE|      LB_PAR|          LB|  FLAG|  TIME (s)| CP_ITER| CP_FLAG|   CP_INEQ|     PAIR  TRIANGLE    CLIQUE|          UB|         GUB|     I      J|     NODE_GAP|          GAP|  OPEN|
+Infeasibility: k is too large
+
+WALL_TIME: 9 sec
+N_NODES: 0
+AVG_INEQ: -nan
+AVG_CP_ITER: -nan
+ROOT_GAP: 0
+GAP: 0
+BEST: inf
+
+RAY 0.3:
+
+|    N| NODE_PAR|    NODE|      LB_PAR|          LB|  FLAG|  TIME (s)| CP_ITER| CP_FLAG|   CP_INEQ|     PAIR  TRIANGLE    CLIQUE|          UB|         GUB|     I      J|     NODE_GAP|          GAP|  OPEN|
+Infeasibility: k is too large
+
+WALL_TIME: 9 sec
+N_NODES: 0
+AVG_INEQ: -nan
+AVG_CP_ITER: -nan
+ROOT_GAP: 0
+GAP: 0
+BEST: inf
+
+RAY 0.5:
+
+|    N| NODE_PAR|    NODE|      LB_PAR|          LB|  FLAG|  TIME (s)| CP_ITER| CP_FLAG|   CP_INEQ|     PAIR  TRIANGLE    CLIQUE|          UB|         GUB|     I      J|     NODE_GAP|          GAP|  OPEN|
+Infeasibility: k is too large
+
+WALL_TIME: 9 sec
+N_NODES: 0
+AVG_INEQ: -nan
+AVG_CP_ITER: -nan
+ROOT_GAP: 0
+GAP: 0
+BEST: inf
+
