@@ -222,71 +222,82 @@ void run(int argc, char **argv) {
     data_path = argv[1];
     sol_path = argv[2];
     int k = std::stoi(argv[3]);
-    log_path = argv[4];
-    result_path = argv[5];
-    log_file.open(log_path);
 
     int n, d;
     double best_sol_v;
     arma::mat Ws = read_data(data_path, n, d, k);
-    arma::mat sol = read_sol(sol_path, n, d, k, best_sol_v);
 
-    log_file << "DATA_PATH, SOL_PATH, n, d, k: ";
-    log_file << data_path << " " << sol_path << " " << n << " " << d << " " << k << "\n";
-    log_file << "LOG_PATH: " << log_path << "\n\n";
+    string[] km_sol = {"brutto", "meno_brutto", "opt"};
+    double all_rays[] = {0.85, 0.75, 0.65};
 
-    log_file << "BRANCH_AND_BOUND_TOL: " << branch_and_bound_tol << "\n";
-    log_file << "BRANCH_AND_BOUND_PARALLEL: " << branch_and_bound_parallel << "\n";
-    log_file << "BRANCH_AND_BOUND_MAX_NODES: " <<  branch_and_bound_max_nodes << "\n";
-    log_file << "BRANCH_AND_BOUND_VISITING_STRATEGY: " << branch_and_bound_visiting_strategy << "\n\n";
-
-    log_file << "SDP_SOLVER_SESSION_THREADS_ROOT: " << sdp_solver_session_threads_root << "\n";
-    log_file << "SDP_SOLVER_SESSION_THREADS: " << sdp_solver_session_threads << "\n";
-    log_file << "SDP_SOLVER_FOLDER: " << sdp_solver_folder << "\n";
-    log_file << "SDP_SOLVER_TOL: " << sdp_solver_tol << "\n";
-    log_file << "SDP_SOLVER_VERBOSE: " << sdp_solver_verbose << "\n";
-    log_file << "SDP_SOLVER_MAX_CP_ITER_ROOT: " << sdp_solver_max_cp_iter_root << "\n";
-    log_file << "SDP_SOLVER_MAX_CP_ITER: " << sdp_solver_max_cp_iter << "\n";
-    log_file << "SDP_SOLVER_CP_TOL: " << sdp_solver_cp_tol << "\n";
-    log_file << "SDP_SOLVER_MAX_INEQ: " << sdp_solver_max_ineq << "\n";
-    log_file << "SDP_SOLVER_INHERIT_PERC: " << sdp_solver_inherit_perc << "\n";
-    log_file << "SDP_SOLVER_EPS_INEQ: " << sdp_solver_eps_ineq << "\n";
-    log_file << "SDP_SOLVER_EPS_ACTIVE: " << sdp_solver_eps_active << "\n";
-    log_file << "SDP_SOLVER_MAX_PAIR_INEQ: " << sdp_solver_max_pair_ineq << "\n";
-    log_file << "SDP_SOLVER_PAIR_PERC: " << sdp_solver_pair_perc << "\n";
-    log_file << "SDP_SOLVER_MAX_TRIANGLE_INEQ: " << sdp_solver_max_triangle_ineq << "\n";
-    log_file << "SDP_SOLVER_TRIANGLE_PERC: " << sdp_solver_triangle_perc << "\n\n";
-
-    double all_rays[] = {0.9, 0.1, 0.7, 0.3, 0.5};
-    double best_ray = -1.0;
-    double ray_sol_v  = std::numeric_limits<double>::infinity();
+    double best_ray;
+    double ray_sol_v;
     double v_imp;
     arma::sp_mat best_sol;
     arma::sp_mat ray_sol;
 
-    // to edit
-    sol = Ws;
-    for (double ray : all_rays) {
-        log_file << "RAY " << ray << ":\n";
-        UserConstraints constraints = generate_constraints(sol, ray);
-        ray_sol_v = sdp_branch_and_bound(k, Ws, constraints, ray_sol);
-        v_imp = (best_sol_v - ray_sol_v) / best_sol_v;
-        if (v_imp >= 0) {
-            std::cout << "best found";
-            best_ray = ray;
-            best_sol = ray_sol;
-            if (v_imp < 0.01)
-                std::cerr << "Pruning: ray " << ray << ".\n";
-            break;
+    for (string km : km_sol) {
+
+        log_path = argv[4] + km;
+        result_path = argv[5] + km;
+
+        log_file.open(log_path);
+
+        log_file << "DATA_PATH, SOL_PATH, n, d, k: ";
+        log_file << data_path << " " << sol_path << " " << n << " " << d << " " << k << "\n";
+        log_file << "LOG_PATH: " << log_path << "\n\n";
+
+        log_file << "BRANCH_AND_BOUND_TOL: " << branch_and_bound_tol << "\n";
+        log_file << "BRANCH_AND_BOUND_PARALLEL: " << branch_and_bound_parallel << "\n";
+        log_file << "BRANCH_AND_BOUND_MAX_NODES: " << branch_and_bound_max_nodes << "\n";
+        log_file << "BRANCH_AND_BOUND_VISITING_STRATEGY: " << branch_and_bound_visiting_strategy << "\n\n";
+
+        log_file << "SDP_SOLVER_SESSION_THREADS_ROOT: " << sdp_solver_session_threads_root << "\n";
+        log_file << "SDP_SOLVER_SESSION_THREADS: " << sdp_solver_session_threads << "\n";
+        log_file << "SDP_SOLVER_FOLDER: " << sdp_solver_folder << "\n";
+        log_file << "SDP_SOLVER_TOL: " << sdp_solver_tol << "\n";
+        log_file << "SDP_SOLVER_VERBOSE: " << sdp_solver_verbose << "\n";
+        log_file << "SDP_SOLVER_MAX_CP_ITER_ROOT: " << sdp_solver_max_cp_iter_root << "\n";
+        log_file << "SDP_SOLVER_MAX_CP_ITER: " << sdp_solver_max_cp_iter << "\n";
+        log_file << "SDP_SOLVER_CP_TOL: " << sdp_solver_cp_tol << "\n";
+        log_file << "SDP_SOLVER_MAX_INEQ: " << sdp_solver_max_ineq << "\n";
+        log_file << "SDP_SOLVER_INHERIT_PERC: " << sdp_solver_inherit_perc << "\n";
+        log_file << "SDP_SOLVER_EPS_INEQ: " << sdp_solver_eps_ineq << "\n";
+        log_file << "SDP_SOLVER_EPS_ACTIVE: " << sdp_solver_eps_active << "\n";
+        log_file << "SDP_SOLVER_MAX_PAIR_INEQ: " << sdp_solver_max_pair_ineq << "\n";
+        log_file << "SDP_SOLVER_PAIR_PERC: " << sdp_solver_pair_perc << "\n";
+        log_file << "SDP_SOLVER_MAX_TRIANGLE_INEQ: " << sdp_solver_max_triangle_ineq << "\n";
+        log_file << "SDP_SOLVER_TRIANGLE_PERC: " << sdp_solver_triangle_perc << "\n\n";
+
+        arma::mat sol = read_sol(sol_path, n, d, k, best_sol_v);
+        best_ray = -1.0;
+        ray_sol_v = std::numeric_limits<double>::infinity();
+
+        // to edit
+        sol = Ws;
+        for (double ray: all_rays) {
+            log_file << "RAY " << ray << ":\n";
+            UserConstraints constraints = generate_constraints(sol, ray);
+            ray_sol_v = sdp_branch_and_bound(k, Ws, constraints, ray_sol);
+            v_imp = (best_sol_v - ray_sol_v) / best_sol_v;
+            if (v_imp >= 0) {
+                std::cout << "best found";
+                best_ray = ray;
+                best_sol = ray_sol;
+                if (v_imp < 0.01)
+                    std::cerr << "Pruning: ray " << ray << ".\n";
+                break;
+            }
         }
-    }
 
-    if (best_ray == -1) {
-        std::cerr << "WARNING: Useless instance.\n";
-        exit(EXIT_FAILURE);
-    }
+        if (best_ray == -1) {
+            std::cerr << "WARNING: Useless instance.\n";
+            exit(EXIT_FAILURE);
+        }
 
-    save_X_to_file(best_sol);
+        save_X_to_file(best_sol);
+
+    }
 
 }
 
