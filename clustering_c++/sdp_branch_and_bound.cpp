@@ -552,42 +552,6 @@ std::pair<JobData *, JobData *> build_ml_problem(MatlabStruct *matlab_struct, No
 }
 
 
-int get_delta_gamma_constraints(arma::mat &data, double delta, double gamma,
-							std::vector<std::pair<int,int>> &ml_pairs,
-							std::vector<std::pair<int,int>> &cl_pairs){
-
-	if (delta == 0 && std::isinf(gamma))
-		return 0;
-
-	int n = data.n_rows;
-	double min_dist = std::numeric_limits<double>::infinity();
-	double max_dist = 0;
-	for (int i = 0; i < n; i++){
-		for (int j = i+1; j < n; j++){
-			double dij = std::sqrt(squared_distance(data.row(i).t(), data.row(j).t()));
-			if (dij < min_dist)
-				min_dist = dij;
-			if (dij > max_dist)
-				max_dist = dij;
-			if (dij < delta)
-				ml_pairs.push_back(std::pair<int,int>(i, j));
-			else if (dij > gamma)
-				cl_pairs.push_back(std::pair<int,int>(i, j));
-		}
-	}
-	if (max_dist < delta) {
-		log_file << "Delta constraint is infeasible\n";
-		return -1;
-	}
-	if (min_dist > gamma) {
-		log_file << "Gamma constraint is infeasible\n";
-		return -1;
-	}
-	return 0;
-}
-
-
-
 std::map<int, std::set<int>> get_ml_map(int n, std::vector<std::pair<int, int>> &ml) {
 
     std::map<int, std::set<int>> ml_graph;
@@ -623,16 +587,6 @@ int get_root_constraints(arma::mat &Ws, int k, UserConstraints &constraints,
 							std::vector<std::pair<int,int>> &local_cl_pairs){
 
 	int n = Ws.n_rows;
-
-	if (constraints.gamma < constraints.delta){
-		log_file << "Infeasibility: Gamma and delta constraints are infeasible\n";
-		return -1;
-	}	
-
-	if (get_delta_gamma_constraints(Ws, constraints.delta, constraints.gamma,
-							constraints.ml_pairs, constraints.cl_pairs) != 0){
-		return -1;
-	}
 
 	global_ml_pairs = constraints.ml_pairs;
 	global_cl_pairs = constraints.cl_pairs;
@@ -804,7 +758,7 @@ bool is_thread_pool_working(std::vector<bool> &thread_state) {
 }
 
 
-double sdp_branch_and_bound(int k, arma::mat &Ws, UserConstraints &constraints, arma::sp_mat &sol) {
+double sdp_branch_and_bound(int k, arma::mat &Ws, UserConstraints &constraints, arma::mat &sol) {
 
     int n_thread = branch_and_bound_parallel;
 
