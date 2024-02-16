@@ -1,0 +1,66 @@
+DATA_FILE, SOL_FILE, n, d, k: ../artificial_instances/data/art_200_3_0.8.txt ../artificial_instances/h_sol/art_200_3_0.8.txt 200 2 3
+LOG_FILE: ../artificial_instances/log/art_200_3_0.8.txt
+
+BRANCH_AND_BOUND_TOL: 0.0001
+BRANCH_AND_BOUND_PARALLEL: 16
+BRANCH_AND_BOUND_MAX_NODES: 200
+BRANCH_AND_BOUND_VISITING_STRATEGY: 0
+
+SDP_SOLVER_SESSION_THREADS_ROOT: 16
+SDP_SOLVER_SESSION_THREADS: 1
+SDP_SOLVER_FOLDER: /home/aelle/SDP/mr-sos-sdp/SDPNAL
+SDP_SOLVER_TOL: 1e-05
+SDP_SOLVER_VERBOSE: 0
+SDP_SOLVER_MAX_CP_ITER_ROOT: 80
+SDP_SOLVER_MAX_CP_ITER: 40
+SDP_SOLVER_CP_TOL: 1e-06
+SDP_SOLVER_MAX_INEQ: 100000
+SDP_SOLVER_INHERIT_PERC: 1
+SDP_SOLVER_EPS_INEQ: 0.0001
+SDP_SOLVER_EPS_ACTIVE: 1e-06
+SDP_SOLVER_MAX_PAIR_INEQ: 100000
+SDP_SOLVER_PAIR_PERC: 0.05
+SDP_SOLVER_MAX_TRIANGLE_INEQ: 100000
+SDP_SOLVER_TRIANGLE_PERC: 0.05
+
+Heuristic MSS: 279.278
+
+
+RAY 0.85:
+|    N| NODE_PAR|    NODE|      LB_PAR|          LB|  FLAG|  TIME (s)| CP_ITER| CP_FLAG|   CP_INEQ|     PAIR  TRIANGLE    CLIQUE|          UB|         GUB|     I      J|     NODE_GAP|          GAP|  OPEN|
+|    6|       -1|       0|        -inf|      245.02|     0|         1|       0|       0|         0|        0         0         0|     245.027|    245.027*|    -1     -1|  2.75901e-05|  2.75901e-05|     0|
+
+WALL_TIME: 12 sec
+N_NODES: 1
+AVG_INEQ: 0
+AVG_CP_ITER: 0
+ROOT_GAP: 2.75901e-05
+GAP: 0
+BEST: 245.027
+
+
+RAY 0.75:
+|    N| NODE_PAR|    NODE|      LB_PAR|          LB|  FLAG|  TIME (s)| CP_ITER| CP_FLAG|   CP_INEQ|     PAIR  TRIANGLE    CLIQUE|          UB|         GUB|     I      J|     NODE_GAP|          GAP|  OPEN|
+|    6|       -1|       0|        -inf|      245.02|     0|         1|       0|       0|         0|        0         0         0|     245.027|    245.027*|    -1     -1|  2.75901e-05|  2.75901e-05|     0|
+
+WALL_TIME: 5 sec
+N_NODES: 1
+AVG_INEQ: 0
+AVG_CP_ITER: 0
+ROOT_GAP: 2.75901e-05
+GAP: 0
+BEST: 245.027
+
+
+RAY 0.65:
+|    N| NODE_PAR|    NODE|      LB_PAR|          LB|  FLAG|  TIME (s)| CP_ITER| CP_FLAG|   CP_INEQ|     PAIR  TRIANGLE    CLIQUE|          UB|         GUB|     I      J|     NODE_GAP|          GAP|  OPEN|
+|    6|       -1|       0|        -inf|      245.02|     0|         1|       0|       0|         0|        0         0         0|     245.027|    245.027*|    -1     -1|  2.75901e-05|  2.75901e-05|     0|
+
+WALL_TIME: 9 sec
+N_NODES: 1
+AVG_INEQ: 0
+AVG_CP_ITER: 0
+ROOT_GAP: 2.75901e-05
+GAP: 0
+BEST: 245.027
+
