@@ -1,13 +1,14 @@
 #include <iostream>
 #include <map>
+#include <list>
 #include <algorithm>
 #include <armadillo>
 #include "sdp_branch_and_bound.h"
 
-// data full path
+// data file and path
 const char *data_path;
+const char *opt_path;
 const char *sol_path;
-const char *constraints_path;
 const char *log_path;
 const char *result_path;
 std::ofstream log_file;
@@ -46,25 +47,6 @@ int kmeans_n_start;
 int kmeans_permutations;
 bool kmeans_verbose;
 
-// read data Ws
-arma::mat read_data(const char *filename, int &n, int &d, int &k) {
-    std::ifstream file(filename);
-    if (!file) {
-        std::cerr << strerror(errno) << "\n";
-        exit(EXIT_FAILURE);
-    }
-
-    // read the header n, d, k
-    file >> n >> d >> k;
-    arma::mat Ws(n, d);
-    for (int i = 0; i < n; i++) {
-        for (int j = 0; j < d; j++) {
-            file >> Ws(i, j);
-        }
-    }
-    return Ws;
-}
-
 // read parameters in config file
 std::map<std::string, std::string> read_params(std::string &config_file) {
 
@@ -91,78 +73,150 @@ std::map<std::string, std::string> read_params(std::string &config_file) {
     return config_map;
 }
 
-// read initial Kmean sol
-arma::mat read_sol(const char *filename, int n, int d, int k, double &sol_v) {
+// read data Ws
+arma::mat read_data(const char *filename, int &n, int &d) {
+
     std::ifstream file(filename);
     if (!file) {
         std::cerr << strerror(errno) << "\n";
         exit(EXIT_FAILURE);
     }
 
-    // read the header n1, d1, k1, sol_v
-    int n1, d1, k1;
-    file >> n1 >> d1 >> k1 >> sol_v;
-    if (n1 != n || d1 != d || k1 != k) {
-        std::cerr << "Error in the initial solution data.\n";
+    // read the header n, d
+    file >> n >> d;
+    arma::mat data(n, d);
+    for (int i = 0; i < n; i++) {
+        for (int j = 0; j < d; j++) {
+            file >> data(i, j);
+        }
+    }
+
+    return data;
+}
+
+// read initial sol
+arma::mat read_sol(const char *filename, int n, int k) {
+
+    std::ifstream file(filename);
+    if (!file) {
+        std::cerr << strerror(errno) << "\n";
         exit(EXIT_FAILURE);
     }
 
-    arma::mat sol(n, d);
-    // read sol (to do)
+    arma::mat sol(n, k);
+    for (int i = 0; i < n; i++) {
+        for (int j = 0; j < k; j++) {
+            file >> sol(i, j);
+        }
+    }
 
     return sol;
 }
 
-UserConstraints generate_constraints(arma::mat data, double ray){
-
-    double gamma, delta;
-    gamma = delta = -1;
+double compute_clusters(arma::mat &data, arma::mat sol, std::map<int, std::list<std::pair<int, double>>> &cls_map) {
 
     int n = data.n_rows;
-    arma::mat distances = arma::zeros(n, n);
-    double dist;
-    for (int i = 0; i < n; i++){
-        arma::vec point_i = data.row(i).t();
-        for (int j = i+1; j < n; j++){
-            arma::vec point_j = data.row(j).t();
-            dist = std::pow(arma::norm(point_i - point_j, 2), 2);
-            distances(i, j) = dist;
-            distances(j, i) = dist;
+    int d = data.n_cols;
+    int k = sol.n_cols;
+
+    int cluster;
+    arma::vec assignments = arma::zeros(n) - 1;
+    arma::vec count = arma::zeros(k);
+    arma::mat centroids = arma::zeros(k, d);
+    for (int i = 0; i < n; i++) {
+        for (int j = 0; j < k; j++) {
+            if (sol(i,j) == 1.0) {
+                assignments(i) = j;
+                count(j) = count(j) + 1;
+                centroids.row(j) += data.row(i);
+            }
         }
+    }
+
+    // compute clusters' centroids
+    for (int j = 0; j < k; ++j) {
+        // empty cluster
+        if (count(j) == 0) {
+            std::printf("read_data(): cluster %d is empty!\n", j);
+            return false;
+        }
+        centroids.row(j) = centroids.row(j) / count(j);
+        cls_map[j] = {};
+    }
+
+    double sol_mss = 0;
+    double dist;
+    arma::vec maxDist = arma::zeros(k);
+    arma::vec minDist = arma::zeros(k);
+    arma::vec centroid;
+    for (int i = 0; i < n; i++) {
+        cluster = assignments(i);
+        arma::vec point = data.row(i).t();
+        centroid = centroids.row(cluster).t();
+        dist = std::pow(arma::norm(point - centroid, 2), 2);
+        if (dist > maxDist(cluster))
+            maxDist(cluster) = dist;
+        if (dist < minDist(cluster))
+            minDist(cluster) = dist;
+        sol_mss += dist;
+        cls_map[cluster].insert(cls_map[cluster].begin(), std::pair<int, double>(i, dist));
     }
 
     // Normalize the matrix
-    double min_val = distances.min();
-    double max_val = distances.max();
-    distances = (distances - min_val) / (max_val - min_val);
-
-    UserConstraints constraints;
-    for (int i = 0; i < n; i++){
-        for (int j = i+1; j < n; j++){
-            if (distances(i,j) <= ray) {
-                std::pair<int,int> ab_pair(i,j);
-                constraints.ml_pairs.push_back(ab_pair);
-            }
-            // else
-            //     constraints.cl_pairs.push_back(ab_pair);
-        }
+    auto compareDist = [](std::pair<int, double>& a, std::pair<int, double>& b) {
+        return a.second < b.second;
+    };
+    std::list<std::pair<int, double>> points;
+    for (int j = 0; j < k; j++) {
+        points = cls_map[j];
+        for (auto &pair : points)
+            pair.second = (pair.second - minDist(j)) / (maxDist(j) - minDist(j));
+        points.sort(compareDist);
+        cls_map[j] = points;
     }
 
-    if (delta == -1)
-        delta = 0;
-    if (gamma == -1)
-        gamma = std::numeric_limits<double>::infinity();
+    return sol_mss;
+}
 
-    constraints.delta = delta;
-    constraints.gamma = gamma;
+// generate must link constraints
+UserConstraints generate_constraints(std::map<int, std::list<std::pair<int, double>>> cls_map, double ray){
+
+    UserConstraints constraints;
+    
+    int c = 0;
+    std::pair<int, double> p;
+    std::pair<int, double> q;
+    std::list<std::pair<int, double>> points;
+    for (auto& cls : cls_map) {
+        points = cls.second;
+        for (auto it1 = points.begin(); it1 != std::prev(points.end()); ++it1) {
+            p = *it1;
+            if (p.second <= ray) {
+                for (auto it2 = points.begin(); it2 != it1; ++it2) {
+                    q = *it2;
+                    std::pair<int,int> ab_pair(p.first,q.first);
+                    constraints.ml_pairs.push_back(ab_pair);
+                    c++;
+                }
+            }
+            else
+                break;
+        }
+    }
+    std::cout << "Added constraits: " << c << std::endl << std::endl;
 
     return constraints;
 }
 
-void save_X_to_file(arma::sp_mat &X){
+void save_X_to_file(arma::mat &X, const char *filename, double ray){
 
+    std::string file_path = filename;
+    auto file = file_path.substr(file_path.find_last_of("/\\") + 1);
+    auto name = file.substr(0, file.find_last_of("."));
+    int r = ray*100;
+    
     std::ofstream f;
-    f.open(result_path);
+    f.open(result_path + name + "r_0." + std::to_string(r) + ".txt");
     for (int i = 0; i < X.n_rows; i++){
         int val = X(i,0);
         f << val;
@@ -214,89 +268,91 @@ void run(int argc, char **argv) {
     kmeans_verbose = 0;
 
 
-    if (argc != 6) {
-        std::cerr << "Input: <DATA_PATH> <SOL_PATH> <K> <LOG_PATH> <RESULT_PATH>" << std::endl;
+    if (argc != 7) {
+        std::cerr << "Input: <DATA_FILE> <OPT_SOL_FILE> <H_SOL_FILE> <K> <LOG_FILE> <RESULT_PATH>" << std::endl;
         exit(EXIT_FAILURE);
     }
 
     data_path = argv[1];
-    sol_path = argv[2];
-    int k = std::stoi(argv[3]);
+    opt_path = argv[2];
+    sol_path = argv[3];
+    log_path = argv[5] ;
+    result_path = argv[6];
 
     int n, d;
-    double best_sol_v;
-    arma::mat Ws = read_data(data_path, n, d, k);
+    int k = std::stoi(argv[4]);
 
-    string[] km_sol = {"brutto", "meno_brutto", "opt"};
-    double all_rays[] = {0.85, 0.75, 0.65};
+    arma::mat Ws = read_data(data_path, n, d);
+    arma::mat init_sol = read_sol(sol_path, n, k);
+    std::map<int, std::list<std::pair<int, double>>> cls_map;
+    double init_sol_mss = compute_clusters(Ws, init_sol, cls_map);
+    std::cout << std::endl << std::endl << "**********************************************************" << std::endl;
+    std::cout << "Heuristic MSS " << init_sol_mss << std::endl << std::endl;
 
-    double best_ray;
-    double ray_sol_v;
+    log_file.open(log_path);
+    log_file << "DATA_FILE, SOL_FILE, n, d, k: ";
+    log_file << data_path << " " << sol_path << " " << n << " " << d << " " << k << "\n";
+    log_file << "LOG_FILE: " << log_path << "\n\n";
+
+    log_file << "BRANCH_AND_BOUND_TOL: " << branch_and_bound_tol << "\n";
+    log_file << "BRANCH_AND_BOUND_PARALLEL: " << branch_and_bound_parallel << "\n";
+    log_file << "BRANCH_AND_BOUND_MAX_NODES: " << branch_and_bound_max_nodes << "\n";
+    log_file << "BRANCH_AND_BOUND_VISITING_STRATEGY: " << branch_and_bound_visiting_strategy << "\n\n";
+
+    log_file << "SDP_SOLVER_SESSION_THREADS_ROOT: " << sdp_solver_session_threads_root << "\n";
+    log_file << "SDP_SOLVER_SESSION_THREADS: " << sdp_solver_session_threads << "\n";
+    log_file << "SDP_SOLVER_FOLDER: " << sdp_solver_folder << "\n";
+    log_file << "SDP_SOLVER_TOL: " << sdp_solver_tol << "\n";
+    log_file << "SDP_SOLVER_VERBOSE: " << sdp_solver_verbose << "\n";
+    log_file << "SDP_SOLVER_MAX_CP_ITER_ROOT: " << sdp_solver_max_cp_iter_root << "\n";
+    log_file << "SDP_SOLVER_MAX_CP_ITER: " << sdp_solver_max_cp_iter << "\n";
+    log_file << "SDP_SOLVER_CP_TOL: " << sdp_solver_cp_tol << "\n";
+    log_file << "SDP_SOLVER_MAX_INEQ: " << sdp_solver_max_ineq << "\n";
+    log_file << "SDP_SOLVER_INHERIT_PERC: " << sdp_solver_inherit_perc << "\n";
+    log_file << "SDP_SOLVER_EPS_INEQ: " << sdp_solver_eps_ineq << "\n";
+    log_file << "SDP_SOLVER_EPS_ACTIVE: " << sdp_solver_eps_active << "\n";
+    log_file << "SDP_SOLVER_MAX_PAIR_INEQ: " << sdp_solver_max_pair_ineq << "\n";
+    log_file << "SDP_SOLVER_PAIR_PERC: " << sdp_solver_pair_perc << "\n";
+    log_file << "SDP_SOLVER_MAX_TRIANGLE_INEQ: " << sdp_solver_max_triangle_ineq << "\n";
+    log_file << "SDP_SOLVER_TRIANGLE_PERC: " << sdp_solver_triangle_perc << "\n\n";
+    log_file << "Heuristic MSS: " << init_sol_mss << "\n\n";
+
+    arma::mat sdp_sol;
+    arma::mat best_sol = init_sol;
+    double best_ray = -1.0;
+    double best_sol_mss = init_sol_mss;
+    double sdp_mss;
     double v_imp;
-    arma::sp_mat best_sol;
-    arma::sp_mat ray_sol;
 
-    for (string km : km_sol) {
-
-        log_path = argv[4] + km;
-        result_path = argv[5] + km;
-
-        log_file.open(log_path);
-
-        log_file << "DATA_PATH, SOL_PATH, n, d, k: ";
-        log_file << data_path << " " << sol_path << " " << n << " " << d << " " << k << "\n";
-        log_file << "LOG_PATH: " << log_path << "\n\n";
-
-        log_file << "BRANCH_AND_BOUND_TOL: " << branch_and_bound_tol << "\n";
-        log_file << "BRANCH_AND_BOUND_PARALLEL: " << branch_and_bound_parallel << "\n";
-        log_file << "BRANCH_AND_BOUND_MAX_NODES: " << branch_and_bound_max_nodes << "\n";
-        log_file << "BRANCH_AND_BOUND_VISITING_STRATEGY: " << branch_and_bound_visiting_strategy << "\n\n";
-
-        log_file << "SDP_SOLVER_SESSION_THREADS_ROOT: " << sdp_solver_session_threads_root << "\n";
-        log_file << "SDP_SOLVER_SESSION_THREADS: " << sdp_solver_session_threads << "\n";
-        log_file << "SDP_SOLVER_FOLDER: " << sdp_solver_folder << "\n";
-        log_file << "SDP_SOLVER_TOL: " << sdp_solver_tol << "\n";
-        log_file << "SDP_SOLVER_VERBOSE: " << sdp_solver_verbose << "\n";
-        log_file << "SDP_SOLVER_MAX_CP_ITER_ROOT: " << sdp_solver_max_cp_iter_root << "\n";
-        log_file << "SDP_SOLVER_MAX_CP_ITER: " << sdp_solver_max_cp_iter << "\n";
-        log_file << "SDP_SOLVER_CP_TOL: " << sdp_solver_cp_tol << "\n";
-        log_file << "SDP_SOLVER_MAX_INEQ: " << sdp_solver_max_ineq << "\n";
-        log_file << "SDP_SOLVER_INHERIT_PERC: " << sdp_solver_inherit_perc << "\n";
-        log_file << "SDP_SOLVER_EPS_INEQ: " << sdp_solver_eps_ineq << "\n";
-        log_file << "SDP_SOLVER_EPS_ACTIVE: " << sdp_solver_eps_active << "\n";
-        log_file << "SDP_SOLVER_MAX_PAIR_INEQ: " << sdp_solver_max_pair_ineq << "\n";
-        log_file << "SDP_SOLVER_PAIR_PERC: " << sdp_solver_pair_perc << "\n";
-        log_file << "SDP_SOLVER_MAX_TRIANGLE_INEQ: " << sdp_solver_max_triangle_ineq << "\n";
-        log_file << "SDP_SOLVER_TRIANGLE_PERC: " << sdp_solver_triangle_perc << "\n\n";
-
-        arma::mat sol = read_sol(sol_path, n, d, k, best_sol_v);
-        best_ray = -1.0;
-        ray_sol_v = std::numeric_limits<double>::infinity();
-
-        // to edit
-        sol = Ws;
-        for (double ray: all_rays) {
-            log_file << "RAY " << ray << ":\n";
-            UserConstraints constraints = generate_constraints(sol, ray);
-            ray_sol_v = sdp_branch_and_bound(k, Ws, constraints, ray_sol);
-            v_imp = (best_sol_v - ray_sol_v) / best_sol_v;
-            if (v_imp >= 0) {
-                std::cout << "best found";
-                best_ray = ray;
-                best_sol = ray_sol;
-                if (v_imp < 0.01)
-                    std::cerr << "Pruning: ray " << ray << ".\n";
-                break;
-            }
+    // solve with different rays
+    double ray;
+    for (int i=0; i < 3; i++) {
+        ray = 0.85 - i*0.10;
+        log_file << "\nRAY " << ray << ":";
+        std::cout << std::endl << "---------------------------------------------------------------" << std::endl;
+        std::cout << std::endl << "Solving ray " << ray << std::endl;
+        UserConstraints constraints = generate_constraints(cls_map, ray);
+        sdp_mss = sdp_branch_and_bound(k, Ws, constraints, sdp_sol);
+        save_X_to_file(sdp_sol, data_path, ray);
+        v_imp = (best_sol_mss - sdp_mss) / best_sol_mss;
+        if (v_imp > 0) {
+            best_ray = ray;
+            best_sol = sdp_sol;
+            best_sol_mss = sdp_mss;
+            std::cout << std::endl << "**********************************************************" << std::endl;
+            std::cout << "Best found!" << std::endl << "Ray " << ray << ". MSS " << best_sol_mss;
+            std::cout << std::endl << "**********************************************************" << std::endl;
         }
+//        if (v_imp < 0.01) {
+//            std::cerr << "Pruning: ray " << ray << ".\n";
+//            break;
+//        }
 
-        if (best_ray == -1) {
-            std::cerr << "WARNING: Useless instance.\n";
-            exit(EXIT_FAILURE);
-        }
+    }
 
-        save_X_to_file(best_sol);
-
+    if (best_ray == -1) {
+        std::cerr << std::endl << std::endl << "WARNING: Initial solution too tight." << std::endl;
+        exit(EXIT_FAILURE);
     }
 
 }
