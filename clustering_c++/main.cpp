@@ -4,6 +4,8 @@
 #include <algorithm>
 #include <armadillo>
 #include "sdp_branch_and_bound.h"
+#include "Kmeans.h"
+#include "kmeans_util.h"
 
 // data file and path
 const char *data_path;
@@ -113,6 +115,33 @@ arma::mat read_sol(const char *filename, int n, int k) {
     return sol;
 }
 
+// flip points
+void flip(arma::mat &sol, int f) {
+
+    int n = sol.n_rows;
+    int k = sol.n_cols;
+    int cls;
+    int rand_c;
+    int i;
+    
+    for (int l = 0; l < f; l++) {
+        i = std::rand() % (n);
+        for (int j = 0; j < k; j++) {
+            if (sol(i, j) == 1.0) {
+                cls = j;
+                break;
+            }
+        }
+        sol.row(i) = arma::zeros(k).t();
+        do {
+            rand_c = rand() % (k); // Generate a new random cluster
+        } while (rand_c == cls);
+        sol(i, rand_c) = 1.0;
+    }
+    
+    std::cout << std::endl << "** Done flipping " << f << " points **" << std::endl;
+}
+
 double compute_clusters(arma::mat &data, arma::mat sol, std::map<int, std::list<std::pair<int, double>>> &cls_map) {
 
     int n = data.n_rows;
@@ -153,7 +182,7 @@ double compute_clusters(arma::mat &data, arma::mat sol, std::map<int, std::list<
         cluster = assignments(i);
         arma::vec point = data.row(i).t();
         centroid = centroids.row(cluster).t();
-        dist = std::pow(arma::norm(point - centroid, 2), 2);
+        dist = squared_distance(point, centroid);
         if (dist > maxDist(cluster))
             maxDist(cluster) = dist;
         if (dist < minDist(cluster))
@@ -179,7 +208,7 @@ double compute_clusters(arma::mat &data, arma::mat sol, std::map<int, std::list<
 }
 
 // generate must link constraints
-UserConstraints generate_constraints(std::map<int, std::list<std::pair<int, double>>> cls_map, double ray){
+UserConstraints generate_constraints(std::map<int, std::list<std::pair<int, double>>> cls_map, double ray) {
 
     UserConstraints constraints;
     
@@ -208,15 +237,18 @@ UserConstraints generate_constraints(std::map<int, std::list<std::pair<int, doub
     return constraints;
 }
 
-void save_X_to_file(arma::mat &X, const char *filename, double ray){
-
-    std::string file_path = filename;
-    auto file = file_path.substr(file_path.find_last_of("/\\") + 1);
-    auto name = file.substr(0, file.find_last_of("."));
-    int r = ray*100;
+void save_sol_to_file(arma::mat &X, const char *filename, double ray){
     
     std::ofstream f;
-    f.open(result_path + name + "r_0." + std::to_string(r) + ".txt");
+    if (ray == 0)
+        f.open(sol_path);
+    else {
+        std::string file_path = filename;
+        auto file = file_path.substr(file_path.find_last_of("/\\") + 1);
+        auto name = file.substr(0, file.find_last_of("."));
+        int r = ray*100;
+        f.open(result_path + name + "_ray_0." + std::to_string(r) + ".txt");
+    }
     for (int i = 0; i < X.n_rows; i++){
         int val = X(i,0);
         f << val;
@@ -263,27 +295,44 @@ void run(int argc, char **argv) {
 	sdp_solver_maxtime = 3600;
 
     // kmeans
-    kmeans_max_iter = 100;
-    kmeans_n_start = 200;
+    kmeans_max_iter = 2;
+    kmeans_n_start = 1;
     kmeans_verbose = 0;
 
 
-    if (argc != 7) {
-        std::cerr << "Input: <DATA_FILE> <OPT_SOL_FILE> <H_SOL_FILE> <K> <LOG_FILE> <RESULT_PATH>" << std::endl;
+    if (argc != 8) {
+        std::cerr << "Input: <DATA_FILE> <OPT_SOL_FILE> <H_SOL_FILE> <LOG_FILE> <RESULT_PATH> <K> <F>" << std::endl;
         exit(EXIT_FAILURE);
     }
 
     data_path = argv[1];
     opt_path = argv[2];
     sol_path = argv[3];
-    log_path = argv[5] ;
-    result_path = argv[6];
+    log_path = argv[4] ;
+    result_path = argv[5];
 
     int n, d;
-    int k = std::stoi(argv[4]);
+    int k = std::stoi(argv[6]);
+    int f = std::stoi(argv[7]);
 
     arma::mat Ws = read_data(data_path, n, d);
-    arma::mat init_sol = read_sol(sol_path, n, k);
+    arma::mat init_sol;
+    if (f > 0){
+        init_sol = read_sol(opt_path, n, k);
+        flip(init_sol, f);
+    }
+    else{
+        std::map<int, std::set<int>> ml_map = {};
+        std::vector<std::pair<int, int>> local_cl = {};
+        std::vector<std::pair<int, int>> global_ml = {};
+        std::vector<std::pair<int, int>> global_cl = {};
+        Kmeans kmeans(Ws, k, ml_map, local_cl, global_ml, global_cl, kmeans_verbose);
+        kmeans.findClustering(kmeans_n_start, kmeans_max_iter, compute_distances(Ws));
+        std::cout << std::endl << "** Done computing initial Kmean solution **" << std::endl;
+        init_sol = kmeans.getAssignments();
+        save_sol_to_file(init_sol, data_path, 0);
+    }
+    // arma::mat init_sol = read_sol(sol_path, n, k);
     std::map<int, std::list<std::pair<int, double>>> cls_map;
     double init_sol_mss = compute_clusters(Ws, init_sol, cls_map);
     std::cout << std::endl << std::endl << "**********************************************************" << std::endl;
@@ -326,14 +375,14 @@ void run(int argc, char **argv) {
 
     // solve with different rays
     double ray;
-    for (int i=0; i < 3; i++) {
-        ray = 0.85 - i*0.10;
+    for (int i=0; i < 5; i++) {
+        ray = 0.85 - i*0.15;
         log_file << "\nRAY " << ray << ":";
         std::cout << std::endl << "---------------------------------------------------------------" << std::endl;
         std::cout << std::endl << "Solving ray " << ray << std::endl;
         UserConstraints constraints = generate_constraints(cls_map, ray);
         sdp_mss = sdp_branch_and_bound(k, Ws, constraints, sdp_sol);
-        save_X_to_file(sdp_sol, data_path, ray);
+        save_sol_to_file(sdp_sol, data_path, ray);
         v_imp = (best_sol_mss - sdp_mss) / best_sol_mss;
         if (v_imp > 0) {
             best_ray = ray;
@@ -342,6 +391,8 @@ void run(int argc, char **argv) {
             std::cout << std::endl << "**********************************************************" << std::endl;
             std::cout << "Best found!" << std::endl << "Ray " << ray << ". MSS " << best_sol_mss;
             std::cout << std::endl << "**********************************************************" << std::endl;
+            cls_map = {};
+            compute_clusters(Ws, best_sol, cls_map);
         }
 //        if (v_imp < 0.01) {
 //            std::cerr << "Pruning: ray " << ray << ".\n";
