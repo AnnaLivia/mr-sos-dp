@@ -18,7 +18,6 @@ private:
 	std::vector<int> cl_degrees;
 	std::vector<int> points_sorting;
 
-    double objectiveFunction();
     bool assignPoints(std::vector<int> &permutation);
     bool computeCentroids();
     void initCentroids(arma::mat &distances);
@@ -37,6 +36,7 @@ public:
     bool start(int max_iter, int n_permutations,  arma::mat &init_centroids);
 	bool findClustering(int n_start, int n_permutations, arma::mat distances);
     arma::sp_mat getAssignments();
+    double objectiveFunction();
     double getLoss();
     arma::mat getCentroids();
 

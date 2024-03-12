@@ -42,14 +42,6 @@ Kmeans::Kmeans(const arma::mat &data, int k,
     }
 }
 
-// mss objective function
-double Kmeans::objectiveFunction() {
-    arma::sp_mat assignments_mat = getAssignments();
-    arma::mat m = data - assignments_mat * centroids;
-    return arma::dot(m.as_col(), m.as_col());
-}
-
-
 /*
 // pick centroids as random points of the dataset
 void Kmeans::initCentroids() {
@@ -388,7 +380,15 @@ arma::sp_mat Kmeans::getAssignments() {
     return assignments_mat;
 }
 
+// get centroids
 arma::mat Kmeans::getCentroids() {
     return centroids;
+}
+
+// mss objective function
+double Kmeans::objectiveFunction() {
+    arma::sp_mat assignments_mat = getAssignments();
+    arma::mat m = data - assignments_mat * centroids;
+    return arma::dot(m.as_col(), m.as_col());
 }
 

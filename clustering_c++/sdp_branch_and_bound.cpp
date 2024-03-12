@@ -236,7 +236,6 @@ std::pair<JobData *, JobData *> create_cl_ml_jobs(double node_gap, SDPNode *node
 
 std::pair<JobData *, JobData *> build_cl_problem(MatlabStruct *matlab_struct, NodeData *node_data, InputData *input_data, SharedData  *shared_data) {
 
-
     // generate cannot link child
     auto cl_node = new SDPNode();
 	auto parent = node_data->node;
@@ -356,7 +355,6 @@ std::pair<JobData *, JobData *> build_cl_problem(MatlabStruct *matlab_struct, No
         auto duration = std::chrono::duration_cast<std::chrono::seconds>(end_time - start_time);
         double time = duration.count();
 
-        //std::cout << '\r';
         print_log_sdp(log_file, cl_node->Ws.n_rows, parent->id, cl_node->id, parent->lb, cl_node->lb,
                       flag, time, cp_iter, cp_flag, n_ineq, n_pair, n_triangle, n_clique, cl_node->ub,
 					  shared_data->global_ub, node_data->i, node_data->j, node_gap, shared_data->gap, open, ub_updated);
@@ -662,7 +660,11 @@ std::pair<JobData *, JobData *> build_root_problem(MatlabStruct *matlab_struct,
 	if (n < input_data->k){
 		log_file << "Infeasibility: k is too large\n";
         return std::make_pair(nullptr, nullptr);
-	}	
+	}
+    else if (n > 500) {
+		log_file << "\nBad scaling: n is too large (" << n << ")\n";
+        return std::make_pair(nullptr, nullptr);
+	}
 
     root->Ws = build_Ws(input_data->Ws, root->ml_map);
     root->A = build_A(root->ml_map, root->local_cl_pairs);
@@ -741,7 +743,7 @@ std::pair<JobData *, JobData *> build_root_problem(MatlabStruct *matlab_struct,
     print_log_sdp(log_file, n, -1, root->id, -std::numeric_limits<double>::infinity(), root->lb,
                   flag, time, cp_iter, cp_flag, n_ineq, n_pair, n_triangle, n_clique, root->ub,
 				  shared_data->global_ub, -1, -1, node_gap, node_gap, open, true);
-
+    
     return create_cl_ml_jobs(node_gap, root, X, nullptr, shared_data, input_data);
 
 }

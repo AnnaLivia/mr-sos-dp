@@ -16,4 +16,4 @@ bb: $(objects)
 .PHONY: clean
 		
 clean:
-		rm -f bb main.o
+		rm -f bb *.o

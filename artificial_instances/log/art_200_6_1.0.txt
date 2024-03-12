@@ -23,8 +23,51 @@ SDP_SOLVER_PAIR_PERC: 0.05
 SDP_SOLVER_MAX_TRIANGLE_INEQ: 100000
 SDP_SOLVER_TRIANGLE_PERC: 0.05
 
-Heuristic MSS: 382.526
+Heuristic MSS: 294.894
 
 
-RAY 0.85:
+CLUSTER 0: points 13
+CLUSTER 1: points 14
+CLUSTER 2: points 14
+CLUSTER 3: points 9
+CLUSTER 4: points 12
+CLUSTER 5: points 10
 |    N| NODE_PAR|    NODE|      LB_PAR|          LB|  FLAG|  TIME (s)| CP_ITER| CP_FLAG|   CP_INEQ|     PAIR  TRIANGLE    CLIQUE|          UB|         GUB|     I      J|     NODE_GAP|          GAP|  OPEN|
+|   72|       -1|       0|        -inf|        23.2|     0|         2|       0|       0|         0|        0         0         0|     23.2043|    23.2043*|    -1     -1|  0.000186062|  0.000186062|     0|
+PRUNING BY OPTIMALITY 0
+
+WALL_TIME: 16 sec
+N_NODES: 1
+AVG_INEQ: 0
+AVG_CP_ITER: 0
+ROOT_GAP: 0.000186062
+GAP: 0
+BEST: 23.2043
+
+
+CLUSTER 0: points 13
+CLUSTER 1: points 14
+CLUSTER 2: points 14
+CLUSTER 3: points 9
+CLUSTER 4: points 12
+CLUSTER 5: points 10
+|    N| NODE_PAR|    NODE|      LB_PAR|          LB|  FLAG|  TIME (s)| CP_ITER| CP_FLAG|   CP_INEQ|     PAIR  TRIANGLE    CLIQUE|          UB|         GUB|     I      J|     NODE_GAP|          GAP|  OPEN|
+|   72|       -1|       0|        -inf|     72.2586|     0|         6|       1|       0|      5130|      130      5000         0|     72.2598|    72.2598*|    -1     -1|  1.64054e-05|  1.64054e-05|     0|
+
+WALL_TIME: 10 sec
+N_NODES: 1
+AVG_INEQ: 5130
+AVG_CP_ITER: 1
+ROOT_GAP: 1.64054e-05
+GAP: 0
+BEST: 72.2598
+
+
+CLUSTER 0: points 11
+CLUSTER 1: points 13
+CLUSTER 2: points 12
+CLUSTER 3: points 7
+CLUSTER 4: points 11
+CLUSTER 5: points 8
+|    N| NODE_PAR|    NODE|      LB_PAR|          LB|  FLAG|  TIME (s)| CP_ITER| CP_FLAG|   CP_INEQ|     PAIR  TRIANGLE    CLIQUE|          UB|         GUB|     I      J|     NODE_GAP|          GAP|  OPEN|
+|   62|       -1|       0|        -inf|     137.498|     0|        27|       2|      -3|      5136|       80      3336         1|     137.689|    137.689*|    -1     -1|   0.00138542|   0.00138542|     0|

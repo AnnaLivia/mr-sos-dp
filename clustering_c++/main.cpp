@@ -142,13 +142,55 @@ void flip(arma::mat &sol, int f) {
     std::cout << std::endl << "** Done flipping " << f << " points **" << std::endl;
 }
 
+double compute_mss(arma::mat &data, arma::mat sol) {
+    
+    int n = data.n_rows;
+    int d = data.n_cols;
+    int k = sol.n_cols;
+
+    arma::vec assignments = arma::zeros(n) - 1;
+    arma::vec count = arma::zeros(k);
+    arma::mat centroids = arma::zeros(k, d);
+    for (int i = 0; i < n; i++) {
+        for (int j = 0; j < k; j++) {
+            if (sol(i,j) == 1.0) {
+                assignments(i) = j;
+                count(j) = count(j) + 1;
+                centroids.row(j) += data.row(i);
+            }
+        }
+    }
+
+    // compute clusters' centroids
+    for (int j = 0; j < k; ++j) {
+        // empty cluster
+        if (count(j) == 0) {
+            std::printf("read_data(): cluster %d is empty!\n", j);
+            return false;
+        }
+        centroids.row(j) = centroids.row(j) / count(j);
+    }
+    
+    double sol_mss = 0;
+    int cluster;
+    arma::vec centroid;
+    for (int i = 0; i < n; i++) {
+        cluster = assignments(i);
+        arma::vec point = data.row(i).t();
+        centroid = centroids.row(cluster).t();
+        sol_mss += squared_distance(point, centroid);
+    }
+    
+    std::cout << "OPT SOL:" << sol_mss << std::endl;
+    return sol_mss;
+}
+
 double compute_clusters(arma::mat &data, arma::mat sol, std::map<int, std::list<std::pair<int, double>>> &cls_map) {
 
     int n = data.n_rows;
     int d = data.n_cols;
     int k = sol.n_cols;
 
-    int cluster;
     arma::vec assignments = arma::zeros(n) - 1;
     arma::vec count = arma::zeros(k);
     arma::mat centroids = arma::zeros(k, d);
@@ -172,7 +214,8 @@ double compute_clusters(arma::mat &data, arma::mat sol, std::map<int, std::list<
         centroids.row(j) = centroids.row(j) / count(j);
         cls_map[j] = {};
     }
-
+    
+    int cluster;
     double sol_mss = 0;
     double dist;
     arma::vec maxDist = arma::zeros(k);
@@ -295,13 +338,13 @@ void run(int argc, char **argv) {
 	sdp_solver_maxtime = 3600;
 
     // kmeans
-    kmeans_max_iter = 2;
-    kmeans_n_start = 1;
+    kmeans_max_iter = 200;
+    kmeans_n_start = 100;
     kmeans_verbose = 0;
+    kmeans_permutations = 1;
 
-
-    if (argc != 8) {
-        std::cerr << "Input: <DATA_FILE> <OPT_SOL_FILE> <H_SOL_FILE> <LOG_FILE> <RESULT_PATH> <K> <F>" << std::endl;
+    if (argc != 9) {
+        std::cerr << "Input: <DATA_FILE> <OPT_SOL_FILE> <H_SOL_FILE> <LOG_FILE> <RESULT_PATH> <K> <F> <P>" << std::endl;
         exit(EXIT_FAILURE);
     }
 
@@ -314,11 +357,14 @@ void run(int argc, char **argv) {
     int n, d;
     int k = std::stoi(argv[6]);
     int f = std::stoi(argv[7]);
+    int n_partitions = std::stoi(argv[8]);
 
     arma::mat Ws = read_data(data_path, n, d);
+    arma::mat opt_sol = read_sol(opt_path, n, k);
+    double opt_mss = compute_mss(Ws, opt_sol);
     arma::mat init_sol;
     if (f > 0){
-        init_sol = read_sol(opt_path, n, k);
+        init_sol = opt_sol;
         flip(init_sol, f);
     }
     else{
@@ -327,16 +373,18 @@ void run(int argc, char **argv) {
         std::vector<std::pair<int, int>> global_ml = {};
         std::vector<std::pair<int, int>> global_cl = {};
         Kmeans kmeans(Ws, k, ml_map, local_cl, global_ml, global_cl, kmeans_verbose);
-        kmeans.findClustering(kmeans_n_start, kmeans_max_iter, compute_distances(Ws));
+        kmeans.start(kmeans_max_iter, kmeans_n_start, kmeans_permutations);
         std::cout << std::endl << "** Done computing initial Kmean solution **" << std::endl;
+        std::cout << "Iter:" << kmeans_max_iter << std::endl << "Start:" << kmeans_n_start;
+        std::cout << std::endl << "Permutation:" << kmeans_permutations << std::endl << std::endl;
         init_sol = kmeans.getAssignments();
         save_sol_to_file(init_sol, data_path, 0);
     }
     // arma::mat init_sol = read_sol(sol_path, n, k);
     std::map<int, std::list<std::pair<int, double>>> cls_map;
-    double init_sol_mss = compute_clusters(Ws, init_sol, cls_map);
-    std::cout << std::endl << std::endl << "**********************************************************" << std::endl;
-    std::cout << "Heuristic MSS " << init_sol_mss << std::endl << std::endl;
+    double init_mss = compute_clusters(Ws, init_sol, cls_map);
+    std::cout << std::endl << "**********************************************************" << std::endl;
+    std::cout << "Heuristic MSS " << init_mss << std::endl << std::endl;
 
     log_file.open(log_path);
     log_file << "DATA_FILE, SOL_FILE, n, d, k: ";
@@ -364,47 +412,93 @@ void run(int argc, char **argv) {
     log_file << "SDP_SOLVER_PAIR_PERC: " << sdp_solver_pair_perc << "\n";
     log_file << "SDP_SOLVER_MAX_TRIANGLE_INEQ: " << sdp_solver_max_triangle_ineq << "\n";
     log_file << "SDP_SOLVER_TRIANGLE_PERC: " << sdp_solver_triangle_perc << "\n\n";
-    log_file << "Heuristic MSS: " << init_sol_mss << "\n\n";
+    log_file << "Heuristic MSS: " << init_mss << "\n\n";
 
     arma::mat sdp_sol;
     arma::mat best_sol = init_sol;
     double best_ray = -1.0;
-    double best_sol_mss = init_sol_mss;
+    double part_mss = 0;
+    double best_sol_mss = init_mss;
     double sdp_mss;
     double v_imp;
 
     // solve with different rays
-    double ray;
-    for (int i=0; i < 5; i++) {
-        ray = 0.85 - i*0.15;
-        log_file << "\nRAY " << ray << ":";
-        std::cout << std::endl << "---------------------------------------------------------------" << std::endl;
-        std::cout << std::endl << "Solving ray " << ray << std::endl;
-        UserConstraints constraints = generate_constraints(cls_map, ray);
-        sdp_mss = sdp_branch_and_bound(k, Ws, constraints, sdp_sol);
-        save_sol_to_file(sdp_sol, data_path, ray);
-        v_imp = (best_sol_mss - sdp_mss) / best_sol_mss;
-        if (v_imp > 0) {
-            best_ray = ray;
-            best_sol = sdp_sol;
-            best_sol_mss = sdp_mss;
-            std::cout << std::endl << "**********************************************************" << std::endl;
-            std::cout << "Best found!" << std::endl << "Ray " << ray << ". MSS " << best_sol_mss;
-            std::cout << std::endl << "**********************************************************" << std::endl;
-            cls_map = {};
-            compute_clusters(Ws, best_sol, cls_map);
-        }
-//        if (v_imp < 0.01) {
-//            std::cerr << "Pruning: ray " << ray << ".\n";
-//            break;
+//    double ray;
+//    for (int i=0; i < 5; i++) {
+//        ray = 0.85 - i*0.15;
+//        log_file << "\nRAY " << ray << ":";
+//        std::cout << std::endl << "---------------------------------------------------------------" << std::endl;
+//        std::cout << std::endl << "Solving ray " << ray << std::endl;
+//        UserConstraints constraints = generate_constraints(cls_map, ray);
+//        sdp_mss = sdp_branch_and_bound(k, Ws, constraints, sdp_sol);
+//        save_sol_to_file(sdp_sol, data_path, ray);
+//        v_imp = (best_sol_mss - sdp_mss) / best_sol_mss;
+//        if (v_imp > 0.0000001) {
+//            best_ray = ray;
+//            best_sol = sdp_sol;
+//            best_sol_mss = sdp_mss;
+//            std::cout << std::endl << "**********************************************************" << std::endl;
+//            std::cout << "Best found!" << std::endl << "Ray " << ray << ". MSS " << best_sol_mss;
+//            std::cout << std::endl << "**********************************************************" << std::endl;
+//            cls_map = {};
+//            compute_clusters(Ws, best_sol, cls_map);
 //        }
+////        if (v_imp < 0.01) {
+////            std::cerr << "Pruning: ray " << ray << ".\n";
+////            break;
+////        }
+//
+//    }
 
+    UserConstraints constraints;
+    std::cout << std::endl << "Partitions: " << n_partitions << std::endl;
+    std::cout << "---------------------------------------------------------------" << std::endl;
+    for (int i=0; i < n_partitions; i++) {
+        int part_points = 0;
+        arma::mat part_data(n, d);
+        for (int j = 0; j < k; ++j) {
+            int cls_points = 0;
+            std::list<std::pair<int, double>> points = cls_map[j];
+            
+            //int n_points = (int) cls_map[j].size()/(double) n_partitions + 1;
+            int n_points = (int) cls_map[j].size()/(double) (n_partitions + 3);
+            std::cout << std::endl << "Cluster " << j << " (" <<  cls_map[j].size() <<  ")  - ";
+            std::cout << "Avg points per part: " << n_points << std::endl;
+            auto it = points.begin();
+            if (i == 1)
+                std::advance(it, i*n_points - 1);
+            if (i == 2)
+                std::advance(it, 3*n_points - 1);
+            // std::cout << "first: " << i*n_points << std::endl;
+            std::pair<int, double> p;
+            for (it; it != std::prev(points.end()); ++it) {
+                p = *it;
+                part_data.row(part_points) = Ws.row(p.first);
+                part_points++;
+                cls_points++;
+                if (i == 0 and cls_points >= n_points)
+                    break;
+                //else if (i != 0 and cls_points >= n_points)
+                //    break;
+            }
+            std::cout << "Added points: " << cls_points << std::endl;
+            log_file << "\nCLUSTER " << j << ": points " << cls_points;
+        }
+        std::cout << std::endl << "Solving" << std::endl;
+        arma::mat part_Ws = part_data.submat(0, 0, part_points - 1, d - 1);
+        sdp_mss = sdp_branch_and_bound(k, part_Ws, constraints, sdp_sol);
+        save_sol_to_file(sdp_sol, data_path, i);
+        std::cout << std::endl << "**********************************************************" << std::endl;
+        std::cout << "Partition " << (i+1) << " Points " << part_points << " MSS " << sdp_mss;
+        std::cout << std::endl << "**********************************************************" << std::endl;
+        part_mss += sdp_mss;
     }
-
-    if (best_ray == -1) {
-        std::cerr << std::endl << std::endl << "WARNING: Initial solution too tight." << std::endl;
-        exit(EXIT_FAILURE);
-    }
+    
+    std::cout << std::endl << "**********************************************************" << std::endl;
+    std::cout << "Total MSS BOUND " << part_mss << std::endl;
+    std::cout << "Heuristic MSS BOUND " << init_mss << std::endl;
+    std::cout << "Optimal MSS BOUND " << opt_mss << std::endl;
+    std::cout << std::endl << "**********************************************************" << std::endl;
 
 }
 
