@@ -280,7 +280,7 @@ UserConstraints generate_constraints(std::map<int, std::list<std::pair<int, doub
     return constraints;
 }
 
-// generate partitionss
+// generate partitions
 std::map<int, arma::mat> generate_partitions(arma::mat data, std::map<int, std::list<std::pair<int, double>>> cls_map,
                                              int n_part) {
     
@@ -306,6 +306,71 @@ std::map<int, arma::mat> generate_partitions(arma::mat data, std::map<int, std::
 
     for (auto& part : part_map)
         part.second = part.second.submat(0, 0, n_points(part.first) - 1, d - 1);
+    
+    return part_map;
+}
+
+
+void take_n_from_p(arma::mat data, std::map<int, int> &new_p, std::map<int, int> &prec_p, int n) {
+    
+    arma::mat new_data(prec_p.size(),data.n_cols);
+    std::map<int, int> old_p;
+    int pp = 0;
+    for (auto& point : prec_p) {
+        new_data.row(pp) = data.row(point.second);
+        old_p[pp] = point.second;
+        pp++;
+    }
+    
+    arma::mat dist = compute_distances(new_data);
+    arma::vec rowSums = arma::zeros(pp);
+    
+    int idx = new_p.size();
+    double max_dist = dist.max();
+    for (int i = 0; i < n; ++i) {
+        for (int i = 0; i < pp; ++i)
+            rowSums(i) = arma::accu(dist.row(i));
+        int p = arma::index_min(rowSums);
+        dist.row(p).fill(max_dist);
+        dist.col(p) = arma::zeros(pp);
+        new_p[idx + i] = old_p[p];
+        old_p.erase(p);
+    }
+    
+    prec_p = old_p;
+    
+}
+
+// generate partitions
+std::map<int, arma::mat> generate_partitions(arma::mat data, int n_part) {
+    
+    int n = data.n_rows;
+    int d = data.n_cols;
+    
+    std::map<int, int> first_p;
+    for (int i = 0; i < n; ++i)
+        first_p[i] = i;
+    std::map<int, std::map<int, int>> part_points;
+    part_points[0] = first_p;
+    
+    for (int p = 1; p < n_part; ++p) {
+        // create partition from the previous ones
+        int n_part = n / (p*(p+1));
+        for (int prec_p = 0; prec_p < p; ++prec_p)
+            take_n_from_p(data, part_points[p], part_points[prec_p], n_part);
+    }
+
+    std::map<int, arma::mat> part_map;
+    for (int i=0; i < n_part; ++i) {
+        std::map<int, int> all_points = part_points[i];
+        arma::mat part(all_points.size(),d);
+        int pp = 0;
+        for (auto& point : all_points) {
+            part.row(pp) = data.row(point.second);
+            pp++;
+        }
+        part_map[i] = part;
+    }
     
     return part_map;
 }
@@ -527,14 +592,15 @@ void run(int argc, char **argv) {
 }
     
     // solve with n uniform partition
-    std::cout << std::endl << "# Partitions: " << n_partitions << std::endl;
+    std::cout << std::endl << "# Partitions = " << n_partitions << std::endl;
     std::cout << "---------------------------------------------------------------" << std::endl;
-    std::map<int, arma::mat> part_map = generate_partitions(Ws, cls_map, n_partitions);
+    //std::map<int, arma::mat> part_map = generate_partitions(Ws, cls_map, n_partitions);
+    std::map<int, arma::mat> part_map = generate_partitions(Ws, n_partitions);
     
     std::cout << std::endl << "Solving" << std::endl;
     for (auto& p : part_map) {
         std::cout << std::endl << "**********************************************************" << std::endl;
-        std::cout << "Partition " << (p.first+1) << " Points " << p.second.n_rows << std::endl;
+        std::cout << "Partition " << (p.first+1) << "\nPoints " << p.second.n_rows;
         std::cout << std::endl << "**********************************************************" << std::endl;
         sdp_mss = sdp_branch_and_bound(k, p.second, constraints, sdp_sol);
         save_sol_to_file(sdp_sol, data_path, p.first);
