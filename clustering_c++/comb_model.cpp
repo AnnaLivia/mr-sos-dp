@@ -21,13 +21,11 @@ std::string comb_model::get_x_variable_name(int i, int h){
 	return os.str();
 }
 
-/*
 std::string comb_model::get_y_variable_name(int i, int j, int h){
 	std::ostringstream os;
 	os << "y" << i << "_" << j << "_p" << h;
 	return os.str();
 }
-*/
 
 std::string comb_model::get_point_constraint_name(int i){
 	std::ostringstream os;
@@ -50,7 +48,6 @@ std::string comb_model::get_edge_constraint_name(int i, int j, int h){
 */
 
 
-
 comb_gurobi_model::comb_gurobi_model(GRBEnv *env, int n, int p) : model(*env), X(n,p) {
 	this->n = n;
 	this->p = p;
@@ -59,7 +56,8 @@ comb_gurobi_model::comb_gurobi_model(GRBEnv *env, int n, int p) : model(*env), X
 	this->X = create_X_variables(this->model);
 	//this->Y = create_Y_variables(this->model);
     this->model.set("OutputFlag", "1");
-    this->model.set("Threads", "1");
+//    this->model.set("Threads", "4");
+    this->model.set("TimeLimit", "300");
     //this->model.set("Presolve", std::to_string(lp_solver_presolve));
 }
 
@@ -107,7 +105,7 @@ void comb_gurobi_model::add_part_constraints() {
         for (int i = 0; i < n; i++)
             lhs_sum += X(i, h);
         std::string name = get_part_constraint_name(h);
-        model.addConstr(lhs_sum <= n/p + 20, name);
+        model.addConstr(lhs_sum <= n/p + 1, name);
     }
 }
 
@@ -125,7 +123,8 @@ void comb_gurobi_model::add_edge_constraints() {
 		}
     }
 }
-*/
+ */
+
 
 void comb_gurobi_model::set_objective_function(arma::mat &dist) {
     GRBQuadExpr obj = 0;
@@ -143,13 +142,12 @@ void comb_gurobi_model::set_objective_function(arma::mat &dist) {
 
 void comb_gurobi_model::optimize(){
 	try {
-		model.optimize();
-		status = model.get(GRB_IntAttr_Status);
-        
-        model.update();
         std::string file = log_path;
         auto name = file.substr(0, file.find_last_of("."));
         model.write(name + ".lp");
+        
+		model.optimize();
+		status = model.get(GRB_IntAttr_Status);
     } catch (GRBException &e) {
         std::cout << "Error code = " << e.getErrorCode() << std::endl;
         std::cout << e.getMessage() << std::endl;

@@ -30,7 +30,7 @@ class comb_model {
 	int n, p, m;
 
 	std::string get_x_variable_name(int i, int h);
-//	std::string get_y_variable_name(int i, int j, int h);
+	std::string get_y_variable_name(int i, int j, int h);
 	std::string get_point_constraint_name(int i);
 	std::string get_part_constraint_name(int h);
 //	std::string get_edge_constraint_name(int i, int j, int h);
