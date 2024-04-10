@@ -37,7 +37,10 @@ void take_n_from_p(arma::mat data, std::map<int, int> &new_p, std::map<int, int>
 // generate partitions
 std::map<int, arma::mat> generate_partitions(arma::mat data, int n_part);
 
+// solve with different rays
+double solve_with_ray(arma::mat Ws, arma::mat init_sol, int k, std::string result_path);
+
 // define moving ray routine
-std::pair<double,double> mr_heuristic(int k, int p, arma::mat Ws, const char *data_path);
+std::pair<double,double> mr_heuristic(int k, int p, arma::mat Ws, std::string path, int it);
 
 #endif //CLUSTERING_MR_HEURISTICS_H

@@ -28,7 +28,6 @@
 extern const char *data_path;
 extern const char *constraints_path;
 extern const char *log_path;
-extern const char *result_path;
 extern std::ofstream log_file;
 
 // branch and bound

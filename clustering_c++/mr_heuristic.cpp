@@ -6,12 +6,10 @@
 #include "matlab_util.h"
 #include "sdp_branch_and_bound.h"
 
-void save_to_file(arma::mat &X, const char *path, std::string name){
+void save_to_file(arma::mat &X, std::string file, std::string name){
     
     std::ofstream f;
-    std::string file_path = path;
-    auto file = file_path.substr(file_path.find_last_of("/\\") + 1);
-    f.open(result_path + name + ".txt");
+    f.open(file + "_" + name + ".txt");
     
     for (int i = 0; i < X.n_rows; i++){
         int val = X(i,0);
@@ -377,7 +375,48 @@ std::map<int, arma::mat> generate_partitions(arma::mat data, int n_part) {
     return part_map;
 }
 
-std::pair<double,double> mr_heuristic(int k, int p, arma::mat Ws, const char *data_path) {
+// solve with different rays
+double solve_with_ray(arma::mat Ws, arma::mat init_sol, int k, std::string result_path) {
+    
+    UserConstraints constraints;
+    std::map < int, std::list < std::pair < int, double>>> cls_map;
+    double best_mss = compute_clusters(Ws, init_sol, cls_map);
+    double sdp_mss;
+    double ray;
+    double best_ray = -1.0;
+    arma::mat sdp_sol;
+    arma::mat best_sol = init_sol;
+    
+    std::cout << std::endl << "---------------------------------------------------------------" << std::endl;
+    for (int i = 0; i < 4; i++) {
+        ray = 0.85 - i * 0.15;
+        std::cout << std::endl << std::endl;
+        std::cout << std::endl << "Solving ray " << ray << std::endl;
+        constraints = generate_constraints(cls_map, ray);
+        sdp_mss = sdp_branch_and_bound(k, Ws, constraints, sdp_sol);
+        if ((best_mss - sdp_mss) / best_mss > 0.00001) {
+            best_ray = ray;
+            best_sol = sdp_sol;
+            best_mss = sdp_mss;
+            std::cout << std::endl << "**********************************************************" << std::endl;
+            std::cout << "Best found!" << std::endl << "Ray " << ray << ". UB MSS " << sdp_mss;
+            std::cout << std::endl << "**********************************************************" << std::endl;
+            cls_map = {};
+            compute_clusters(Ws, best_sol, cls_map);
+            save_to_file(best_sol, result_path, "ray0" + std::to_string((int) ray*100));
+        }
+//        if (v_imp < 0.01) {
+//            std::cerr << "Pruning: ray " << ray << ".\n";
+//            break;
+//        }
+    }
+    
+    return best_mss;
+    
+}
+
+
+std::pair<double,double> mr_heuristic(int k, int p, arma::mat Ws, std::string result_path, int it) {
     
     double lb_mss;
     double ub_mss;
@@ -385,12 +424,12 @@ std::pair<double,double> mr_heuristic(int k, int p, arma::mat Ws, const char *da
     double part_mss;
     arma::mat sdp_sol;
     arma::mat ub_sol;
+    arma::mat best_sol;
     UserConstraints constraints;
     std::map<int, arma::mat> part_map;
     std::map<int, arma::vec> point_map;
     std::map<int, arma::mat> sol_map;
     
-    int it = 0;
     bool improvement = true;
     
     while (improvement) {
@@ -425,7 +464,7 @@ std::pair<double,double> mr_heuristic(int k, int p, arma::mat Ws, const char *da
         if (part_mss >= lb_mss) {
             lb_mss = part_mss;
             for (int i = 0; i < p; ++i)
-                save_to_file(sol_map[i], data_path, "part" + std::to_string(i));
+                save_to_file(sol_map[i], result_path, "part" + std::to_string(i));
         }
         
         // create upper bound
@@ -440,9 +479,10 @@ std::pair<double,double> mr_heuristic(int k, int p, arma::mat Ws, const char *da
         std::cout << std::endl << "*********************************************************************" << std::endl;
         std::cout  << std::endl << "UB MSS: " << sdp_mss << std::endl;
         
-        if ((ub_mss - sdp_mss) / ub_mss >= 0.001 or (it == 0)) {
+        if ((ub_mss - sdp_mss) / ub_mss >= 0.0001 or (it == 0)) {
             ub_mss = sdp_mss;
-            save_to_file(ub_sol, data_path, "it" + std::to_string(it));
+            best_sol = ub_sol;
+            save_to_file(ub_sol, result_path, "it" + std::to_string(it));
         }
         if (part_mss < lb_mss)
             improvement = false;
@@ -455,39 +495,12 @@ std::pair<double,double> mr_heuristic(int k, int p, arma::mat Ws, const char *da
         
     }
     
+    std::cout << std::endl << "*********************************************************************" << std::endl;
+    std::cout  << std::endl << "Best UB MSS: " << ub_mss << std::endl;
+    std::cout << std::endl << "*********************************************************************" << std::endl;
+    
+    ub_mss = solve_with_ray(Ws, best_sol, k, result_path);
+    
     return std::make_pair(lb_mss, ub_mss);
     
 }
-
-/*
- * // solve with different rays
-    arma::mat best_sol = init_sol;
-    part_mss = init_mss;
-    double v_imp;
-    double ray;
-    double best_ray = -1.0;
-    for (int i = 0; i < 5; i++) {
-        ray = 0.85 - i * 0.15;
-        log_file << "\nRAY " << ray << ":";
-        std::cout << std::endl << "---------------------------------------------------------------" << std::endl;
-        std::cout << std::endl << "Solving ray " << ray << std::endl;
-        constraints = generate_constraints(cls_map, ray);
-        sdp_mss = sdp_branch_and_bound(k, Ws, constraints, sdp_sol);
-        save_to_file(sdp_sol, data_path, "_ray" + std::to_string(r));
-        v_imp = (part_mss - sdp_mss) / part_mss;
-        if (v_imp > 0.0000001) {
-            best_ray = ray;
-            best_sol = sdp_sol;
-            part_mss = sdp_mss;
-            std::cout << std::endl << "**********************************************************" << std::endl;
-            std::cout << "Best found!" << std::endl << "Ray " << ray << ". MSS " << part_mss;
-            std::cout << std::endl << "**********************************************************" << std::endl;
-            cls_map = {};
-            compute_clusters(Ws, best_sol, cls_map);
-        }
-//        if (v_imp < 0.01) {
-//            std::cerr << "Pruning: ray " << ray << ".\n";
-//            break;
-//        }
-    }
- */

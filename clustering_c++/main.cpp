@@ -12,7 +12,6 @@ const char *data_path;
 const char *opt_path;
 const char *sol_path;
 const char *log_path;
-const char *result_path;
 std::ofstream log_file;
 
 // branch and bound
@@ -51,7 +50,7 @@ bool kmeans_verbose;
 
 // read parameters in config file
 std::map<std::string, std::string> read_params(std::string &config_file) {
-
+    
     std::map<std::string, std::string> config_map = {};
 
     std::ifstream cFile (config_file);
@@ -104,11 +103,30 @@ arma::mat read_sol(const char *filename, int n, int k) {
         std::cerr << strerror(errno) << "\n";
         exit(EXIT_FAILURE);
     }
-
+    
+    std::ifstream filecheck(filename);
+    int reader = 0;
+    std::string line;
+    getline(filecheck, line);
+    std::stringstream ss(line);
+    int cols = 0;
+    double item;
+    while(ss >> item) cols++;
+    if (cols == 1)
+        reader = 1;
+    filecheck.close();
+    
     arma::mat sol(n, k);
     for (int i = 0; i < n; i++) {
-        for (int j = 0; j < k; j++) {
-            file >> sol(i, j);
+        if (reader == 1) {
+            sol.row(i) = arma::zeros(k).t();
+            int c = 0;
+            file >> c;
+            sol(i, c) = 1;
+        }
+        else {
+            for (int j = 0; j < k; j++)
+                file >> sol(i, j);
         }
     }
     
@@ -181,8 +199,8 @@ void run(int argc, char **argv) {
     kmeans_verbose = 0;
     kmeans_permutations = 1;
     
-    if (argc != 9) {
-        std::cerr << "Input: <DATA_FILE> <OPT_SOL_FILE> <H_SOL_FILE> <LOG_FILE> <RESULT_PATH> <K> <F> <P>" << std::endl;
+    if (argc != 8) {
+        std::cerr << "Input: <DATA_FILE> <OPT_SOL_FILE> <H_SOL_FILE> <LOG_FILE> <K> <F> <P>" << std::endl;
         exit(EXIT_FAILURE);
     }
     
@@ -190,20 +208,25 @@ void run(int argc, char **argv) {
     opt_path = argv[2];
     sol_path = argv[3];
     log_path = argv[4];
-    result_path = argv[5];
     
     int n, d;
-    int k = std::stoi(argv[6]);
-    int f = std::stoi(argv[7]);
-    int p = std::stoi(argv[8]);
+    int k = std::stoi(argv[5]);
+    int f = std::stoi(argv[6]);
+    int p = std::stoi(argv[7]);
+    
+    std::string str_path = data_path;
+    std::string inst_name = str_path.substr(str_path.find_last_of("/\\")+1);
+    inst_name = inst_name.substr(0, str_path.find_last_of("."));
+    std::string dir_path = str_path.substr(0, str_path.find_last_of("/\\"));
+    dir_path = dir_path.substr(0, dir_path.find_last_of("/\\")+1);
+    std::string result_path = dir_path + "results/" + inst_name + "_" + std::to_string(k);  
     
     arma::mat Ws = read_data(data_path, n, d);
     arma::mat opt_sol = read_sol(opt_path, n, k);
     double opt_mss = compute_mss(Ws, opt_sol);
     arma::mat init_sol;
-    if (f == -1) {
+    if (f == -1)
         init_sol = read_sol(sol_path, n, k);
-    }
     else if (f > 0) {
         init_sol = opt_sol;
         flip(init_sol, f);
@@ -219,7 +242,7 @@ void run(int argc, char **argv) {
         std::cout << std::endl << "Permutation:" << kmeans_permutations << std::endl << std::endl;
         init_sol = kmeans.getAssignments();
     }
-    save_to_file(init_sol, data_path, "");
+//    save_to_file(init_sol, result_path, "_init");
     std::map < int, std::list < std::pair < int, double>>> cls_map;
     double init_mss = compute_clusters(Ws, init_sol, cls_map);
     std::cout << std::endl << "**********************************************************" << std::endl;
@@ -256,7 +279,8 @@ void run(int argc, char **argv) {
     log_file << "SDP_SOLVER_TRIANGLE_PERC: " << sdp_solver_triangle_perc << "\n\n";
     log_file << "Heuristic MSS: " << init_mss << "\n\n";
     
-    std::pair<double,double> bounds = mr_heuristic(k, p, Ws, data_path);
+    int it = 0;
+    std::pair<double,double> bounds = mr_heuristic(k, p, Ws, result_path, it);
     double lb_mss = bounds.first;
     double ub_mss = bounds.second;
 
@@ -269,8 +293,25 @@ void run(int argc, char **argv) {
     std::cout << "GAP UB Opt " << round((ub_mss - opt_mss) / opt_mss * 100) << "%" << std::endl;
     std::cout << "GAP LB Heur " << round((init_mss - lb_mss) / init_mss * 100) << "%" << std::endl;
     std::cout << "GAP UB Heur " << round((ub_mss - init_mss) / init_mss * 100) << "%" << std::endl;
+    std::cout << "It " << it << "%" << std::endl;
     std::cout << std::endl << "**********************************************************" << std::endl;
-
+    
+	std::ofstream test_SUMMARY(dir_path + "test_SUMMARY.txt", std::ios::app);
+	test_SUMMARY << inst_name << "\t" << k << "\t"
+    << opt_mss << "\t"
+    << opt_mss << "\t"
+    << init_mss << "\t"
+    << lb_mss << "\t"
+    << ub_mss << "\t"
+    << round((opt_mss - lb_mss) / opt_mss * 100) << "%" << "\t"
+    << round((ub_mss - opt_mss) / opt_mss * 100) << "%" << "\t"
+    << round((init_mss - lb_mss) / init_mss * 100) << "%" << "\t"
+    << round((ub_mss - init_mss) / init_mss * 100) << "%" << "\t"
+    << it << "\t"
+    << "\n";
+    
+	test_SUMMARY.close();
+ 
 }
 
 int main(int argc, char **argv) {
