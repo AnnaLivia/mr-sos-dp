@@ -6,10 +6,10 @@
 #include "matlab_util.h"
 #include "sdp_branch_and_bound.h"
 
-void save_to_file(arma::mat &X, std::string file, std::string name){
+void save_to_file(arma::mat &X, std::string path, std::string name){
     
     std::ofstream f;
-    f.open(file + "_" + name + ".txt");
+    f.open(path + "_" + name + ".txt");
     
     for (int i = 0; i < X.n_rows; i++){
         int val = X(i,0);
@@ -388,10 +388,13 @@ double solve_with_ray(arma::mat Ws, arma::mat init_sol, int k, std::string resul
     arma::mat best_sol = init_sol;
     
     std::cout << std::endl << "---------------------------------------------------------------" << std::endl;
+    log_file << "---------------------------------------------------------------\n";
+    log_file << "Solving with moving ray" << "\n\n";
     for (int i = 0; i < 4; i++) {
         ray = 0.85 - i * 0.15;
         std::cout << std::endl << std::endl;
         std::cout << std::endl << "Solving ray " << ray << std::endl;
+        log_file << "Ray " << ray << "\n";
         constraints = generate_constraints(cls_map, ray);
         sdp_mss = sdp_branch_and_bound(k, Ws, constraints, sdp_sol);
         if ((best_mss - sdp_mss) / best_mss > 0.00001) {
@@ -436,9 +439,11 @@ std::pair<double,double> mr_heuristic(int k, int p, arma::mat Ws, std::string re
     
         std::cout << std::endl << "--------------------------------------------------------------------" << std::endl;
         std::cout << "It " << it << std::endl;
+        log_file << "---------------------------------------------------------------\n";
+        log_file << "It " << it << "\n";
         if (it == 0) {
             // solve with combinatorial bound
-            std::cout << "Solving Comb bound:" << std::endl;
+            std::cout << "solving Comb bound" << std::endl;
             compute_comb_bound(Ws, p, part_map, point_map);
         }
         else{
@@ -454,6 +459,7 @@ std::pair<double,double> mr_heuristic(int k, int p, arma::mat Ws, std::string re
             std::cout << std::endl << "*********************************************************************" << std::endl;
             std::cout << "Partition " << (p.first + 1) << "\nPoints " << p.second.n_rows;
             std::cout << std::endl << "*********************************************************************" << std::endl;
+            log_file << "Partition " << (p.first + 1) << "\n";
             part_mss += sdp_branch_and_bound(k, p.second, constraints, sdp_sol);
             sol_map[p.first] = sdp_sol;
         }
@@ -475,6 +481,7 @@ std::pair<double,double> mr_heuristic(int k, int p, arma::mat Ws, std::string re
         for (int i = 0; i < p; ++i)
             n_constr += generate_part_constraints(sol_map[i], part_constraints, point_map[i]);
         std::cout << std::endl << "Added constraints: " << n_constr << std::endl;
+        log_file << "Generating UB (added constraints " << n_constr << ")\n";
         sdp_mss = sdp_branch_and_bound(k, Ws, part_constraints, ub_sol);
         std::cout << std::endl << "*********************************************************************" << std::endl;
         std::cout  << std::endl << "UB MSS: " << sdp_mss << std::endl;

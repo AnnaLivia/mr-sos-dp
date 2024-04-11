@@ -142,9 +142,9 @@ void comb_gurobi_model::set_objective_function(arma::mat &dist) {
 
 void comb_gurobi_model::optimize(){
 	try {
-        std::string file = log_path;
-        auto name = file.substr(0, file.find_last_of("."));
-        model.write(name + ".lp");
+        //std::string file = log_path;
+        //auto name = file.substr(0, file.find_last_of("."));
+        //model.write(name + ".lp");
         
 		model.optimize();
 		status = model.get(GRB_IntAttr_Status);

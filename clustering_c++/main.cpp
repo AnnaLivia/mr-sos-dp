@@ -219,7 +219,7 @@ void run(int argc, char **argv) {
     inst_name = inst_name.substr(0, str_path.find_last_of("."));
     std::string dir_path = str_path.substr(0, str_path.find_last_of("/\\"));
     dir_path = dir_path.substr(0, dir_path.find_last_of("/\\")+1);
-    std::string result_path = dir_path + "results/" + inst_name + "_" + std::to_string(k);  
+    std::string result_path = dir_path + "results/" + inst_name + "_" + std::to_string(k);
     
     arma::mat Ws = read_data(data_path, n, d);
     arma::mat opt_sol = read_sol(opt_path, n, k);
@@ -245,11 +245,13 @@ void run(int argc, char **argv) {
 //    save_to_file(init_sol, result_path, "_init");
     std::map < int, std::list < std::pair < int, double>>> cls_map;
     double init_mss = compute_clusters(Ws, init_sol, cls_map);
+    std::cout << std::endl << std::endl;
     std::cout << std::endl << "**********************************************************" << std::endl;
-    std::cout << "Heuristic MSS " << init_mss << std::endl;
-    std::cout << "Optimal MSS:" << opt_mss << std::endl << std::endl;
-    std::cout << "---------------------------------------------------------------" << std::endl;
-    std::cout << "# Partitions = " << p << std::endl << std::endl;
+    std::cout << "Instance " << inst_name << std::endl;
+    std::cout << "Heuristic MSS: " << init_mss << std::endl;
+    std::cout << "Optimal MSS:" << opt_mss << std::endl;
+    std::cout << "# Partitions: " << p << std::endl << std::endl;
+    std::cout << std::endl << "**********************************************************" << std::endl;
     
     log_file.open(log_path);
     log_file << "DATA_FILE, SOL_FILE, n, d, k: ";
@@ -289,6 +291,7 @@ void run(int argc, char **argv) {
     std::cout << "Heuristic MSS BOUND " << init_mss << std::endl;
     std::cout << "Best LB MSS BOUND " << lb_mss << std::endl;
     std::cout << "Best UB MSS BOUND " << ub_mss << std::endl;
+    std::cout << "GAP UB-LB " << round((ub_mss - lb_mss) / ub_mss * 100) << "%" << std::endl;
     std::cout << "GAP LB Opt " << round((opt_mss - lb_mss) / opt_mss * 100) << "%" << std::endl;
     std::cout << "GAP UB Opt " << round((ub_mss - opt_mss) / opt_mss * 100) << "%" << std::endl;
     std::cout << "GAP LB Heur " << round((init_mss - lb_mss) / init_mss * 100) << "%" << std::endl;
@@ -299,10 +302,10 @@ void run(int argc, char **argv) {
 	std::ofstream test_SUMMARY(dir_path + "test_SUMMARY.txt", std::ios::app);
 	test_SUMMARY << inst_name << "\t" << k << "\t"
     << opt_mss << "\t"
-    << opt_mss << "\t"
     << init_mss << "\t"
     << lb_mss << "\t"
     << ub_mss << "\t"
+    << round((ub_mss - lb_mss) / ub_mss * 100) << "%" << "\t"
     << round((opt_mss - lb_mss) / opt_mss * 100) << "%" << "\t"
     << round((ub_mss - opt_mss) / opt_mss * 100) << "%" << "\t"
     << round((init_mss - lb_mss) / init_mss * 100) << "%" << "\t"
