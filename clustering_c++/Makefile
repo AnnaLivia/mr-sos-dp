@@ -1,5 +1,5 @@
-matlab_path = /home/aelle/SDP
-gurobi_path = /home/aelle/SDP/gurobi1100/linux64
+matlab_path = /home/aelle
+gurobi_path = /home/aelle/gurobi1100/linux64
 
 sources = main.cpp matlab_util.cpp sdp_solver_util.cpp sdp_branch_and_bound.cpp kmeans_util.cpp Kmeans.cpp JobQueue.cpp util.cpp ThreadPool.cpp feasibility.cpp ub_heuristics.cpp ilp_model.cpp comb_model.cpp mr_heuristic.cpp
 objects = $(sources:.cpp=.o)
