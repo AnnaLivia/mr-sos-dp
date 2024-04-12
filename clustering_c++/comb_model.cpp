@@ -57,7 +57,7 @@ comb_gurobi_model::comb_gurobi_model(GRBEnv *env, int n, int p) : model(*env), X
 	//this->Y = create_Y_variables(this->model);
     this->model.set("OutputFlag", "1");
 //    this->model.set("Threads", "4");
-    this->model.set("TimeLimit", "30");
+    this->model.set("TimeLimit", "60");
     //this->model.set("Presolve", std::to_string(lp_solver_presolve));
 }
 

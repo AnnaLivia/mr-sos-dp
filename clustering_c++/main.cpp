@@ -250,7 +250,7 @@ void run(int argc, char **argv) {
     std::cout << "Instance " << inst_name << std::endl;
     std::cout << "Heuristic MSS: " << init_mss << std::endl;
     std::cout << "Optimal MSS:" << opt_mss << std::endl;
-    std::cout << "# Partitions: " << p << std::endl << std::endl;
+    std::cout << "Num Partitions: " << p << std::endl << std::endl;
     std::cout << std::endl << "**********************************************************" << std::endl;
     
     log_file.open(log_path);
@@ -289,28 +289,28 @@ void run(int argc, char **argv) {
     std::cout << std::endl << "**********************************************************" << std::endl;
     std::cout << "Optimal MSS BOUND " << opt_mss << std::endl;
     std::cout << "Heuristic MSS BOUND " << init_mss << std::endl;
-    std::cout << "Best LB MSS BOUND " << lb_mss << std::endl;
     std::cout << "Best UB MSS BOUND " << ub_mss << std::endl;
+    std::cout << "Best LB MSS BOUND " << lb_mss << std::endl;
     std::cout << "GAP UB-LB " << round((ub_mss - lb_mss) / ub_mss * 100) << "%" << std::endl;
-    std::cout << "GAP LB Opt " << round((opt_mss - lb_mss) / opt_mss * 100) << "%" << std::endl;
+    std::cout << "Num It " << it << std::endl;
     std::cout << "GAP UB Opt " << round((ub_mss - opt_mss) / opt_mss * 100) << "%" << std::endl;
-    std::cout << "GAP LB Heur " << round((init_mss - lb_mss) / init_mss * 100) << "%" << std::endl;
+    std::cout << "GAP LB Opt " << round((opt_mss - lb_mss) / opt_mss * 100) << "%" << std::endl;
     std::cout << "GAP UB Heur " << round((ub_mss - init_mss) / init_mss * 100) << "%" << std::endl;
-    std::cout << "It " << it << "%" << std::endl;
+    std::cout << "GAP LB Heur " << round((init_mss - lb_mss) / init_mss * 100) << "%" << std::endl;
     std::cout << std::endl << "**********************************************************" << std::endl;
     
 	std::ofstream test_SUMMARY(dir_path + "test_SUMMARY.txt", std::ios::app);
 	test_SUMMARY << inst_name << "\t" << k << "\t"
     << opt_mss << "\t"
     << init_mss << "\t"
-    << lb_mss << "\t"
     << ub_mss << "\t"
+    << lb_mss << "\t"
     << round((ub_mss - lb_mss) / ub_mss * 100) << "%" << "\t"
-    << round((opt_mss - lb_mss) / opt_mss * 100) << "%" << "\t"
-    << round((ub_mss - opt_mss) / opt_mss * 100) << "%" << "\t"
-    << round((init_mss - lb_mss) / init_mss * 100) << "%" << "\t"
-    << round((ub_mss - init_mss) / init_mss * 100) << "%" << "\t"
     << it << "\t"
+    << round((ub_mss - opt_mss) / opt_mss * 100) << "%" << "\t"
+    << round((opt_mss - lb_mss) / opt_mss * 100) << "%" << "\t"
+    << round((ub_mss - init_mss) / init_mss * 100) << "%" << "\t"
+    << round((init_mss - lb_mss) / init_mss * 100) << "%" << "\t"
     << "\n";
     
 	test_SUMMARY.close();

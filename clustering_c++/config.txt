@@ -10,7 +10,7 @@ SDP_SOLVER_SESSION_THREADS_ROOT = 16
 # numer of threads for the matlab session (must-link and cannot-link)
 SDP_SOLVER_SESSION_THREADS = 1
 # sdp solver path
-SDP_SOLVER_FOLDER = /home/aelle/mr-sos-sdp/SDPNAL
+SDP_SOLVER_FOLDER = /home/aelle/mr-sos-dp/SDPNAL
 # precision of the sdp solver
 SDP_SOLVER_TOL = 1e-5
 # do not display log (0), display log (1)
