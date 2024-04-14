@@ -222,7 +222,7 @@ void run(int argc, char **argv) {
     dir_path = dir_path.substr(0, dir_path.find_last_of("/\\") + 1);
     std::ofstream test_SUMMARY(dir_path + "test_SUMMARY.txt", std::ios::app);
 
-    dir_path += "results/part" + p + "/" + inst_name + "_" + std::to_string(k);
+    dir_path += "results/" + p + "part/" + inst_name + "_" + std::to_string(k);
     if (!std::filesystem::exists(dir_path))
         std::filesystem::create_directories(dir_path);
     std::string result_path = dir_path + "/" + inst_name + "_" + std::to_string(k);
