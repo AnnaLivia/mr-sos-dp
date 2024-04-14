@@ -376,13 +376,14 @@ std::map<int, arma::mat> generate_partitions(arma::mat data, int n_part) {
 }
 
 // solve with different rays
-double solve_with_ray(arma::mat Ws, arma::mat init_sol, int k, std::string result_path) {
+double solve_with_ray(arma::mat Ws, arma::mat init_sol, int k, std::string result_path, int &num_update) {
     
     UserConstraints constraints;
     std::map < int, std::list < std::pair < int, double>>> cls_map;
     double best_mss = compute_clusters(Ws, init_sol, cls_map);
     double sdp_mss;
     double ray;
+    int int_ray;
     double best_ray = -1.0;
     arma::mat sdp_sol;
     arma::mat best_sol = init_sol;
@@ -401,12 +402,14 @@ double solve_with_ray(arma::mat Ws, arma::mat init_sol, int k, std::string resul
             best_ray = ray;
             best_sol = sdp_sol;
             best_mss = sdp_mss;
+            num_update++;
             std::cout << std::endl << "**********************************************************" << std::endl;
             std::cout << "Best found!" << std::endl << "Ray " << ray << ". UB MSS " << sdp_mss;
             std::cout << std::endl << "**********************************************************" << std::endl;
             cls_map = {};
             compute_clusters(Ws, best_sol, cls_map);
-            save_to_file(best_sol, result_path, "ray0" + std::to_string((int) ray*100));
+            int_ray = ray*100;
+            save_to_file(best_sol, result_path, "ray0" + std::to_string(int_ray));
         }
 //        if (v_imp < 0.01) {
 //            std::cerr << "Pruning: ray " << ray << ".\n";
@@ -419,8 +422,13 @@ double solve_with_ray(arma::mat Ws, arma::mat init_sol, int k, std::string resul
 }
 
 
-std::pair<double,double> mr_heuristic(int k, int p, arma::mat Ws, std::string result_path, int it) {
-    
+ResultData mr_heuristic(int k, int p, arma::mat Ws, std::string result_path) {
+
+    ResultData results;
+
+    int it = 0;
+    int ub_update = 0;
+    int ray_update = 0;
     double lb_mss;
     double ub_mss;
     double sdp_mss;
@@ -434,7 +442,11 @@ std::pair<double,double> mr_heuristic(int k, int p, arma::mat Ws, std::string re
     std::map<int, arma::mat> sol_map;
     
     bool improvement = true;
-    
+    auto start_time_all = std::chrono::high_resolution_clock::now();
+    double ub_time = 0;
+    double lb_time = 0;
+    double all_time = 0;
+
     while (improvement) {
     
         std::cout << std::endl << "--------------------------------------------------------------------" << std::endl;
@@ -454,6 +466,7 @@ std::pair<double,double> mr_heuristic(int k, int p, arma::mat Ws, std::string re
         }
         
         std::cout << std::endl << "Generating LB";
+        auto start_time_lb = std::chrono::high_resolution_clock::now();
         part_mss = 0;
         for (auto &p: part_map) {
             std::cout << std::endl << "*********************************************************************" << std::endl;
@@ -464,17 +477,21 @@ std::pair<double,double> mr_heuristic(int k, int p, arma::mat Ws, std::string re
             sol_map[p.first] = sdp_sol;
         }
         std::cout  << std::endl << std::endl << "LB MSS: " << part_mss << std::endl;
-        
+        auto end_time_lb = std::chrono::high_resolution_clock::now();
+        lb_time += std::chrono::duration_cast<std::chrono::seconds>(end_time_lb - start_time_lb).count();
+
+
         if (it == 0)
             lb_mss = part_mss;
         if (part_mss >= lb_mss) {
             lb_mss = part_mss;
             for (int i = 0; i < p; ++i)
-                save_to_file(sol_map[i], result_path, "part" + std::to_string(i));
+                save_to_file(sol_map[i], result_path, "part" + std::to_string(i+1));
         }
         
         // create upper bound
         std::cout << std::endl << "Generating UB";
+        auto start_time_ub = std::chrono::high_resolution_clock::now();
         std::cout << std::endl << "*********************************************************************" << std::endl;
         int n_constr = 0;
         UserConstraints part_constraints;
@@ -485,10 +502,13 @@ std::pair<double,double> mr_heuristic(int k, int p, arma::mat Ws, std::string re
         sdp_mss = sdp_branch_and_bound(k, Ws, part_constraints, ub_sol);
         std::cout << std::endl << "*********************************************************************" << std::endl;
         std::cout  << std::endl << "UB MSS: " << sdp_mss << std::endl;
+        auto end_time_ub = std::chrono::high_resolution_clock::now();
+        ub_time += std::chrono::duration_cast<std::chrono::seconds>(end_time_ub - start_time_ub).count();
         
         if ((ub_mss - sdp_mss) / ub_mss >= 0.0001 or (it == 0)) {
             ub_mss = sdp_mss;
             best_sol = ub_sol;
+            ub_update++;
             save_to_file(ub_sol, result_path, "it" + std::to_string(it));
         }
         if (part_mss < lb_mss)
@@ -505,9 +525,24 @@ std::pair<double,double> mr_heuristic(int k, int p, arma::mat Ws, std::string re
     std::cout << std::endl << "*********************************************************************" << std::endl;
     std::cout  << std::endl << "Best UB MSS: " << ub_mss << std::endl;
     std::cout << std::endl << "*********************************************************************" << std::endl;
-    
-    ub_mss = solve_with_ray(Ws, best_sol, k, result_path);
-    
-    return std::make_pair(lb_mss, ub_mss);
+
+    auto start_time_ray = std::chrono::high_resolution_clock::now();
+    ub_mss = solve_with_ray(Ws, best_sol, k, result_path, ray_update);
+    auto end_time_ray = std::chrono::high_resolution_clock::now();
+
+    double ray_time = std::chrono::duration_cast<std::chrono::seconds>(end_time_ray - start_time_ray).count();
+    double all_time = std::chrono::duration_cast<std::chrono::seconds>(end_time_ray - start_time_all).count();
+
+    results.ub_mss = ub_mss;
+    results.lb_mss = lb_mss;
+    results.it = it;
+    results.ub_update = ub_update;
+    results.ray_update = ray_update;
+    results.ub_time = ub_time;
+    results.lb_time = lb_time;
+    results.ray_time = ray_time;
+    results.all_time = all_time;
+
+    return results;
     
 }

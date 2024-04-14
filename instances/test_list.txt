@@ -1,9 +1,0 @@
-./bb ../instances/data/test.txt ../instances/opt/test.txt ../instances/h_sol/test.txt ../instances/log/test.txt 3 -1 3
-./bb ../instances/data/ruspini.txt ../instances/opt/ruspini.txt ../instances/h_sol/ruspini.txt ../instances/log/ruspini.txt 4 -1 3
-./bb ../instances/data/ch150.txt ../instances/opt/ch150_2.txt ../instances/h_sol/ch150_2.txt ../instances/log/ch150_2.txt 2 -1 3
-./bb ../instances/data/d198.txt ../instances/opt/d198.txt ../instances/h_sol/d198.txt ../instances/log/d198.txt 7 -1 3
-./bb ../instances/data/gr202.txt ../instances/opt/gr202_2.txt ../instances/h_sol/gr202_2.txt ../instances/log/gr202_2.txt 2 -1 3
-./bb ../instances/data/pr299.txt ../instances/opt/pr299_2.txt ../instances/h_sol/pr299_2.txt ../instances/log/pr299_2.txt 2 -1 3
-./bb ../instances/data/fl417.txt ../instances/opt/fl417_2.txt ../instances/h_sol/fl417_2.txt ../instances/log/fl417_2.txt 2 -1 3
-./bb ../instances/data/rd400.txt ../instances/opt/rd400_3.txt ../instances/h_sol/rd400_3.txt ../instances/log/rd400_3.txt 3 -1 3
-./bb ../instances/data/gr666.txt ../instances/opt/gr666_2.txt ../instances/h_sol/gr666_2.txt ../instances/log/gr666_2.txt 2 -1 3

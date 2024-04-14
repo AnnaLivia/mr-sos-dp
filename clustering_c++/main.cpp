@@ -1,4 +1,5 @@
 #include <iostream>
+#include <filesystem>
 #include <map>
 #include <list>
 #include <algorithm>
@@ -216,10 +217,15 @@ void run(int argc, char **argv) {
     
     std::string str_path = data_path;
     std::string inst_name = str_path.substr(str_path.find_last_of("/\\")+1);
-    inst_name = inst_name.substr(0, str_path.find_last_of("."));
+    inst_name = inst_name.substr(0, inst_name.find("."));
     std::string dir_path = str_path.substr(0, str_path.find_last_of("/\\"));
-    dir_path = dir_path.substr(0, dir_path.find_last_of("/\\")+1);
-    std::string result_path = dir_path + "results/" + inst_name + "_" + std::to_string(k);
+    dir_path = dir_path.substr(0, dir_path.find_last_of("/\\") + 1);
+    std::ofstream test_SUMMARY(dir_path + "test_SUMMARY.txt", std::ios::app);
+
+    dir_path += "results/part" + p + "/" + inst_name + "_" + std::to_string(k);
+    if (!std::filesystem::exists(dir_path))
+        std::filesystem::create_directories(dir_path);
+    std::string result_path = dir_path + "/" + inst_name + "_" + std::to_string(k);
     
     arma::mat Ws = read_data(data_path, n, d);
     arma::mat opt_sol = read_sol(opt_path, n, k);
@@ -280,11 +286,17 @@ void run(int argc, char **argv) {
     log_file << "SDP_SOLVER_MAX_TRIANGLE_INEQ: " << sdp_solver_max_triangle_ineq << "\n";
     log_file << "SDP_SOLVER_TRIANGLE_PERC: " << sdp_solver_triangle_perc << "\n\n";
     log_file << "Heuristic MSS: " << init_mss << "\n\n";
-    
-    int it = 0;
-    std::pair<double,double> bounds = mr_heuristic(k, p, Ws, result_path, it);
-    double lb_mss = bounds.first;
-    double ub_mss = bounds.second;
+
+    ResultData results = mr_heuristic(k, p, Ws, result_path);
+    int it = results.it;
+    double ub_mss = results.ub_mss;
+    double lb_mss = results.lb_mss;
+    double ub_time = results.ub_time;
+    int ub_update = results.ub_update;
+    int ray_update = results.ray_update;
+    double lb_time = results.lb_time;
+    double ray_time = results.ray_time;
+    double all_time = results.all_time;
 
     std::cout << std::endl << "**********************************************************" << std::endl;
     std::cout << "Optimal MSS BOUND " << opt_mss << std::endl;
@@ -293,20 +305,33 @@ void run(int argc, char **argv) {
     std::cout << "Best LB MSS BOUND " << lb_mss << std::endl;
     std::cout << "GAP UB-LB " << round((ub_mss - lb_mss) / ub_mss * 100) << "%" << std::endl;
     std::cout << "Num It " << it << std::endl;
+    std::cout << "Num UB update " << ub_update << std::endl;
+    std::cout << "Num RAY update " << ray_update << std::endl;
+    std::cout << "UB Time " << ub_time << " sec" << std::endl;
+    std::cout << "LB Time " << lb_time << " sec" << std::endl;
+    std::cout << "RAY Time " << ray_time << " sec" << std::endl;
+    std::cout << "ALL Time " << all_time << " sec" << std::endl;
     std::cout << "GAP UB Opt " << round((ub_mss - opt_mss) / opt_mss * 100) << "%" << std::endl;
     std::cout << "GAP LB Opt " << round((opt_mss - lb_mss) / opt_mss * 100) << "%" << std::endl;
     std::cout << "GAP UB Heur " << round((ub_mss - init_mss) / init_mss * 100) << "%" << std::endl;
     std::cout << "GAP LB Heur " << round((init_mss - lb_mss) / init_mss * 100) << "%" << std::endl;
     std::cout << std::endl << "**********************************************************" << std::endl;
     
-	std::ofstream test_SUMMARY(dir_path + "test_SUMMARY.txt", std::ios::app);
-	test_SUMMARY << inst_name << "\t" << k << "\t"
+	test_SUMMARY << inst_name << "\t"
+	<< p << "\t"
+	<< k << "\t"
     << opt_mss << "\t"
     << init_mss << "\t"
     << ub_mss << "\t"
     << lb_mss << "\t"
     << round((ub_mss - lb_mss) / ub_mss * 100) << "%" << "\t"
     << it << "\t"
+    << ub_update << "\t"
+    << ray_update << "\t"
+    << ub_time << "\t"
+    << lb_time << "\t"
+    << ray_time << "\t"
+    << all_time << "\t"
     << round((ub_mss - opt_mss) / opt_mss * 100) << "%" << "\t"
     << round((opt_mss - lb_mss) / opt_mss * 100) << "%" << "\t"
     << round((ub_mss - init_mss) / init_mss * 100) << "%" << "\t"

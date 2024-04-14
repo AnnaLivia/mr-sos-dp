@@ -14,6 +14,20 @@ typedef struct UserConstraints {
 
 } UserConstraints;
 
+typedef struct ResultData {
+
+	int it;
+	double ub_mss;
+	double lb_mss;
+	int ub_update;
+	int ray_update;
+	double ub_time;
+	double lb_time;
+	double ray_time;
+	double all_time;
+
+} ResultData;
+
 void save_to_file(arma::mat &X, const char *path, std::string name);
 double compute_mss(arma::mat &data, arma::mat sol);
 double compute_clusters(arma::mat &data, arma::mat sol, std::map<int, std::list<std::pair<int, double>>> &cls_map);
@@ -38,9 +52,9 @@ void take_n_from_p(arma::mat data, std::map<int, int> &new_p, std::map<int, int>
 std::map<int, arma::mat> generate_partitions(arma::mat data, int n_part);
 
 // solve with different rays
-double solve_with_ray(arma::mat Ws, arma::mat init_sol, int k, std::string result_path);
+double solve_with_ray(arma::mat Ws, arma::mat init_sol, int k, std::string result_path, int &num_update);
 
 // define moving ray routine
-std::pair<double,double> mr_heuristic(int k, int p, arma::mat Ws, std::string path, int it);
+ResultData mr_heuristic(int k, int p, arma::mat Ws, std::string path);
 
 #endif //CLUSTERING_MR_HEURISTICS_H
