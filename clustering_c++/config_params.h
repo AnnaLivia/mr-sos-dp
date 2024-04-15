@@ -27,8 +27,15 @@
 // data full path
 extern const char *data_path;
 extern const char *constraints_path;
-extern const char *log_path;
+
+// log and result path
+extern std::string result_folder;
+extern std::string log_folder;
+extern std::string result_path;
+extern std::string log_path;
 extern std::ofstream log_file;
+extern std::ofstream lb_file;
+extern std::ofstream ub_file;
 
 // branch and bound
 extern double branch_and_bound_tol;

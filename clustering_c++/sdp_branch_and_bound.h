@@ -52,11 +52,18 @@ typedef struct InputData {
 
 } InputData;
 
+
 typedef struct ResultData {
 
     int it;
     double ub_mss;
     double lb_mss;
+    int ub_update;
+    int ray_update;
+    double ub_time;
+    double lb_time;
+    double ray_time;
+    double all_time;
 
 } ResultData;
 

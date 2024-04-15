@@ -1,3 +1,8 @@
+# log path
+LOG_FOLDER = /home/aelle/mr-sos-dp/instances/log
+# result path
+RESULT_FOLDER = /home/aelle/mr-sos-dp/instances/results
+
 BRANCH_AND_BOUND_TOL = 1e-3
 # single thread (1), multi-thread (> 1)
 BRANCH_AND_BOUND_PARALLEL = 16

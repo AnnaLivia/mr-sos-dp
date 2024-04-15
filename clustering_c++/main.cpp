@@ -8,12 +8,19 @@
 #include "kmeans_util.h"
 #include "mr_heuristic.h"
 
-// data file and path
+// data file
 const char *data_path;
 const char *opt_path;
 const char *sol_path;
-const char *log_path;
+
+// log and result path
+std::string result_folder;
+std::string log_folder;
+std::string result_path;
+std::string log_path;
 std::ofstream log_file;
+std::ofstream lb_file;
+std::ofstream ub_file;
 
 // branch and bound
 double branch_and_bound_tol;
@@ -165,7 +172,10 @@ void run(int argc, char **argv) {
     
     std::string config_file = "config.txt";
     std::map <std::string, std::string> config_map = read_params(config_file);
-    
+
+    log_folder = config_map["LOG_FOLDER"];
+    result_folder = config_map["RESULT_FOLDER"];
+
     // branch and bound
     branch_and_bound_tol = std::stod(config_map["BRANCH_AND_BOUND_TOL"]);
     branch_and_bound_parallel = std::stoi(config_map["BRANCH_AND_BOUND_PARALLEL"]);
@@ -200,32 +210,37 @@ void run(int argc, char **argv) {
     kmeans_verbose = 0;
     kmeans_permutations = 1;
     
-    if (argc != 8) {
-        std::cerr << "Input: <DATA_FILE> <OPT_SOL_FILE> <H_SOL_FILE> <LOG_FILE> <K> <F> <P>" << std::endl;
+    if (argc != 7) {
+        std::cerr << "Input: <DATA_FILE> <OPT_SOL_FILE> <H_SOL_FILE> <K> <F> <P>" << std::endl;
         exit(EXIT_FAILURE);
     }
     
     data_path = argv[1];
     opt_path = argv[2];
     sol_path = argv[3];
-    log_path = argv[4];
     
     int n, d;
-    int k = std::stoi(argv[5]);
-    int f = std::stoi(argv[6]);
-    int p = std::stoi(argv[7]);
+    int k = std::stoi(argv[4]);
+    int f = std::stoi(argv[5]);
+    int p = std::stoi(argv[6]);
     
     std::string str_path = data_path;
     std::string inst_name = str_path.substr(str_path.find_last_of("/\\")+1);
     inst_name = inst_name.substr(0, inst_name.find("."));
-    std::string dir_path = str_path.substr(0, str_path.find_last_of("/\\"));
-    dir_path = dir_path.substr(0, dir_path.find_last_of("/\\") + 1);
-    std::ofstream test_SUMMARY(dir_path + "test_SUMMARY.txt", std::ios::app);
+    std::ofstream test_SUMMARY(result_folder.substr(0, result_folder.find_last_of("/\\")) + "/test_SUMMARY.txt", std::ios::app);
 
-    dir_path += "results/" + p + "part/" + inst_name + "_" + std::to_string(k);
-    if (!std::filesystem::exists(dir_path))
-        std::filesystem::create_directories(dir_path);
-    std::string result_path = dir_path + "/" + inst_name + "_" + std::to_string(k);
+    result_path = result_folder + "/" + std::to_string(p) + "part/" + inst_name + "_" + std::to_string(k);
+    if (!std::filesystem::exists(result_path))
+        std::filesystem::create_directories(result_path);
+    result_path += "/" + inst_name + "_" + std::to_string(k);
+
+    lb_file.open(result_path + "_LB.txt");
+    ub_file.open(result_path + "_UB.txt");
+
+    log_path = log_folder + "/" + std::to_string(p) + "part/" + inst_name + "_" + std::to_string(k);
+    if (!std::filesystem::exists(log_path))
+        std::filesystem::create_directories(log_path);
+    log_path += "/" + inst_name + "_" + std::to_string(k) + ".txt";
     
     arma::mat Ws = read_data(data_path, n, d);
     arma::mat opt_sol = read_sol(opt_path, n, k);
@@ -252,13 +267,14 @@ void run(int argc, char **argv) {
     std::map < int, std::list < std::pair < int, double>>> cls_map;
     double init_mss = compute_clusters(Ws, init_sol, cls_map);
     std::cout << std::endl << std::endl;
-    std::cout << std::endl << "**********************************************************" << std::endl;
+    std::cout << std::endl << "******************************************************************" << std::endl;
     std::cout << "Instance " << inst_name << std::endl;
+    std::cout << "Num Partitions " << p << std::endl << std::endl;
+    std::cout << "Num Clusters " << k << std::endl << std::endl;
     std::cout << "Heuristic MSS: " << init_mss << std::endl;
     std::cout << "Optimal MSS:" << opt_mss << std::endl;
-    std::cout << "Num Partitions: " << p << std::endl << std::endl;
-    std::cout << std::endl << "**********************************************************" << std::endl;
-    
+    std::cout << "******************************************************************" << std::endl << std::endl;
+
     log_file.open(log_path);
     log_file << "DATA_FILE, SOL_FILE, n, d, k: ";
     log_file << data_path << " " << sol_path << " " << n << " " << d << " " << k << "\n";
@@ -287,7 +303,7 @@ void run(int argc, char **argv) {
     log_file << "SDP_SOLVER_TRIANGLE_PERC: " << sdp_solver_triangle_perc << "\n\n";
     log_file << "Heuristic MSS: " << init_mss << "\n\n";
 
-    ResultData results = mr_heuristic(k, p, Ws, result_path);
+    ResultData results = mr_heuristic(k, p, Ws);
     int it = results.it;
     double ub_mss = results.ub_mss;
     double lb_mss = results.lb_mss;
@@ -315,7 +331,7 @@ void run(int argc, char **argv) {
     std::cout << "GAP LB Opt " << round((opt_mss - lb_mss) / opt_mss * 100) << "%" << std::endl;
     std::cout << "GAP UB Heur " << round((ub_mss - init_mss) / init_mss * 100) << "%" << std::endl;
     std::cout << "GAP LB Heur " << round((init_mss - lb_mss) / init_mss * 100) << "%" << std::endl;
-    std::cout << std::endl << "**********************************************************" << std::endl;
+    std::cout << "**********************************************************" << std::endl << std::endl;
     
 	test_SUMMARY << inst_name << "\t"
 	<< p << "\t"

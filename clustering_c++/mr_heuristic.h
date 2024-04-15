@@ -28,7 +28,7 @@ typedef struct ResultData {
 
 } ResultData;
 
-void save_to_file(arma::mat &X, const char *path, std::string name);
+void save_to_file(arma::mat &X, std::string name);
 double compute_mss(arma::mat &data, arma::mat sol);
 double compute_clusters(arma::mat &data, arma::mat sol, std::map<int, std::list<std::pair<int, double>>> &cls_map);
 
@@ -41,9 +41,9 @@ double compute_part_lb(std::map<int, arma::mat> &part_map);
 double compute_comb_bound(arma::mat &data, int p, std::map<int, arma::mat> &part_map, std::map<int, arma::vec> &point_map);
 
 // generate partitions from clusters
-std::map<int, arma::mat> generate_partitions(arma::mat data,
-                                             std::map<int, std::list<std::pair<int, double>>> cls_map, int n_part,
-                                             std::map<int, arma::vec> &point_map);
+std::map<int, arma::vec> generate_partitions(arma::mat data, int n_part,
+                                             std::map<int, std::list<std::pair<int, double>>> cls_map,
+                                             std::map<int, arma::mat> &part_map);
 
 // generate partitions taking closest points
 void take_n_from_p(arma::mat data, std::map<int, int> &new_p, std::map<int, int> &prec_p, int n);
@@ -51,10 +51,16 @@ void take_n_from_p(arma::mat data, std::map<int, int> &new_p, std::map<int, int>
 // generate partitions
 std::map<int, arma::mat> generate_partitions(arma::mat data, int n_part);
 
+// compute ub
+double compute_ub(arma::mat Ws, std::map<int, arma::vec> point_map, arma::mat &sol, std::map<int, arma::mat> &sol_map, int k, int p);
+
+// compute lb
+double compute_lb(std::map<int, arma::mat> part_map, arma::mat &sol, std::map<int, arma::mat> &sol_map, int k, int p);
+
 // solve with different rays
-double solve_with_ray(arma::mat Ws, arma::mat init_sol, int k, std::string result_path, int &num_update);
+double solve_with_ray(arma::mat Ws, arma::mat init_sol, int k, int p, int &num_update, double &lb);
 
 // define moving ray routine
-ResultData mr_heuristic(int k, int p, arma::mat Ws, std::string path);
+ResultData mr_heuristic(int k, int p, arma::mat Ws);
 
 #endif //CLUSTERING_MR_HEURISTICS_H
