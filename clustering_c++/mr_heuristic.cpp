@@ -554,7 +554,7 @@ ResultData mr_heuristic(int k, int p, arma::mat Ws) {
     std::cout << std::endl << "*********************************************************************" << std::endl;
 
     auto start_time_ray = std::chrono::high_resolution_clock::now();
-    sdp_mss = solve_with_ray(Ws, best_sol, k, p, ray_update);
+    sdp_mss = solve_with_ray(Ws, best_sol, k, p, ray_update, lb_mss);
     auto end_time_ray = std::chrono::high_resolution_clock::now();
     if (sdp_mss < ub_mss)
         ub_mss = sdp_mss;
