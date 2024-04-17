@@ -1,0 +1,4 @@
+iteration 0 : 1.2461e+06
+iteration 1 : 1.52603e+06
+iteration 2 : 1.43405e+06
+after ray 0.850000 : 1.70919e+06after ray 0.700000 : 1.72096e+06after ray 0.550000 : 1.68442e+06after ray 0.400000 : 1.69027e+06

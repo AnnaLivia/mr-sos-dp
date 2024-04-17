@@ -1,0 +1,3 @@
+iteration 0 : 23617.5
+iteration 1 : 25335.4
+iteration 2 : 24304.3

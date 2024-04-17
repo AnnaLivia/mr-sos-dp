@@ -113,20 +113,17 @@ arma::mat read_sol(const char *filename, int n, int k) {
     }
     
     std::ifstream filecheck(filename);
-    int reader = 0;
     std::string line;
     getline(filecheck, line);
     std::stringstream ss(line);
     int cols = 0;
     double item;
     while(ss >> item) cols++;
-    if (cols == 1)
-        reader = 1;
     filecheck.close();
-    
+
     arma::mat sol(n, k);
     for (int i = 0; i < n; i++) {
-        if (reader == 1) {
+        if (cols == 1) {
             sol.row(i) = arma::zeros(k).t();
             int c = 0;
             file >> c;
@@ -167,6 +164,41 @@ void flip(arma::mat &sol, int f) {
     
     std::cout << std::endl << "** Done flipping " << f << " points **" << std::endl;
 }
+
+double compute_mss(arma::mat data, arma::mat sol) {
+
+    int n = data.n_rows;
+    int d = data.n_cols;
+    int k = sol.n_cols;
+
+    arma::mat assignment_mat = arma::zeros(n, k);
+    arma::vec count = arma::zeros(k);
+    arma::mat centroids = arma::zeros(k, d);
+    for (int i = 0; i < n; i++) {
+        for (int j = 0; j < k; j++) {
+            if (sol(i,j) == 1) {
+                assignment_mat(i, j) = 1;
+                ++count(j);
+                centroids.row(j) += data.row(i);
+            }
+        }
+    }
+
+    // compute clusters' centroids
+    for (int j = 0; j < k; j++) {
+        // empty cluster
+        if (count(j) == 0) {
+            std::printf("read_data(): cluster %d is empty!\n", j);
+            return false;
+        }
+        centroids.row(j) = centroids.row(j) / count(j);
+    }
+
+    arma::mat m = data - assignment_mat * centroids;
+
+    return arma::dot(m.as_col(), m.as_col());
+}
+
 
 void run(int argc, char **argv) {
     
@@ -262,14 +294,13 @@ void run(int argc, char **argv) {
         std::cout << "Iter:" << kmeans_max_iter << std::endl << "Start:" << kmeans_n_start;
         std::cout << std::endl << "Permutation:" << kmeans_permutations << std::endl << std::endl;
         init_sol = kmeans.getAssignments();
+		//    save_to_file(init_sol, result_path, "_init");
     }
-//    save_to_file(init_sol, result_path, "_init");
-    std::map < int, std::list < std::pair < int, double>>> cls_map;
-    double init_mss = compute_clusters(Ws, init_sol, cls_map);
+    double init_mss = compute_mss(Ws, init_sol);
     std::cout << std::endl << std::endl;
     std::cout << std::endl << "******************************************************************" << std::endl;
     std::cout << "Instance " << inst_name << std::endl;
-    std::cout << "Num Partitions " << p << std::endl << std::endl;
+    std::cout << "Num Partitions " << p << std::endl;
     std::cout << "Num Clusters " << k << std::endl << std::endl;
     std::cout << "Heuristic MSS: " << init_mss << std::endl;
     std::cout << "Optimal MSS:" << opt_mss << std::endl;

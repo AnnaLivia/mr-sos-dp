@@ -57,7 +57,7 @@ comb_gurobi_model::comb_gurobi_model(GRBEnv *env, int n, int p) : model(*env), X
 	//this->Y = create_Y_variables(this->model);
     this->model.set("OutputFlag", "1");
 //    this->model.set("Threads", "4");
-    this->model.set("TimeLimit", "60");
+    this->model.set("TimeLimit", "2");
     //this->model.set("Presolve", std::to_string(lp_solver_presolve));
 }
 
@@ -105,7 +105,8 @@ void comb_gurobi_model::add_part_constraints() {
         for (int i = 0; i < n; i++)
             lhs_sum += X(i, h);
         std::string name = get_part_constraint_name(h);
-        model.addConstr(lhs_sum <= n/p + 1, name);
+        model.addConstr(lhs_sum <= n/(p - 1), name);
+        model.addConstr(lhs_sum >= n/(p + 1), name);
     }
 }
 

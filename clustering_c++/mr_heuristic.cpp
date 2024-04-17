@@ -6,13 +6,13 @@
 #include "matlab_util.h"
 #include "sdp_branch_and_bound.h"
 
-void save_to_file(arma::mat &X, std::string name){
+void save_to_file(arma::mat X, std::string name){
     
     std::ofstream f;
     f.open(result_path + "_" + name + ".txt");
     
     for (int i = 0; i < X.n_rows; i++){
-        int val = X(i,0);
+        double val = X(i,0);
         f << val;
         for (int j = 1; j < X.n_cols; j++){
             val = X(i,j);
@@ -23,49 +23,7 @@ void save_to_file(arma::mat &X, std::string name){
     f.close();
 }
 
-double compute_mss(arma::mat &data, arma::mat sol) {
-    
-    int n = data.n_rows;
-    int d = data.n_cols;
-    int k = sol.n_cols;
-
-    arma::vec assignments = arma::zeros(n) - 1;
-    arma::vec count = arma::zeros(k);
-    arma::mat centroids = arma::zeros(k, d);
-    for (int i = 0; i < n; i++) {
-        for (int j = 0; j < k; j++) {
-            if (sol(i,j) == 1.0) {
-                assignments(i) = j;
-                count(j) = count(j) + 1;
-                centroids.row(j) += data.row(i);
-            }
-        }
-    }
-
-    // compute clusters' centroids
-    for (int j = 0; j < k; ++j) {
-        // empty cluster
-        if (count(j) == 0) {
-            std::printf("read_data(): cluster %d is empty!\n", j);
-            return false;
-        }
-        centroids.row(j) = centroids.row(j) / count(j);
-    }
-    
-    double sol_mss = 0;
-    int cluster;
-    arma::vec centroid;
-    for (int i = 0; i < n; i++) {
-        cluster = assignments(i);
-        arma::vec point = data.row(i).t();
-        centroid = centroids.row(cluster).t();
-        sol_mss += squared_distance(point, centroid);
-    }
-    
-    return sol_mss;
-}
-
-double compute_clusters(arma::mat &data, arma::mat sol, std::map<int, std::list<std::pair<int, double>>> &cls_map) {
+double compute_clusters(arma::mat data, arma::mat sol, std::map<int, std::list<std::pair<int, double>>> &cls_map) {
 
     int n = data.n_rows;
     int d = data.n_cols;
@@ -164,16 +122,18 @@ UserConstraints generate_constraints(std::map<int, std::list<std::pair<int, doub
 
 
 // generate must link constraints on partition sol
-int generate_part_constraints(arma::mat sol, UserConstraints &constraints, arma::vec points) {
+int generate_part_constraints(arma::mat sol, int k, UserConstraints &constraints) {
     
     int n = sol.n_rows;
-    int k = sol.n_cols;
-    
+    int d = sol.n_cols - k - 1;
+    arma::vec points = sol.col(0);
+    arma::mat cls_sol = sol.submat(0, d, n - 1, sol.n_cols - 1);
+
     int c = 0;
     for (int h = 0; h < k; h++) {
         std::list<int> cls_points = {};
         for (int i = 0; i < n; i++) {
-            if (sol(i,h) == 1.0) {
+            if (cls_sol(i,h) == 1.0) {
                 for (auto& j : cls_points) {
                     std::pair<int,int> ab_pair(points(i),points(j));
                     constraints.ml_pairs.push_back(ab_pair);
@@ -200,12 +160,12 @@ double compute_part_lb(std::map<int, arma::mat> &part_map) {
 
 }
 
-double compute_comb_bound(arma::mat &data, int p, std::map<int, arma::mat> &part_map, std::map<int, arma::vec> &point_map){
+double compute_comb_bound(arma::mat &data, int p, std::map<int, arma::mat> &sol_map){
     
     int n = data.n_rows;
     int d = data.n_cols;
-    arma::mat dist = compute_distances(data);
 	double max_dist = 0;
+    arma::mat dist = compute_distances(data);
 
 	try {
 		GRBEnv *env = new GRBEnv();
@@ -222,26 +182,19 @@ double compute_comb_bound(arma::mat &data, int p, std::map<int, arma::mat> &part
             max_dist = model->get_value();
         
         arma::mat sol = model->get_x_solution();
-        
-        arma::vec n_points = arma::zeros(p);
-        for (int i=0; i < p; ++i) {
-            part_map[i] = arma::zeros(n, d);
-            point_map[i] = arma::zeros(n);
-        }
-        
-        for (int h = 0; h < p; ++h) {
+
+		// create sol map
+        for (int h=0; h < p; ++h) {
+        	int n_points = 0;
+            sol_map[h] = arma::zeros(n, d+1);
             for (int i=0; i < n; ++i) {
                 if (sol(i,h) > 0.9) {
-                    part_map[h].row(n_points(h)) = data.row(i);
-                    point_map[h](n_points(h)) = i;
-                    n_points(h)++;
+                    sol_map[h](n_points,0) = i;
+                    sol_map[h].row(n_points).subvec(1,d) = data.row(i);
+                    n_points++;
                 }
             }
-        }
-        
-        for (int i=0; i < p; ++i) {
-            part_map[i] = part_map[i].submat(0, 0, n_points(i) - 1, d - 1);
-            point_map[i] = point_map[i].subvec(0, n_points(i) - 1);
+            sol_map[h] = sol_map[h].submat(0, 0, n_points - 1, d);
         }
         
 		delete model;
@@ -260,43 +213,36 @@ double compute_comb_bound(arma::mat &data, int p, std::map<int, arma::mat> &part
 }
 
 // generate partitions from clusters
-std::map<int, arma::vec> generate_partitions(arma::mat data, int n_part,
-                                             std::map<int, std::list<std::pair<int, double>>> cls_map,
-                                             std::map<int, arma::mat> &part_map) {
+std::map<int, arma::mat> generate_partitions(arma::mat data, int p,
+                                             std::map<int, std::list<std::pair<int, double>>> cls_map) {
     
     int n = data.n_rows;
     int d = data.n_cols;
     int k = cls_map.size();
-    
-    std::map<int, arma::vec> point_map;
-    arma::vec n_points = arma::zeros(n_part);
-    for (int i=0; i < n_part; ++i) {
-        part_map[i] = arma::zeros(n, d);
-        point_map[i] = arma::zeros(n);
-    }
-    
-    std::list<std::pair<int, double>> points;
+
+    std::map<int, arma::mat> sol_map;
+    for (int h=0; h < p; ++h)
+        sol_map[h] = arma::zeros(n, d+1);
+
+    arma::vec n_points = arma::zeros(p);
     for (auto& cls : cls_map) {
         int np = 0;
-        int part = 0;
-        int part_points = n_points(part);
-        for (auto p : cls.second) {
+        int h = 0;
+        for (auto point : cls.second) {
 //            part = rand() % (n_part);
-            part_map[part].row(n_points(part)) = data.row(p.first);
-            point_map[part](n_points(part)) = p.first;
-            n_points(part)++;
+            sol_map[h](n_points(h),0) = point.first;
+            sol_map[h].row(n_points(h)).subvec(1,d) = data.row(point.first);
+            n_points(h)++;
             np++;
-            if (np > (part + 1)*cls.second.size()/n_part)
-                part++;
+            if (np > (h + 1)*cls.second.size()/p)
+                h++;
         }
     }
 
-    for (int i=0; i < n_part; ++i) {
-        part_map[i] = part_map[i].submat(0, 0, n_points(i) - 1, d - 1);
-        point_map[i] = point_map[i].subvec(0, n_points(i) - 1);
-    }
+    for (int h=0; h < p; ++h)
+        sol_map[h] = sol_map[h].submat(0, 0, n_points(h) - 1, d);
     
-    return point_map;
+    return sol_map;
 }
 
 
@@ -376,14 +322,14 @@ std::map<int, arma::mat> generate_partitions(arma::mat data, int n_part) {
 }
 
 // compute ub
-double compute_ub(arma::mat Ws, std::map<int, arma::vec> point_map, arma::mat &sol, std::map<int, arma::mat> &sol_map, int k, int p) {
+double compute_ub(arma::mat Ws, arma::mat &sol, std::map<int, arma::mat> &sol_map, int k, int p) {
 
     std::cout << std::endl << "Generating UB";
     std::cout << std::endl << "*********************************************************************" << std::endl;
     int n_constr = 0;
     UserConstraints part_constraints;
-    for (int i = 0; i < p; ++i)
-        n_constr += generate_part_constraints(sol_map[i], part_constraints, point_map[i]);
+    for (int h = 0; h < p; ++h)
+        n_constr += generate_part_constraints(sol_map[h], k, part_constraints);
     std::cout << std::endl << "Added constraints: " << n_constr << std::endl;
     log_file << "Generating UB (added constraints " << n_constr << ")\n";
     double ub_mss = sdp_branch_and_bound(k, Ws, part_constraints, sol);
@@ -394,18 +340,22 @@ double compute_ub(arma::mat Ws, std::map<int, arma::vec> point_map, arma::mat &s
 }
 
 // compute lb
-double compute_lb(std::map<int, arma::mat> part_map, arma::mat &sol, std::map<int, arma::mat> &sol_map, int k, int p) {
+double compute_lb(std::map<int, arma::mat> &sol_map, int k, int p) {
 
     std::cout << std::endl << "Generating LB";
     double lb_mss = 0;
     UserConstraints constraints;
-    for (auto &p: part_map) {
+    for (auto &part: sol_map) {
+    	int np = part.second.n_rows;
+    	int d = part.second.n_cols - 1;
         std::cout << std::endl << "*********************************************************************" << std::endl;
-        std::cout << "Partition " << (p.first + 1) << "\nPoints " << p.second.n_rows;
+        std::cout << "Partition " << (part.first + 1) << "\nPoints " << np;
         std::cout << std::endl << "*********************************************************************" << std::endl;
-        log_file << "Partition " << (p.first + 1) << "\n";
-        lb_mss += sdp_branch_and_bound(k, p.second, constraints, sol);
-        sol_map[p.first] = sol;
+        log_file << "Partition " << (part.first + 1) << "\n";
+        arma::mat data = part.second.submat(0, 1, np-1, d);
+        arma::mat sol(np,k);
+        lb_mss += sdp_branch_and_bound(k, data, constraints, sol);
+        part.second = std::move(arma::join_horiz(part.second, sol));
     }
     std::cout  << std::endl << std::endl << "LB MSS: " << lb_mss << std::endl;
 
@@ -429,7 +379,7 @@ double solve_with_ray(arma::mat Ws, arma::mat init_sol, int k, int p, int &num_u
     std::cout << std::endl << "---------------------------------------------------------------" << std::endl;
     log_file << "--------------------------------------------------------------\n";
     log_file << "Solving with moving ray" << "\n\n";
-    for (int i = 0; i < 6; i++) {
+    for (int i = 0; i < 5; i++) {
         ray = 0.85 - i * 0.15;
         std::cout << std::endl << std::endl;
         std::cout << std::endl << "Solving ray " << ray << std::endl;
@@ -447,15 +397,13 @@ double solve_with_ray(arma::mat Ws, arma::mat init_sol, int k, int p, int &num_u
             ub_file << "after ray " << std::to_string(ray) << " : " << sdp_mss  << "\n";
             cls_map = {};
             compute_clusters(Ws, best_sol, cls_map);
-            std::map<int, arma::mat> part_map;
-            std::map<int, arma::mat> sol_map;
-            generate_partitions(Ws, 2, cls_map, part_map);
-            lb_mss = compute_lb(part_map, sdp_sol, sol_map, k, p);
+            std::map<int, arma::mat> sol_map = generate_partitions(Ws, p, cls_map);
+            lb_mss = compute_lb(sol_map, k, p);
             if (lb > lb_mss)
                 lb = lb_mss;
-            lb_file << "after ray " << std::to_string(ray) << " : " << lb_mss;
+            lb_file << "after ray " << std::to_string(ray) << " : " << lb_mss << "\n";
             int_ray = ray*100;
-            save_to_file(best_sol, "_r0" + std::to_string(int_ray));
+            save_to_file(best_sol, "r0" + std::to_string(int_ray));
         }
 //        if (v_imp < 0.01) {
 //            std::cerr << "Pruning: ray " << ray << ".\n";
@@ -481,10 +429,9 @@ ResultData mr_heuristic(int k, int p, arma::mat Ws) {
     double part_mss;
     arma::mat sdp_sol;
     arma::mat ub_sol;
+    arma::mat lb_sol;
     arma::mat best_sol;
     UserConstraints constraints;
-    std::map<int, arma::mat> part_map;
-    std::map<int, arma::vec> point_map;
     std::map<int, arma::mat> sol_map;
     
     bool improvement = true;
@@ -500,51 +447,54 @@ ResultData mr_heuristic(int k, int p, arma::mat Ws) {
         log_file << "It " << it << "\n";
         if (it == 0) {
             // solve with combinatorial bound
-            std::cout << "solving Comb bound" << std::endl;
-            compute_comb_bound(Ws, p, part_map, point_map);
+            std::cout << "Solving Comb Bound" << std::endl;
+            compute_comb_bound(Ws, p, sol_map);
         }
         else{
             // solve with n partition from cluster
             std::map < int, std::list < std::pair < int, double>>> cls_map;
-            compute_clusters(Ws, ub_sol, cls_map);
-            point_map = generate_partitions(Ws, p, cls_map, part_map);
+            compute_clusters(Ws, sdp_sol, cls_map);
+            sol_map = generate_partitions(Ws, p, cls_map);
         }
 
         // generating lb
         auto start_time_lb = std::chrono::high_resolution_clock::now();
-        part_mss = compute_lb(part_map, sdp_sol, sol_map, k, p);
+        part_mss = compute_lb(sol_map, k, p);
         lb_file << "iteration " << std::to_string(it) << " : " << part_mss  << "\n";
         auto end_time_lb = std::chrono::high_resolution_clock::now();
         lb_time += std::chrono::duration_cast<std::chrono::seconds>(end_time_lb - start_time_lb).count();
 
-        if (it == 0)
+        if (part_mss >= lb_mss or it == 0) {
             lb_mss = part_mss;
-        if (part_mss >= lb_mss) {
-            lb_mss = part_mss;
-            for (int i = 0; i < p; ++i)
-                save_to_file(sol_map[i], "part" + std::to_string(i+1));
         }
+        lb_sol = sol_map[0];
+        for (int h = 1; h < p; ++h)
+        	lb_sol = std::move(arma::join_vert(lb_sol, sol_map[h]));
+        save_to_file(lb_sol, "LBit" + std::to_string(it));
         
         // create upper bound
         auto start_time_ub = std::chrono::high_resolution_clock::now();
-        sdp_mss = compute_ub(Ws, point_map, ub_sol, sol_map, k, p);
+        sdp_mss = compute_ub(Ws, sdp_sol, sol_map, k, p);
         ub_file << "iteration " << std::to_string(it) << " : " << sdp_mss  << "\n";
         auto end_time_ub = std::chrono::high_resolution_clock::now();
         ub_time += std::chrono::duration_cast<std::chrono::seconds>(end_time_ub - start_time_ub).count();
         
         if ((ub_mss - sdp_mss) / ub_mss >= 0.0001 or (it == 0)) {
             ub_mss = sdp_mss;
-            best_sol = ub_sol;
+            best_sol = sdp_sol;
             ub_update++;
-            save_to_file(ub_sol, "_it" + std::to_string(it));
         }
-        if (part_mss < lb_mss)
-            improvement = false;
+        ub_sol = std::move(arma::join_horiz(Ws, sdp_sol));
+        ub_sol = std::move(arma::join_horiz(arma::zeros(Ws.n_rows,1), ub_sol));
+        save_to_file(ub_sol, "UBit" + std::to_string(it));
         
         std::cout << std::endl << std::endl << "--------------------------------------------------------------------";
         std::cout << std::endl << "It " << it << " GAP UB-LB " << round((ub_mss - lb_mss) / ub_mss * 100) << "%" << std::endl;
         std::cout << "--------------------------------------------------------------------" << std::endl;
-        
+
+        if (part_mss < lb_mss)
+            improvement = false;
+
         it++;
         
     }
