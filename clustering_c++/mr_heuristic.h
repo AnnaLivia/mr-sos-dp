@@ -17,12 +17,14 @@ typedef struct UserConstraints {
 typedef struct ResultData {
 
 	int it;
-	double ub_mss;
 	double lb_mss;
+	double ub_mss;
 	int ub_update;
-	int ray_update;
-	double ub_time;
+	int lb_update;
+	int ray_ub_update;
+	int ray_lb_update;
 	double lb_time;
+	double ub_time;
 	double ray_time;
 	double all_time;
 
@@ -35,7 +37,7 @@ double compute_clusters(arma::mat data, arma::mat sol, std::map<int, std::list<s
 UserConstraints generate_constraints(std::map<int, std::list<std::pair<int, double>>> cls_map, double ray);
 
 // generate must link constraints on partition sol
-int generate_part_constraints(arma::mat sol, int k, UserConstraints &constraints);
+int generate_part_constraints(std::map<int, arma::mat> sol_map, int k, int p, UserConstraints &constraints);
 double compute_part_lb(std::map<int, arma::mat> &sol_map);
 double compute_comb_bound(arma::mat &data, int p, std::map<int, arma::mat> &sol_map);
 
@@ -55,10 +57,17 @@ double compute_ub(arma::mat Ws, arma::mat &sol, std::map<int, arma::mat> &sol_ma
 // compute lb
 double compute_lb(std::map<int, arma::mat> &sol_map, int k, int p);
 
+// compute lb e ub sol to print
+arma::mat save_lb(std::map<int, arma::mat> &sol_map, int p);
+arma::mat save_ub(arma::mat data, arma::mat sol);
+
 // solve with different rays
-double solve_with_ray(arma::mat Ws, arma::mat init_sol, int k, int p, int &num_update, double &lb);
+double solve_with_ray(arma::mat Ws, arma::mat init_sol, int k, int p, int &ub_update, int &lb_update, double &lb);
 
 // define moving ray routine
 ResultData mr_heuristic(int k, int p, arma::mat Ws);
+
+// define moving ray routine only with ray mechanism
+ResultData mr_heuristic_only_ray(int k, int p, arma::mat Ws);
 
 #endif //CLUSTERING_MR_HEURISTICS_H

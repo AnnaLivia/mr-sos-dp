@@ -55,18 +55,19 @@ typedef struct InputData {
 
 typedef struct ResultData {
 
-    int it;
-    double ub_mss;
-    double lb_mss;
-    int ub_update;
-    int ray_update;
-    double ub_time;
-    double lb_time;
-    double ray_time;
-    double all_time;
+	int it;
+	double lb_mss;
+	double ub_mss;
+	int ub_update;
+	int lb_update;
+	int ray_ub_update;
+	int ray_lb_update;
+	double lb_time;
+	double ub_time;
+	double ray_time;
+	double all_time;
 
 } ResultData;
-
 
 double sdp_branch_and_bound(int k, arma::mat &Ws, UserConstraints &constraints, arma::mat &sol);
 std::pair<JobData *, JobData *> build_root_problem(MatlabStruct *matlab_struct, InputData *input_data, SharedData *shared_data);

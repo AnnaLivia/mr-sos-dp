@@ -122,29 +122,32 @@ UserConstraints generate_constraints(std::map<int, std::list<std::pair<int, doub
 
 
 // generate must link constraints on partition sol
-int generate_part_constraints(arma::mat sol, int k, UserConstraints &constraints) {
-    
-    int n = sol.n_rows;
-    int d = sol.n_cols - k - 1;
-    arma::vec points = sol.col(0);
-    arma::mat cls_sol = sol.submat(0, d, n - 1, sol.n_cols - 1);
+int generate_part_constraints(std::map<int, arma::mat> sol_map, int k, int p, UserConstraints &constraints) {
 
-    int c = 0;
-    for (int h = 0; h < k; h++) {
-        std::list<int> cls_points = {};
-        for (int i = 0; i < n; i++) {
-            if (cls_sol(i,h) == 1.0) {
-                for (auto& j : cls_points) {
-                    std::pair<int,int> ab_pair(points(i),points(j));
-                    constraints.ml_pairs.push_back(ab_pair);
-                    c++;
-                }
-                cls_points.push_back(i);
-            }
-        }
+    int nc = 0;
+
+    for (int h = 0; h < p; h++) {
+    	arma::mat sol = sol_map[h];
+    	arma::vec point_id = sol.col(0);
+    	arma::vec cls_id = sol.col(sol.n_cols-1);
+    	int np = sol.n_rows;
+
+    	for (int c = 0; c < k; c++) {
+        	std::list<int> cls_points = {};
+        	for (int i = 0; i < np; i++) {
+            	if (cls_id(i) == c) {
+                	for (auto& j : cls_points) {
+                    	std::pair<int,int> ab_pair(point_id(i),point_id(j));
+                    	constraints.ml_pairs.push_back(ab_pair);
+                    	nc++;
+                	}
+                	cls_points.push_back(i);
+            	}
+        	}
+    	}
     }
     
-    return c;
+    return nc;
 }
 
 
@@ -224,19 +227,34 @@ std::map<int, arma::mat> generate_partitions(arma::mat data, int p,
     for (int h=0; h < p; ++h)
         sol_map[h] = arma::zeros(n, d+1);
 
+    // partition points by clusters
+    int part;
     arma::vec n_points = arma::zeros(p);
-    for (auto& cls : cls_map) {
-        int np = 0;
-        int h = 0;
-        for (auto point : cls.second) {
-//            part = rand() % (n_part);
-            sol_map[h](n_points(h),0) = point.first;
-            sol_map[h].row(n_points(h)).subvec(1,d) = data.row(point.first);
-            n_points(h)++;
-            np++;
-            if (np > (h + 1)*cls.second.size()/p)
-                h++;
+    if (part_m == 'c') {
+    	for (auto& cls : cls_map) {
+        	int np = 0;
+        	part = 0;
+        	for (auto point : cls.second) {
+            	sol_map[part](n_points(part),0) = point.first;
+            	sol_map[part].row(n_points(part)).subvec(1,d) = data.row(point.first);
+            	n_points(part)++;
+            	np++;
+            	if (np > (part + 1)*cls.second.size()/p)
+                	part++;
+        	}
         }
+    }
+
+    // random point to partitions
+    else if (part_m == 'r') {
+    	for (int i=0; i < n; ++i) {
+        	do {
+            	part = rand() % (p); // Generate a new random part
+        	} while (n_points(part) >= n/p + 1);
+        	sol_map[part](n_points(part),0) = i;
+        	sol_map[part].row(n_points(part)).subvec(1,d) = data.row(i);
+        	n_points(part)++;
+    	}
     }
 
     for (int h=0; h < p; ++h)
@@ -326,10 +344,8 @@ double compute_ub(arma::mat Ws, arma::mat &sol, std::map<int, arma::mat> &sol_ma
 
     std::cout << std::endl << "Generating UB";
     std::cout << std::endl << "*********************************************************************" << std::endl;
-    int n_constr = 0;
     UserConstraints part_constraints;
-    for (int h = 0; h < p; ++h)
-        n_constr += generate_part_constraints(sol_map[h], k, part_constraints);
+    int n_constr = generate_part_constraints(sol_map, k, p, part_constraints);
     std::cout << std::endl << "Added constraints: " << n_constr << std::endl;
     log_file << "Generating UB (added constraints " << n_constr << ")\n";
     double ub_mss = sdp_branch_and_bound(k, Ws, part_constraints, sol);
@@ -355,55 +371,103 @@ double compute_lb(std::map<int, arma::mat> &sol_map, int k, int p) {
         arma::mat data = part.second.submat(0, 1, np-1, d);
         arma::mat sol(np,k);
         lb_mss += sdp_branch_and_bound(k, data, constraints, sol);
-        part.second = std::move(arma::join_horiz(part.second, sol));
+        arma::mat cls(np,1);
+        for (int i = 0; i < np; i++)
+        	for (int c = 0; c < k; c++)
+        		if (sol(i,c)==1)
+        			cls(i)= c+1;
+        part.second = std::move(arma::join_horiz(part.second, cls));
     }
     std::cout  << std::endl << std::endl << "LB MSS: " << lb_mss << std::endl;
+    log_file << "Merge LB MSS: " << lb_mss << "\n\n\n";
 
     return lb_mss;
 }
 
+// compute lb sol by merging partitions sol
+arma::mat save_lb(std::map<int, arma::mat> &sol_map, int p){
+
+	arma::mat np = arma::ones(sol_map[0].n_rows,1);
+    arma::mat sol = std::move(arma::join_horiz(np, sol_map[0]));
+    for (int h = 1; h < p; ++h) {
+        np = arma::vec(sol_map[h].n_rows,1).fill(h+1);
+        arma::mat solp = std::move(arma::join_horiz(np, sol_map[h]));
+        sol = std::move(arma::join_vert(sol, solp));
+    }
+
+    return sol;
+}
+
+arma::mat save_ub(arma::mat data, arma::mat sol) {
+
+	int n = data.n_rows;
+	int k = sol.n_cols;
+    arma::mat cls(sol.n_rows,1);
+    arma::mat id(sol.n_rows,2);
+    for (int i = 0; i < data.n_rows; i++) {
+        for (int c = 0; c < k; c++) {
+        	if (sol(i,c)==1) {
+        		cls(i) = c+1;
+        		id(i,0) = 0;
+        		id(i,1) = i+1;
+        	}
+        }
+    }
+    arma::mat ub_sol = std::move(arma::join_horiz(id, data));
+    ub_sol = std::move(arma::join_horiz(ub_sol, cls));
+
+    return ub_sol;
+
+}
+
 // solve with different rays
-double solve_with_ray(arma::mat Ws, arma::mat init_sol, int k, int p, int &num_update, double &lb) {
+double solve_with_ray(arma::mat Ws, arma::mat init_sol, int k, int p, int &ub_update, int &lb_update, double &lb) {
     
     UserConstraints constraints;
     std::map < int, std::list < std::pair < int, double>>> cls_map;
     double best_mss = compute_clusters(Ws, init_sol, cls_map);
-    double sdp_mss;
     double lb_mss;
+    double ub_mss;
     double ray;
     int int_ray;
     double best_ray = -1.0;
     arma::mat sdp_sol;
     arma::mat best_sol = init_sol;
-    
+
     std::cout << std::endl << "---------------------------------------------------------------" << std::endl;
     log_file << "--------------------------------------------------------------\n";
     log_file << "Solving with moving ray" << "\n\n";
     for (int i = 0; i < 5; i++) {
         ray = 0.85 - i * 0.15;
+        int_ray = ray*100;
         std::cout << std::endl << std::endl;
         std::cout << std::endl << "Solving ray " << ray << std::endl;
         log_file << "Ray " << ray << "\n";
         constraints = generate_constraints(cls_map, ray);
-        sdp_mss = sdp_branch_and_bound(k, Ws, constraints, sdp_sol);
-        if ((best_mss - sdp_mss) / best_mss > 0.00001) {
+        ub_mss = sdp_branch_and_bound(k, Ws, constraints, sdp_sol);
+        save_to_file(save_ub(Ws, sdp_sol), "UBr0" + std::to_string(int_ray));
+        if ((best_mss - ub_mss) / best_mss > 0.00001) {
             best_ray = ray;
             best_sol = sdp_sol;
-            best_mss = sdp_mss;
-            num_update++;
+            best_mss = ub_mss;
+            ub_update++;
             std::cout << std::endl << "**********************************************************" << std::endl;
-            std::cout << "Best found!" << std::endl << "Ray " << ray << ". UB MSS " << sdp_mss;
+            std::cout << "Best UB found!" << std::endl << "Ray " << ray << ". UB MSS " << best_mss;
             std::cout << std::endl << "**********************************************************" << std::endl;
-            ub_file << "after ray " << std::to_string(ray) << " : " << sdp_mss  << "\n";
+            ub_file << "after ray " << std::to_string(ray) << " : " << best_mss  << "\n";
             cls_map = {};
             compute_clusters(Ws, best_sol, cls_map);
             std::map<int, arma::mat> sol_map = generate_partitions(Ws, p, cls_map);
             lb_mss = compute_lb(sol_map, k, p);
-            if (lb > lb_mss)
+            if (lb_mss > lb) {
                 lb = lb_mss;
+                lb_update++;
+            	std::cout << std::endl << "**********************************************************" << std::endl;
+            	std::cout << "Best LB found!" << std::endl << "LB MSS " << lb_mss;
+            	std::cout << std::endl << "**********************************************************" << std::endl;
+            }
             lb_file << "after ray " << std::to_string(ray) << " : " << lb_mss << "\n";
-            int_ray = ray*100;
-            save_to_file(best_sol, "r0" + std::to_string(int_ray));
+        	save_to_file(save_lb(sol_map, p), "LBr0" + std::to_string(int_ray));
         }
 //        if (v_imp < 0.01) {
 //            std::cerr << "Pruning: ray " << ray << ".\n";
@@ -421,15 +485,15 @@ ResultData mr_heuristic(int k, int p, arma::mat Ws) {
     ResultData results;
 
     int it = 0;
-    int ub_update = 0;
-    int ray_update = 0;
+    int lb_update = -1;
+    int ub_update = -1;
+    int ray_lb_update = 0;
+    int ray_ub_update = 0;
     double lb_mss;
     double ub_mss;
     double sdp_mss;
     double part_mss;
     arma::mat sdp_sol;
-    arma::mat ub_sol;
-    arma::mat lb_sol;
     arma::mat best_sol;
     UserConstraints constraints;
     std::map<int, arma::mat> sol_map;
@@ -464,13 +528,11 @@ ResultData mr_heuristic(int k, int p, arma::mat Ws) {
         auto end_time_lb = std::chrono::high_resolution_clock::now();
         lb_time += std::chrono::duration_cast<std::chrono::seconds>(end_time_lb - start_time_lb).count();
 
-        if (part_mss >= lb_mss or it == 0) {
+        if (part_mss > lb_mss or it == 0) {
             lb_mss = part_mss;
+            lb_update++;
         }
-        lb_sol = sol_map[0];
-        for (int h = 1; h < p; ++h)
-        	lb_sol = std::move(arma::join_vert(lb_sol, sol_map[h]));
-        save_to_file(lb_sol, "LBit" + std::to_string(it));
+        save_to_file(save_lb(sol_map, p), "LBit" + std::to_string(it));
         
         // create upper bound
         auto start_time_ub = std::chrono::high_resolution_clock::now();
@@ -478,15 +540,13 @@ ResultData mr_heuristic(int k, int p, arma::mat Ws) {
         ub_file << "iteration " << std::to_string(it) << " : " << sdp_mss  << "\n";
         auto end_time_ub = std::chrono::high_resolution_clock::now();
         ub_time += std::chrono::duration_cast<std::chrono::seconds>(end_time_ub - start_time_ub).count();
+        save_to_file(save_ub(Ws, sdp_sol), "UBit" + std::to_string(it));
         
         if ((ub_mss - sdp_mss) / ub_mss >= 0.0001 or (it == 0)) {
             ub_mss = sdp_mss;
             best_sol = sdp_sol;
             ub_update++;
         }
-        ub_sol = std::move(arma::join_horiz(Ws, sdp_sol));
-        ub_sol = std::move(arma::join_horiz(arma::zeros(Ws.n_rows,1), ub_sol));
-        save_to_file(ub_sol, "UBit" + std::to_string(it));
         
         std::cout << std::endl << std::endl << "--------------------------------------------------------------------";
         std::cout << std::endl << "It " << it << " GAP UB-LB " << round((ub_mss - lb_mss) / ub_mss * 100) << "%" << std::endl;
@@ -496,15 +556,19 @@ ResultData mr_heuristic(int k, int p, arma::mat Ws) {
             improvement = false;
 
         it++;
-        
+
     }
     
     std::cout << std::endl << "*********************************************************************" << std::endl;
     std::cout  << std::endl << "Best UB MSS: " << ub_mss << std::endl;
     std::cout << std::endl << "*********************************************************************" << std::endl;
 
+    log_file << "\n\n--------------------------------------------------------------------\n";
+    log_file << "Final GAP UB-LB " << round((ub_mss - lb_mss) / ub_mss * 100) << "%";
+    log_file << "\n--------------------------------------------------------------------\n";
+
     auto start_time_ray = std::chrono::high_resolution_clock::now();
-    sdp_mss = solve_with_ray(Ws, best_sol, k, p, ray_update, lb_mss);
+    sdp_mss = solve_with_ray(Ws, best_sol, k, p, ray_ub_update, ray_lb_update, lb_mss);
     auto end_time_ray = std::chrono::high_resolution_clock::now();
     if (sdp_mss < ub_mss)
         ub_mss = sdp_mss;
@@ -513,16 +577,92 @@ ResultData mr_heuristic(int k, int p, arma::mat Ws) {
     double ray_time = std::chrono::duration_cast<std::chrono::seconds>(end_time_ray - start_time_ray).count();
     double all_time = std::chrono::duration_cast<std::chrono::seconds>(end_time_ray - start_time_all).count();
 
-    results.ub_mss = ub_mss;
-    results.lb_mss = lb_mss;
     results.it = it;
+    results.lb_mss = lb_mss;
+    results.ub_mss = ub_mss;
+    results.lb_update = lb_update;
     results.ub_update = ub_update;
-    results.ray_update = ray_update;
-    results.ub_time = ub_time;
+    results.ray_lb_update = ray_lb_update;
+    results.ray_ub_update = ray_ub_update;
     results.lb_time = lb_time;
+    results.ub_time = ub_time;
     results.ray_time = ray_time;
     results.all_time = all_time;
 
     return results;
     
+}
+
+ResultData mr_heuristic_only_ray(int k, int p, arma::mat Ws) {
+
+    ResultData results;
+
+    int it = 0;
+    int lb_update = -1;
+    int ub_update = -1;
+    int ray_lb_update = 0;
+    int ray_ub_update = 0;
+    double lb_mss;
+    double ub_mss;
+    arma::mat sdp_sol;
+    UserConstraints constraints;
+    std::map<int, arma::mat> sol_map;
+
+    bool improvement = true;
+    auto start_time_all = std::chrono::high_resolution_clock::now();
+    double ub_time = 0;
+    double lb_time = 0;
+
+    std::cout << std::endl << "--------------------------------------------------------------------" << std::endl;
+    std::cout << "Comb bound" << std::endl;
+
+    std::cout << "Solving Comb Bound" << std::endl;
+    compute_comb_bound(Ws, p, sol_map);
+
+    // generating lb
+    auto start_time_lb = std::chrono::high_resolution_clock::now();
+    lb_mss = compute_lb(sol_map, k, p);
+    lb_file << "iteration " << std::to_string(it) << " : " << lb_mss  << "\n";
+    auto end_time_lb = std::chrono::high_resolution_clock::now();
+    lb_time += std::chrono::duration_cast<std::chrono::seconds>(end_time_lb - start_time_lb).count();
+    sdp_sol = save_lb(sol_map, p);
+    save_to_file(sdp_sol, "LBit" + std::to_string(it));
+
+    // create upper bound
+    auto start_time_ub = std::chrono::high_resolution_clock::now();
+    ub_mss = compute_ub(Ws, sdp_sol, sol_map, k, p);
+    ub_file << "iteration " << std::to_string(it) << " : " << ub_mss  << "\n";
+    auto end_time_ub = std::chrono::high_resolution_clock::now();
+    ub_time += std::chrono::duration_cast<std::chrono::seconds>(end_time_ub - start_time_ub).count();
+    save_to_file(save_ub(Ws, sdp_sol), "UBit" + std::to_string(it));
+
+    std::cout << std::endl << std::endl << "--------------------------------------------------------------------";
+    std::cout << std::endl << "It " << it << " GAP UB-LB " << round((ub_mss - lb_mss) / ub_mss * 100) << "%" << std::endl;
+    std::cout << "--------------------------------------------------------------------" << std::endl;
+
+    log_file << "\n\n--------------------------------------------------------------------\n";
+    log_file << "Final GAP UB-LB " << round((ub_mss - lb_mss) / ub_mss * 100) << "%";
+    log_file << "\n--------------------------------------------------------------------\n";
+
+    auto start_time_ray = std::chrono::high_resolution_clock::now();
+    ub_mss = solve_with_ray(Ws, sdp_sol, k, p, ray_ub_update, ray_lb_update, lb_mss);
+    auto end_time_ray = std::chrono::high_resolution_clock::now();
+
+    double ray_time = std::chrono::duration_cast<std::chrono::seconds>(end_time_ray - start_time_ray).count();
+    double all_time = std::chrono::duration_cast<std::chrono::seconds>(end_time_ray - start_time_all).count();
+
+    results.lb_mss = lb_mss;
+    results.ub_mss = ub_mss;
+    results.it = it;
+    results.lb_update = lb_update;
+    results.ub_update = ub_update;
+    results.ray_lb_update = ray_lb_update;
+    results.ray_ub_update = ray_ub_update;
+    results.lb_time = lb_time;
+    results.ub_time = ub_time;
+    results.ray_time = ray_time;
+    results.all_time = all_time;
+
+    return results;
+
 }

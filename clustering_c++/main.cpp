@@ -17,10 +17,12 @@ const char *sol_path;
 std::string result_folder;
 std::string log_folder;
 std::string result_path;
-std::string log_path;
 std::ofstream log_file;
 std::ofstream lb_file;
 std::ofstream ub_file;
+
+// partition method
+char part_m;
 
 // branch and bound
 double branch_and_bound_tol;
@@ -242,7 +244,7 @@ void run(int argc, char **argv) {
     kmeans_verbose = 0;
     kmeans_permutations = 1;
     
-    if (argc != 7) {
+    if (argc != 8) {
         std::cerr << "Input: <DATA_FILE> <OPT_SOL_FILE> <H_SOL_FILE> <K> <F> <P>" << std::endl;
         exit(EXIT_FAILURE);
     }
@@ -255,6 +257,13 @@ void run(int argc, char **argv) {
     int k = std::stoi(argv[4]);
     int f = std::stoi(argv[5]);
     int p = std::stoi(argv[6]);
+    part_m = *(argv[7]);
+
+    if (part_m != 'c' or part_m != 'r') {
+        std::printf("ERROR param: invalid partition method!\n", j);
+        exit(EXIT_FAILURE);
+    }
+
     
     std::string str_path = data_path;
     std::string inst_name = str_path.substr(str_path.find_last_of("/\\")+1);
@@ -269,11 +278,8 @@ void run(int argc, char **argv) {
     lb_file.open(result_path + "_LB.txt");
     ub_file.open(result_path + "_UB.txt");
 
-    log_path = log_folder + "/" + std::to_string(p) + "part/" + inst_name + "_" + std::to_string(k);
-    if (!std::filesystem::exists(log_path))
-        std::filesystem::create_directories(log_path);
-    log_path += "/" + inst_name + "_" + std::to_string(k) + ".txt";
-    
+    log_file.open(result_path + "_LOG.txt");
+
     arma::mat Ws = read_data(data_path, n, d);
     arma::mat opt_sol = read_sol(opt_path, n, k);
     double opt_mss = compute_mss(Ws, opt_sol);
@@ -306,10 +312,8 @@ void run(int argc, char **argv) {
     std::cout << "Optimal MSS:" << opt_mss << std::endl;
     std::cout << "******************************************************************" << std::endl << std::endl;
 
-    log_file.open(log_path);
     log_file << "DATA_FILE, SOL_FILE, n, d, k: ";
     log_file << data_path << " " << sol_path << " " << n << " " << d << " " << k << "\n";
-    log_file << "LOG_FILE: " << log_path << "\n\n";
     
     log_file << "BRANCH_AND_BOUND_TOL: " << branch_and_bound_tol << "\n";
     log_file << "BRANCH_AND_BOUND_PARALLEL: " << branch_and_bound_parallel << "\n";
@@ -332,15 +336,20 @@ void run(int argc, char **argv) {
     log_file << "SDP_SOLVER_PAIR_PERC: " << sdp_solver_pair_perc << "\n";
     log_file << "SDP_SOLVER_MAX_TRIANGLE_INEQ: " << sdp_solver_max_triangle_ineq << "\n";
     log_file << "SDP_SOLVER_TRIANGLE_PERC: " << sdp_solver_triangle_perc << "\n\n";
+    log_file << "optimal MSS: " << opt_mss << "\n";
     log_file << "Heuristic MSS: " << init_mss << "\n\n";
 
+    //ResultData results = mr_heuristic_only_ray(k, p, Ws);
     ResultData results = mr_heuristic(k, p, Ws);
+
     int it = results.it;
     double ub_mss = results.ub_mss;
     double lb_mss = results.lb_mss;
     double ub_time = results.ub_time;
+    int lb_update = results.lb_update;
     int ub_update = results.ub_update;
-    int ray_update = results.ray_update;
+    int ray_lb_update = results.ray_lb_update;
+    int ray_ub_update = results.ray_ub_update;
     double lb_time = results.lb_time;
     double ray_time = results.ray_time;
     double all_time = results.all_time;
@@ -348,20 +357,22 @@ void run(int argc, char **argv) {
     std::cout << std::endl << "**********************************************************" << std::endl;
     std::cout << "Optimal MSS BOUND " << opt_mss << std::endl;
     std::cout << "Heuristic MSS BOUND " << init_mss << std::endl;
-    std::cout << "Best UB MSS BOUND " << ub_mss << std::endl;
     std::cout << "Best LB MSS BOUND " << lb_mss << std::endl;
+    std::cout << "Best UB MSS BOUND " << ub_mss << std::endl;
     std::cout << "GAP UB-LB " << round((ub_mss - lb_mss) / ub_mss * 100) << "%" << std::endl;
     std::cout << "Num It " << it << std::endl;
+    std::cout << "Num LB update " << lb_update << std::endl;
     std::cout << "Num UB update " << ub_update << std::endl;
-    std::cout << "Num RAY update " << ray_update << std::endl;
-    std::cout << "UB Time " << ub_time << " sec" << std::endl;
+    std::cout << "Num RAY LB update " << ray_lb_update << std::endl;
+    std::cout << "Num RAY UB update " << ray_ub_update << std::endl;
     std::cout << "LB Time " << lb_time << " sec" << std::endl;
+    std::cout << "UB Time " << ub_time << " sec" << std::endl;
     std::cout << "RAY Time " << ray_time << " sec" << std::endl;
     std::cout << "ALL Time " << all_time << " sec" << std::endl;
-    std::cout << "GAP UB Opt " << round((ub_mss - opt_mss) / opt_mss * 100) << "%" << std::endl;
     std::cout << "GAP LB Opt " << round((opt_mss - lb_mss) / opt_mss * 100) << "%" << std::endl;
-    std::cout << "GAP UB Heur " << round((ub_mss - init_mss) / init_mss * 100) << "%" << std::endl;
+    std::cout << "GAP UB Opt " << round((ub_mss - opt_mss) / opt_mss * 100) << "%" << std::endl;
     std::cout << "GAP LB Heur " << round((init_mss - lb_mss) / init_mss * 100) << "%" << std::endl;
+    std::cout << "GAP UB Heur " << round((ub_mss - init_mss) / init_mss * 100) << "%" << std::endl;
     std::cout << "**********************************************************" << std::endl << std::endl;
     
 	test_SUMMARY << inst_name << "\t"
@@ -369,20 +380,22 @@ void run(int argc, char **argv) {
 	<< k << "\t"
     << opt_mss << "\t"
     << init_mss << "\t"
-    << ub_mss << "\t"
     << lb_mss << "\t"
+    << ub_mss << "\t"
     << round((ub_mss - lb_mss) / ub_mss * 100) << "%" << "\t"
     << it << "\t"
+    << lb_update << "\t"
     << ub_update << "\t"
-    << ray_update << "\t"
-    << ub_time << "\t"
+    << ray_lb_update << "\t"
+    << ray_ub_update << "\t"
     << lb_time << "\t"
+    << ub_time << "\t"
     << ray_time << "\t"
     << all_time << "\t"
-    << round((ub_mss - opt_mss) / opt_mss * 100) << "%" << "\t"
     << round((opt_mss - lb_mss) / opt_mss * 100) << "%" << "\t"
-    << round((ub_mss - init_mss) / init_mss * 100) << "%" << "\t"
+    << round((ub_mss - opt_mss) / opt_mss * 100) << "%" << "\t"
     << round((init_mss - lb_mss) / init_mss * 100) << "%" << "\t"
+    << round((ub_mss - init_mss) / init_mss * 100) << "%" << "\t"
     << "\n";
     
 	test_SUMMARY.close();

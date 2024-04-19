@@ -32,10 +32,12 @@ extern const char *constraints_path;
 extern std::string result_folder;
 extern std::string log_folder;
 extern std::string result_path;
-extern std::string log_path;
 extern std::ofstream log_file;
 extern std::ofstream lb_file;
 extern std::ofstream ub_file;
+
+// partition method
+extern char part_m;
 
 // branch and bound
 extern double branch_and_bound_tol;
