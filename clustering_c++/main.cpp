@@ -259,11 +259,6 @@ void run(int argc, char **argv) {
     int p = std::stoi(argv[6]);
     part_m = *(argv[7]);
 
-    if (part_m != 'c' or part_m != 'r') {
-        std::printf("ERROR param: invalid partition method!\n", j);
-        exit(EXIT_FAILURE);
-    }
-
     
     std::string str_path = data_path;
     std::string inst_name = str_path.substr(str_path.find_last_of("/\\")+1);
@@ -273,11 +268,10 @@ void run(int argc, char **argv) {
     result_path = result_folder + "/" + std::to_string(p) + "part/" + inst_name + "_" + std::to_string(k);
     if (!std::filesystem::exists(result_path))
         std::filesystem::create_directories(result_path);
-    result_path += "/" + inst_name + "_" + std::to_string(k);
+    result_path += "/" + inst_name + "_" + std::to_string(k) + "_" + part_m;
 
     lb_file.open(result_path + "_LB.txt");
     ub_file.open(result_path + "_UB.txt");
-
     log_file.open(result_path + "_LOG.txt");
 
     arma::mat Ws = read_data(data_path, n, d);
@@ -339,8 +333,15 @@ void run(int argc, char **argv) {
     log_file << "optimal MSS: " << opt_mss << "\n";
     log_file << "Heuristic MSS: " << init_mss << "\n\n";
 
-    //ResultData results = mr_heuristic_only_ray(k, p, Ws);
-    ResultData results = mr_heuristic(k, p, Ws);
+    ResultData results;
+    if (part_m == 'c')
+        results = mr_heuristic_only_ray(k, p, Ws);
+    else if (part_m == 'r')
+        results = mr_heuristic(k, p, Ws);
+    else {
+        std::printf("ERROR param: invalid partition method!\n");
+        exit(EXIT_FAILURE);
+    }
 
     int it = results.it;
     double ub_mss = results.ub_mss;

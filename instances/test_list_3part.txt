@@ -1,59 +1,118 @@
-./bb	../instances/data/test.txt	../instances/opt/test.txt	../instances/h_sol/test.txt	3	-1	3
-./bb	../instances/data/ruspini.txt	../instances/opt/ruspini.txt	../instances/h_sol/ruspini.txt	4	-1	3
-./bb	../instances/data/ch150.txt	../instances/opt/ch150_2.txt	../instances/h_sol/ch150_2.txt	2	-1	3
-./bb	../instances/data/ch150.txt	../instances/opt/ch150_3.txt	../instances/h_sol/ch150_3.txt	3	-1	3
-./bb	../instances/data/ch150.txt	../instances/opt/ch150_4.txt	../instances/h_sol/ch150_4.txt	4	-1	3
-./bb	../instances/data/ch150.txt	../instances/opt/ch150_5.txt	../instances/h_sol/ch150_5.txt	5	-1	3
-./bb	../instances/data/ch150.txt	../instances/opt/ch150_6.txt	../instances/h_sol/ch150_6.txt	6	-1	3
-./bb	../instances/data/ch150.txt	../instances/opt/ch150_7.txt	../instances/h_sol/ch150_7.txt	7	-1	3
-./bb	../instances/data/ch150.txt	../instances/opt/ch150_8.txt	../instances/h_sol/ch150_8.txt	8	-1	3
-./bb	../instances/data/ch150.txt	../instances/opt/ch150_9.txt	../instances/h_sol/ch150_9.txt	9	-1	3
-./bb	../instances/data/ch150.txt	../instances/opt/ch150_10.txt	../instances/h_sol/ch150_10.txt	10	-1	3
-./bb	../instances/data/d198.txt	../instances/opt/d198_7.txt	../instances/h_sol/d198_7.txt	7	-1	3
-./bb	../instances/data/d198.txt	../instances/opt/d198_15.txt	../instances/h_sol/d198_15.txt	15	-1	3
-./bb	../instances/data/gr202.txt	../instances/opt/gr202_2.txt	../instances/h_sol/gr202_2.txt	2	-1	3
-./bb	../instances/data/gr202.txt	../instances/opt/gr202_3.txt	../instances/h_sol/gr202_3.txt	3	-1	3
-./bb	../instances/data/gr202.txt	../instances/opt/gr202_4.txt	../instances/h_sol/gr202_4.txt	4	-1	3
-./bb	../instances/data/gr202.txt	../instances/opt/gr202_5.txt	../instances/h_sol/gr202_5.txt	5	-1	3
-./bb	../instances/data/gr202.txt	../instances/opt/gr202_6.txt	../instances/h_sol/gr202_6.txt	6	-1	3
-./bb	../instances/data/gr202.txt	../instances/opt/gr202_7.txt	../instances/h_sol/gr202_7.txt	7	-1	3
-./bb	../instances/data/gr202.txt	../instances/opt/gr202_8.txt	../instances/h_sol/gr202_8.txt	8	-1	3
-./bb	../instances/data/gr202.txt	../instances/opt/gr202_9.txt	../instances/h_sol/gr202_9.txt	9	-1	3
-./bb	../instances/data/gr202.txt	../instances/opt/gr202_10.txt	../instances/h_sol/gr202_10.txt	10	-1	3
-./bb	../instances/data/pr299.txt	../instances/opt/pr299_2.txt	../instances/h_sol/pr299_2.txt	2	-1	3
-./bb	../instances/data/pr299.txt	../instances/opt/pr299_3.txt	../instances/h_sol/pr299_3.txt	3	-1	3
-./bb	../instances/data/pr299.txt	../instances/opt/pr299_4.txt	../instances/h_sol/pr299_4.txt	4	-1	3
-./bb	../instances/data/pr299.txt	../instances/opt/pr299_5.txt	../instances/h_sol/pr299_5.txt	5	-1	3
-./bb	../instances/data/pr299.txt	../instances/opt/pr299_6.txt	../instances/h_sol/pr299_6.txt	6	-1	3
-./bb	../instances/data/pr299.txt	../instances/opt/pr299_7.txt	../instances/h_sol/pr299_7.txt	7	-1	3
-./bb	../instances/data/pr299.txt	../instances/opt/pr299_8.txt	../instances/h_sol/pr299_8.txt	8	-1	3
-./bb	../instances/data/pr299.txt	../instances/opt/pr299_9.txt	../instances/h_sol/pr299_9.txt	9	-1	3
-./bb	../instances/data/pr299.txt	../instances/opt/pr299_10.txt	../instances/h_sol/pr299_10.txt	10	-1	3
-./bb	../instances/data/fl417.txt	../instances/opt/fl417_2.txt	../instances/h_sol/fl417_2.txt	2	-1	3
-./bb	../instances/data/fl417.txt	../instances/opt/fl417_3.txt	../instances/h_sol/fl417_3.txt	3	-1	3
-./bb	../instances/data/fl417.txt	../instances/opt/fl417_4.txt	../instances/h_sol/fl417_4.txt	4	-1	3
-./bb	../instances/data/fl417.txt	../instances/opt/fl417_5.txt	../instances/h_sol/fl417_5.txt	5	-1	3
-./bb	../instances/data/fl417.txt	../instances/opt/fl417_6.txt	../instances/h_sol/fl417_6.txt	6	-1	3
-./bb	../instances/data/fl417.txt	../instances/opt/fl417_7.txt	../instances/h_sol/fl417_7.txt	7	-1	3
-./bb	../instances/data/fl417.txt	../instances/opt/fl417_8.txt	../instances/h_sol/fl417_8.txt	8	-1	3
-./bb	../instances/data/fl417.txt	../instances/opt/fl417_9.txt	../instances/h_sol/fl417_9.txt	9	-1	3
-./bb	../instances/data/fl417.txt	../instances/opt/fl417_10.txt	../instances/h_sol/fl417_10.txt	10	-1	3
-./bb	../instances/data/rd400.txt	../instances/opt/rd400_3.txt	../instances/h_sol/rd400_3.txt	3	-1	3
-./bb	../instances/data/rd400.txt	../instances/opt/rd400_4.txt	../instances/h_sol/rd400_4.txt	4	-1	3
-./bb	../instances/data/rd400.txt	../instances/opt/rd400_5.txt	../instances/h_sol/rd400_5.txt	5	-1	3
-./bb	../instances/data/rd400.txt	../instances/opt/rd400_6.txt	../instances/h_sol/rd400_6.txt	6	-1	3
-./bb	../instances/data/rd400.txt	../instances/opt/rd400_7.txt	../instances/h_sol/rd400_7.txt	7	-1	3
-./bb	../instances/data/rd400.txt	../instances/opt/rd400_8.txt	../instances/h_sol/rd400_8.txt	8	-1	3
-./bb	../instances/data/rd400.txt	../instances/opt/rd400_9.txt	../instances/h_sol/rd400_9.txt	9	-1	3
-./bb	../instances/data/rd400.txt	../instances/opt/rd400_10.txt	../instances/h_sol/rd400_3.txt	10	-1	3
-./bb	../instances/data/gr666.txt	../instances/opt/gr666_2.txt	../instances/h_sol/gr666_2.txt	2	-1	3
-./bb	../instances/data/gr666.txt	../instances/opt/gr666_3.txt	../instances/h_sol/gr666_3.txt	3	-1	3
-./bb	../instances/data/gr666.txt	../instances/opt/gr666_4.txt	../instances/h_sol/gr666_4.txt	4	-1	3
-./bb	../instances/data/gr666.txt	../instances/opt/gr666_5.txt	../instances/h_sol/gr666_5.txt	5	-1	3
-./bb	../instances/data/gr666.txt	../instances/opt/gr666_6.txt	../instances/h_sol/gr666_6.txt	6	-1	3
-./bb	../instances/data/gr666.txt	../instances/opt/gr666_7.txt	../instances/h_sol/gr666_7.txt	7	-1	3
-./bb	../instances/data/gr666.txt	../instances/opt/gr666_8.txt	../instances/h_sol/gr666_8.txt	8	-1	3
-./bb	../instances/data/gr666.txt	../instances/opt/gr666_9.txt	../instances/h_sol/gr666_9.txt	9	-1	3
-./bb	../instances/data/gr666.txt	../instances/opt/gr666_10.txt	../instances/h_sol/gr666_10.txt	10	-1	3
-./bb	../instances/data/gr666.txt	../instances/opt/gr666_20.txt	../instances/h_sol/gr666_20.txt	20	-1	3
-./bb	../instances/data/gr666.txt	../instances/opt/gr666_50.txt	../instances/h_sol/gr666_50.txt	50	-1	3
+./bb	../instances/data/test.txt	../instances/opt/test.txt	../instances/h_sol/test.txt	3	-1	3	r
+./bb	../instances/data/ruspini.txt	../instances/opt/ruspini.txt	../instances/h_sol/ruspini.txt	4	-1	3	r
+./bb	../instances/data/ch150.txt	../instances/opt/ch150_2.txt	../instances/h_sol/ch150_2.txt	2	-1	3	r
+./bb	../instances/data/ch150.txt	../instances/opt/ch150_3.txt	../instances/h_sol/ch150_3.txt	3	-1	3	r
+./bb	../instances/data/ch150.txt	../instances/opt/ch150_4.txt	../instances/h_sol/ch150_4.txt	4	-1	3	r
+./bb	../instances/data/ch150.txt	../instances/opt/ch150_5.txt	../instances/h_sol/ch150_5.txt	5	-1	3	r
+./bb	../instances/data/ch150.txt	../instances/opt/ch150_6.txt	../instances/h_sol/ch150_6.txt	6	-1	3	r
+./bb	../instances/data/ch150.txt	../instances/opt/ch150_7.txt	../instances/h_sol/ch150_7.txt	7	-1	3	r
+./bb	../instances/data/ch150.txt	../instances/opt/ch150_8.txt	../instances/h_sol/ch150_8.txt	8	-1	3	r
+./bb	../instances/data/ch150.txt	../instances/opt/ch150_9.txt	../instances/h_sol/ch150_9.txt	9	-1	3	r
+./bb	../instances/data/ch150.txt	../instances/opt/ch150_10.txt	../instances/h_sol/ch150_10.txt	10	-1	3	r
+./bb	../instances/data/d198.txt	../instances/opt/d198_7.txt	../instances/h_sol/d198_7.txt	7	-1	3	r
+./bb	../instances/data/d198.txt	../instances/opt/d198_15.txt	../instances/h_sol/d198_15.txt	15	-1	3	r
+./bb	../instances/data/gr202.txt	../instances/opt/gr202_2.txt	../instances/h_sol/gr202_2.txt	2	-1	3	r
+./bb	../instances/data/gr202.txt	../instances/opt/gr202_3.txt	../instances/h_sol/gr202_3.txt	3	-1	3	r
+./bb	../instances/data/gr202.txt	../instances/opt/gr202_4.txt	../instances/h_sol/gr202_4.txt	4	-1	3	r
+./bb	../instances/data/gr202.txt	../instances/opt/gr202_5.txt	../instances/h_sol/gr202_5.txt	5	-1	3	r
+./bb	../instances/data/gr202.txt	../instances/opt/gr202_6.txt	../instances/h_sol/gr202_6.txt	6	-1	3	r
+./bb	../instances/data/gr202.txt	../instances/opt/gr202_7.txt	../instances/h_sol/gr202_7.txt	7	-1	3	r
+./bb	../instances/data/gr202.txt	../instances/opt/gr202_8.txt	../instances/h_sol/gr202_8.txt	8	-1	3	r
+./bb	../instances/data/gr202.txt	../instances/opt/gr202_9.txt	../instances/h_sol/gr202_9.txt	9	-1	3	r
+./bb	../instances/data/gr202.txt	../instances/opt/gr202_10.txt	../instances/h_sol/gr202_10.txt	10	-1	3	r
+./bb	../instances/data/pr299.txt	../instances/opt/pr299_2.txt	../instances/h_sol/pr299_2.txt	2	-1	3	r
+./bb	../instances/data/pr299.txt	../instances/opt/pr299_3.txt	../instances/h_sol/pr299_3.txt	3	-1	3	r
+./bb	../instances/data/pr299.txt	../instances/opt/pr299_4.txt	../instances/h_sol/pr299_4.txt	4	-1	3	r
+./bb	../instances/data/pr299.txt	../instances/opt/pr299_5.txt	../instances/h_sol/pr299_5.txt	5	-1	3	r
+./bb	../instances/data/pr299.txt	../instances/opt/pr299_6.txt	../instances/h_sol/pr299_6.txt	6	-1	3	r
+./bb	../instances/data/pr299.txt	../instances/opt/pr299_7.txt	../instances/h_sol/pr299_7.txt	7	-1	3	r
+./bb	../instances/data/pr299.txt	../instances/opt/pr299_8.txt	../instances/h_sol/pr299_8.txt	8	-1	3	r
+./bb	../instances/data/pr299.txt	../instances/opt/pr299_9.txt	../instances/h_sol/pr299_9.txt	9	-1	3	r
+./bb	../instances/data/pr299.txt	../instances/opt/pr299_10.txt	../instances/h_sol/pr299_10.txt	10	-1	3	r
+./bb	../instances/data/fl417.txt	../instances/opt/fl417_2.txt	../instances/h_sol/fl417_2.txt	2	-1	3	r
+./bb	../instances/data/fl417.txt	../instances/opt/fl417_3.txt	../instances/h_sol/fl417_3.txt	3	-1	3	r
+./bb	../instances/data/fl417.txt	../instances/opt/fl417_4.txt	../instances/h_sol/fl417_4.txt	4	-1	3	r
+./bb	../instances/data/fl417.txt	../instances/opt/fl417_5.txt	../instances/h_sol/fl417_5.txt	5	-1	3	r
+./bb	../instances/data/fl417.txt	../instances/opt/fl417_6.txt	../instances/h_sol/fl417_6.txt	6	-1	3	r
+./bb	../instances/data/fl417.txt	../instances/opt/fl417_7.txt	../instances/h_sol/fl417_7.txt	7	-1	3	r
+./bb	../instances/data/fl417.txt	../instances/opt/fl417_8.txt	../instances/h_sol/fl417_8.txt	8	-1	3	r
+./bb	../instances/data/fl417.txt	../instances/opt/fl417_9.txt	../instances/h_sol/fl417_9.txt	9	-1	3	r
+./bb	../instances/data/fl417.txt	../instances/opt/fl417_10.txt	../instances/h_sol/fl417_10.txt	10	-1	3	r
+./bb	../instances/data/rd400.txt	../instances/opt/rd400_3.txt	../instances/h_sol/rd400_3.txt	3	-1	3	r
+./bb	../instances/data/rd400.txt	../instances/opt/rd400_4.txt	../instances/h_sol/rd400_4.txt	4	-1	3	r
+./bb	../instances/data/rd400.txt	../instances/opt/rd400_5.txt	../instances/h_sol/rd400_5.txt	5	-1	3	r
+./bb	../instances/data/rd400.txt	../instances/opt/rd400_6.txt	../instances/h_sol/rd400_6.txt	6	-1	3	r
+./bb	../instances/data/rd400.txt	../instances/opt/rd400_7.txt	../instances/h_sol/rd400_7.txt	7	-1	3	r
+./bb	../instances/data/rd400.txt	../instances/opt/rd400_8.txt	../instances/h_sol/rd400_8.txt	8	-1	3	r
+./bb	../instances/data/rd400.txt	../instances/opt/rd400_9.txt	../instances/h_sol/rd400_9.txt	9	-1	3	r
+./bb	../instances/data/rd400.txt	../instances/opt/rd400_10.txt	../instances/h_sol/rd400_3.txt	10	-1	3	r
+./bb	../instances/data/gr666.txt	../instances/opt/gr666_2.txt	../instances/h_sol/gr666_2.txt	2	-1	3	r
+./bb	../instances/data/gr666.txt	../instances/opt/gr666_3.txt	../instances/h_sol/gr666_3.txt	3	-1	3	r
+./bb	../instances/data/gr666.txt	../instances/opt/gr666_4.txt	../instances/h_sol/gr666_4.txt	4	-1	3	r
+./bb	../instances/data/gr666.txt	../instances/opt/gr666_5.txt	../instances/h_sol/gr666_5.txt	5	-1	3	r
+./bb	../instances/data/gr666.txt	../instances/opt/gr666_6.txt	../instances/h_sol/gr666_6.txt	6	-1	3	r
+./bb	../instances/data/gr666.txt	../instances/opt/gr666_7.txt	../instances/h_sol/gr666_7.txt	7	-1	3	r
+./bb	../instances/data/gr666.txt	../instances/opt/gr666_8.txt	../instances/h_sol/gr666_8.txt	8	-1	3	r
+./bb	../instances/data/gr666.txt	../instances/opt/gr666_9.txt	../instances/h_sol/gr666_9.txt	9	-1	3	r
+./bb	../instances/data/gr666.txt	../instances/opt/gr666_10.txt	../instances/h_sol/gr666_10.txt	10	-1	3	r
+./bb	../instances/data/gr666.txt	../instances/opt/gr666_20.txt	../instances/h_sol/gr666_20.txt	20	-1	3	r
+./bb	../instances/data/gr666.txt	../instances/opt/gr666_50.txt	../instances/h_sol/gr666_50.txt	50	-1	3	r
+./bb	../instances/data/test.txt	../instances/opt/test.txt	../instances/h_sol/test.txt	3	-1	3	c
+./bb	../instances/data/ruspini.txt	../instances/opt/ruspini.txt	../instances/h_sol/ruspini.txt	4	-1	3	c
+./bb	../instances/data/ch150.txt	../instances/opt/ch150_2.txt	../instances/h_sol/ch150_2.txt	2	-1	3	c
+./bb	../instances/data/ch150.txt	../instances/opt/ch150_3.txt	../instances/h_sol/ch150_3.txt	3	-1	3	c
+./bb	../instances/data/ch150.txt	../instances/opt/ch150_4.txt	../instances/h_sol/ch150_4.txt	4	-1	3	c
+./bb	../instances/data/ch150.txt	../instances/opt/ch150_5.txt	../instances/h_sol/ch150_5.txt	5	-1	3	c
+./bb	../instances/data/ch150.txt	../instances/opt/ch150_6.txt	../instances/h_sol/ch150_6.txt	6	-1	3	c
+./bb	../instances/data/ch150.txt	../instances/opt/ch150_7.txt	../instances/h_sol/ch150_7.txt	7	-1	3	c
+./bb	../instances/data/ch150.txt	../instances/opt/ch150_8.txt	../instances/h_sol/ch150_8.txt	8	-1	3	c
+./bb	../instances/data/ch150.txt	../instances/opt/ch150_9.txt	../instances/h_sol/ch150_9.txt	9	-1	3	c
+./bb	../instances/data/ch150.txt	../instances/opt/ch150_10.txt	../instances/h_sol/ch150_10.txt	10	-1	3	c
+./bb	../instances/data/d198.txt	../instances/opt/d198_7.txt	../instances/h_sol/d198_7.txt	7	-1	3	c
+./bb	../instances/data/d198.txt	../instances/opt/d198_15.txt	../instances/h_sol/d198_15.txt	15	-1	3	c
+./bb	../instances/data/gr202.txt	../instances/opt/gr202_2.txt	../instances/h_sol/gr202_2.txt	2	-1	3	c
+./bb	../instances/data/gr202.txt	../instances/opt/gr202_3.txt	../instances/h_sol/gr202_3.txt	3	-1	3	c
+./bb	../instances/data/gr202.txt	../instances/opt/gr202_4.txt	../instances/h_sol/gr202_4.txt	4	-1	3	c
+./bb	../instances/data/gr202.txt	../instances/opt/gr202_5.txt	../instances/h_sol/gr202_5.txt	5	-1	3	c
+./bb	../instances/data/gr202.txt	../instances/opt/gr202_6.txt	../instances/h_sol/gr202_6.txt	6	-1	3	c
+./bb	../instances/data/gr202.txt	../instances/opt/gr202_7.txt	../instances/h_sol/gr202_7.txt	7	-1	3	c
+./bb	../instances/data/gr202.txt	../instances/opt/gr202_8.txt	../instances/h_sol/gr202_8.txt	8	-1	3	c
+./bb	../instances/data/gr202.txt	../instances/opt/gr202_9.txt	../instances/h_sol/gr202_9.txt	9	-1	3	c
+./bb	../instances/data/gr202.txt	../instances/opt/gr202_10.txt	../instances/h_sol/gr202_10.txt	10	-1	3	c
+./bb	../instances/data/pr299.txt	../instances/opt/pr299_2.txt	../instances/h_sol/pr299_2.txt	2	-1	3	c
+./bb	../instances/data/pr299.txt	../instances/opt/pr299_3.txt	../instances/h_sol/pr299_3.txt	3	-1	3	c
+./bb	../instances/data/pr299.txt	../instances/opt/pr299_4.txt	../instances/h_sol/pr299_4.txt	4	-1	3	c
+./bb	../instances/data/pr299.txt	../instances/opt/pr299_5.txt	../instances/h_sol/pr299_5.txt	5	-1	3	c
+./bb	../instances/data/pr299.txt	../instances/opt/pr299_6.txt	../instances/h_sol/pr299_6.txt	6	-1	3	c
+./bb	../instances/data/pr299.txt	../instances/opt/pr299_7.txt	../instances/h_sol/pr299_7.txt	7	-1	3	c
+./bb	../instances/data/pr299.txt	../instances/opt/pr299_8.txt	../instances/h_sol/pr299_8.txt	8	-1	3	c
+./bb	../instances/data/pr299.txt	../instances/opt/pr299_9.txt	../instances/h_sol/pr299_9.txt	9	-1	3	c
+./bb	../instances/data/pr299.txt	../instances/opt/pr299_10.txt	../instances/h_sol/pr299_10.txt	10	-1	3	c
+./bb	../instances/data/fl417.txt	../instances/opt/fl417_2.txt	../instances/h_sol/fl417_2.txt	2	-1	3	c
+./bb	../instances/data/fl417.txt	../instances/opt/fl417_3.txt	../instances/h_sol/fl417_3.txt	3	-1	3	c
+./bb	../instances/data/fl417.txt	../instances/opt/fl417_4.txt	../instances/h_sol/fl417_4.txt	4	-1	3	c
+./bb	../instances/data/fl417.txt	../instances/opt/fl417_5.txt	../instances/h_sol/fl417_5.txt	5	-1	3	c
+./bb	../instances/data/fl417.txt	../instances/opt/fl417_6.txt	../instances/h_sol/fl417_6.txt	6	-1	3	c
+./bb	../instances/data/fl417.txt	../instances/opt/fl417_7.txt	../instances/h_sol/fl417_7.txt	7	-1	3	c
+./bb	../instances/data/fl417.txt	../instances/opt/fl417_8.txt	../instances/h_sol/fl417_8.txt	8	-1	3	c
+./bb	../instances/data/fl417.txt	../instances/opt/fl417_9.txt	../instances/h_sol/fl417_9.txt	9	-1	3	c
+./bb	../instances/data/fl417.txt	../instances/opt/fl417_10.txt	../instances/h_sol/fl417_10.txt	10	-1	3	c
+./bb	../instances/data/rd400.txt	../instances/opt/rd400_3.txt	../instances/h_sol/rd400_3.txt	3	-1	3	c
+./bb	../instances/data/rd400.txt	../instances/opt/rd400_4.txt	../instances/h_sol/rd400_4.txt	4	-1	3	c
+./bb	../instances/data/rd400.txt	../instances/opt/rd400_5.txt	../instances/h_sol/rd400_5.txt	5	-1	3	c
+./bb	../instances/data/rd400.txt	../instances/opt/rd400_6.txt	../instances/h_sol/rd400_6.txt	6	-1	3	c
+./bb	../instances/data/rd400.txt	../instances/opt/rd400_7.txt	../instances/h_sol/rd400_7.txt	7	-1	3	c
+./bb	../instances/data/rd400.txt	../instances/opt/rd400_8.txt	../instances/h_sol/rd400_8.txt	8	-1	3	c
+./bb	../instances/data/rd400.txt	../instances/opt/rd400_9.txt	../instances/h_sol/rd400_9.txt	9	-1	3	c
+./bb	../instances/data/rd400.txt	../instances/opt/rd400_10.txt	../instances/h_sol/rd400_3.txt	10	-1	3	c
+./bb	../instances/data/gr666.txt	../instances/opt/gr666_2.txt	../instances/h_sol/gr666_2.txt	2	-1	3	c
+./bb	../instances/data/gr666.txt	../instances/opt/gr666_3.txt	../instances/h_sol/gr666_3.txt	3	-1	3	c
+./bb	../instances/data/gr666.txt	../instances/opt/gr666_4.txt	../instances/h_sol/gr666_4.txt	4	-1	3	c
+./bb	../instances/data/gr666.txt	../instances/opt/gr666_5.txt	../instances/h_sol/gr666_5.txt	5	-1	3	c
+./bb	../instances/data/gr666.txt	../instances/opt/gr666_6.txt	../instances/h_sol/gr666_6.txt	6	-1	3	c
+./bb	../instances/data/gr666.txt	../instances/opt/gr666_7.txt	../instances/h_sol/gr666_7.txt	7	-1	3	c
+./bb	../instances/data/gr666.txt	../instances/opt/gr666_8.txt	../instances/h_sol/gr666_8.txt	8	-1	3	c
+./bb	../instances/data/gr666.txt	../instances/opt/gr666_9.txt	../instances/h_sol/gr666_9.txt	9	-1	3	c
+./bb	../instances/data/gr666.txt	../instances/opt/gr666_10.txt	../instances/h_sol/gr666_10.txt	10	-1	3	c
+./bb	../instances/data/gr666.txt	../instances/opt/gr666_20.txt	../instances/h_sol/gr666_20.txt	20	-1	3	c
+./bb	../instances/data/gr666.txt	../instances/opt/gr666_50.txt	../instances/h_sol/gr666_50.txt	50	-1	3	c

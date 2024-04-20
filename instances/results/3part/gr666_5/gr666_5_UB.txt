@@ -1,6 +1,0 @@
-iteration 0 : 509019
-after ray 0.850000 : 503741
-after ray 0.700000 : 500652
-after ray 0.550000 : 492949
-after ray 0.400000 : 486877
-after ray 0.250000 : 485478

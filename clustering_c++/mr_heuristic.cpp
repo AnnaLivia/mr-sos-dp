@@ -135,7 +135,7 @@ int generate_part_constraints(std::map<int, arma::mat> sol_map, int k, int p, Us
     	for (int c = 0; c < k; c++) {
         	std::list<int> cls_points = {};
         	for (int i = 0; i < np; i++) {
-            	if (cls_id(i) == c) {
+            	if (cls_id(i) == c+1) {
                 	for (auto& j : cls_points) {
                     	std::pair<int,int> ab_pair(point_id(i),point_id(j));
                     	constraints.ml_pairs.push_back(ab_pair);
@@ -222,14 +222,14 @@ std::map<int, arma::mat> generate_partitions(arma::mat data, int p,
     int n = data.n_rows;
     int d = data.n_cols;
     int k = cls_map.size();
+    arma::vec n_points = arma::zeros(p);
 
+    int part;
     std::map<int, arma::mat> sol_map;
     for (int h=0; h < p; ++h)
         sol_map[h] = arma::zeros(n, d+1);
-
+    
     // partition points by clusters
-    int part;
-    arma::vec n_points = arma::zeros(p);
     if (part_m == 'c') {
     	for (auto& cls : cls_map) {
         	int np = 0;
