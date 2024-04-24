@@ -26,11 +26,11 @@
 
 // data full path
 extern const char *data_path;
+extern const char *sol_path;
 extern const char *constraints_path;
 
 // log and result path
 extern std::string result_folder;
-extern std::string log_folder;
 extern std::string result_path;
 extern std::ofstream log_file;
 extern std::ofstream lb_file;

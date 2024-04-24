@@ -15,7 +15,6 @@ const char *sol_path;
 
 // log and result path
 std::string result_folder;
-std::string log_folder;
 std::string result_path;
 std::ofstream log_file;
 std::ofstream lb_file;
@@ -207,7 +206,6 @@ void run(int argc, char **argv) {
     std::string config_file = "config.txt";
     std::map <std::string, std::string> config_map = read_params(config_file);
 
-    log_folder = config_map["LOG_FOLDER"];
     result_folder = config_map["RESULT_FOLDER"];
 
     // branch and bound
@@ -245,7 +243,7 @@ void run(int argc, char **argv) {
     kmeans_permutations = 1;
     
     if (argc != 8) {
-        std::cerr << "Input: <DATA_FILE> <OPT_SOL_FILE> <H_SOL_FILE> <K> <F> <P>" << std::endl;
+        std::cerr << "Input: <DATA_FILE> <OPT_SOL_FILE> <H_SOL_FILE> <K> <FLIP> <P> <METHOD>" << std::endl;
         exit(EXIT_FAILURE);
     }
     
@@ -255,7 +253,7 @@ void run(int argc, char **argv) {
     
     int n, d;
     int k = std::stoi(argv[4]);
-    int f = std::stoi(argv[5]);
+    int h = std::stoi(argv[5]);
     int p = std::stoi(argv[6]);
     part_m = *(argv[7]);
 
@@ -278,11 +276,11 @@ void run(int argc, char **argv) {
     arma::mat opt_sol = read_sol(opt_path, n, k);
     double opt_mss = compute_mss(Ws, opt_sol);
     arma::mat init_sol;
-    if (f == -1)
+    if (h == -1)
         init_sol = read_sol(sol_path, n, k);
-    else if (f > 0) {
+    else if (h > 0) {
         init_sol = opt_sol;
-        flip(init_sol, f);
+        flip(init_sol, h);
     } else {
         std::map<int, std::set<int>> ml_map = {};
         std::vector <std::pair<int, int>> local_cl = {};
@@ -334,14 +332,18 @@ void run(int argc, char **argv) {
     log_file << "Heuristic MSS: " << init_mss << "\n\n";
 
     ResultData results;
+    /*
     if (part_m == 'c')
         results = mr_heuristic_only_ray(k, p, Ws);
-    else if (part_m == 'r')
+    else if (part_m == 'r' or part_m == 'f')
         results = mr_heuristic(k, p, Ws);
     else {
         std::printf("ERROR param: invalid partition method!\n");
         exit(EXIT_FAILURE);
     }
+    */
+
+    results = mr_heuristic(k, p, Ws);
 
     int it = results.it;
     double ub_mss = results.ub_mss;

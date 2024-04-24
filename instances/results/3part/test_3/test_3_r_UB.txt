@@ -1,4 +1,4 @@
-iteration 0 : 300.71
+iteration 0 : 299.887
 iteration 1 : 299.887
 iteration 2 : 299.03
 after ray 0.550000 : 298.478

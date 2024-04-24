@@ -1,0 +1,4 @@
+iteration 0 : 1.01035e+08
+iteration 1 : 1.06579e+08
+iteration 2 : 1.07164e+08
+iteration 3 : 1.07131e+08

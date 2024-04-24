@@ -23,6 +23,37 @@ void save_to_file(arma::mat X, std::string name){
     f.close();
 }
 
+// read lb data
+std::map<int, arma::mat> read_sol_map_data(int n, int d, int p) {
+
+    std::ifstream file(sol_path);
+    if (!file) {
+        std::cerr << strerror(errno) << "\n";
+        exit(EXIT_FAILURE);
+    }
+
+    // create sol map
+    std::map<int, arma::mat> sol_map;
+    arma::vec n_points = arma::zeros(p);
+    for (int h=0; h < p; h++)
+        sol_map[h] = arma::zeros(n, d+2);
+
+    int part;
+    for (int i = 0; i < n; i++) {
+        file >> part;
+        part--;
+        sol_map[part](n_points(part), 0) = part;
+        for (int j = 1; j < d+2; j++)
+            file >> sol_map[part](n_points(part), j);
+        n_points(part)++;
+    }
+
+    for (int h=0; h < p; h++)
+        sol_map[h] = sol_map[h].submat(0, 0, n_points(part) - 1, d+1);
+
+    return sol_map;
+}
+
 double compute_clusters(arma::mat data, arma::mat sol, std::map<int, std::list<std::pair<int, double>>> &cls_map) {
 
     int n = data.n_rows;
@@ -246,7 +277,7 @@ std::map<int, arma::mat> generate_partitions(arma::mat data, int p,
     }
 
     // random point to partitions
-    else if (part_m == 'r') {
+    else if (part_m == 'r' or part_m == 'f') {
     	for (int i=0; i < n; ++i) {
         	do {
             	part = rand() % (p); // Generate a new random part
@@ -510,9 +541,19 @@ ResultData mr_heuristic(int k, int p, arma::mat Ws) {
         log_file << "---------------------------------------------------------------\n";
         log_file << "It " << it << "\n";
         if (it == 0) {
-            // solve with combinatorial bound
-            std::cout << "Solving Comb Bound" << std::endl;
-            compute_comb_bound(Ws, p, sol_map);
+            if (part_m == 'c') {
+                std::cout << "Solving Comb Bound" << std::endl;
+                compute_comb_bound(Ws, p, sol_map);
+            }
+            else if (part_m == 'f') {
+                std::cout << "Loading part from file" << std::endl;
+                sol_map = read_sol_map_data(Ws.n_rows, Ws.n_cols, p);
+            }
+            else {
+                std::cout << "Generating randomly" << std::endl;
+                std::map < int, std::list < std::pair < int, double>>> cls_map;
+                sol_map = generate_partitions(Ws, p, cls_map);
+            }
         }
         else{
             // solve with n partition from cluster
@@ -592,6 +633,7 @@ ResultData mr_heuristic(int k, int p, arma::mat Ws) {
     return results;
     
 }
+
 
 ResultData mr_heuristic_only_ray(int k, int p, arma::mat Ws) {
 

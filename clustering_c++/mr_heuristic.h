@@ -31,6 +31,8 @@ typedef struct ResultData {
 } ResultData;
 
 void save_to_file(arma::mat X, std::string name);
+std::map<int, arma::mat> read_sol_map_data(int n, int d, int p);
+
 double compute_clusters(arma::mat data, arma::mat sol, std::map<int, std::list<std::pair<int, double>>> &cls_map);
 
 // generate must link constraints
