@@ -24,7 +24,7 @@ void save_to_file(arma::mat X, std::string name){
 }
 
 // read lb data
-std::map<int, arma::mat> read_sol_map_data(int n, int d, int p) {
+std::map<int, arma::mat> read_part_data(int n, int d, int k, int p) {
 
     std::ifstream file(sol_path);
     if (!file) {
@@ -41,15 +41,18 @@ std::map<int, arma::mat> read_sol_map_data(int n, int d, int p) {
     int part;
     for (int i = 0; i < n; i++) {
         file >> part;
-        part--;
-        sol_map[part](n_points(part), 0) = part;
-        for (int j = 1; j < d+2; j++)
-            file >> sol_map[part](n_points(part), j);
-        n_points(part)++;
+        for (int j = 0; j < d+1; j++)
+            file >> sol_map[part-1](n_points(part-1), j);
+        n_points(part-1)++;
     }
 
-    for (int h=0; h < p; h++)
-        sol_map[h] = sol_map[h].submat(0, 0, n_points(part) - 1, d+1);
+    for (int h=0; h < p; h++) {
+        sol_map[h] = sol_map[h].submat(0, 0, n_points(h) - 1, d);
+        if (n_points(h) < k) {
+            std::cerr << "read_part_data(): not enough point in partition " << h << " \n";
+            exit(EXIT_FAILURE);
+        }
+    }
 
     return sol_map;
 }
@@ -77,7 +80,7 @@ double compute_clusters(arma::mat data, arma::mat sol, std::map<int, std::list<s
     for (int j = 0; j < k; ++j) {
         // empty cluster
         if (count(j) == 0) {
-            std::printf("read_data(): cluster %d is empty!\n", j);
+            std::printf("compute_clusters(): cluster %d is empty!\n", j);
             return false;
         }
         centroids.row(j) = centroids.row(j) / count(j);
@@ -159,7 +162,7 @@ int generate_part_constraints(std::map<int, arma::mat> sol_map, int k, int p, Us
 
     for (int h = 0; h < p; h++) {
     	arma::mat sol = sol_map[h];
-    	arma::vec point_id = sol.col(0);
+    	arma::vec point_id = sol.col(0) - 1;
     	arma::vec cls_id = sol.col(sol.n_cols-1);
     	int np = sol.n_rows;
 
@@ -194,12 +197,13 @@ double compute_part_lb(std::map<int, arma::mat> &part_map) {
 
 }
 
-double compute_comb_bound(arma::mat &data, int p, std::map<int, arma::mat> &sol_map){
+std::map<int, arma::mat> compute_comb_bound(arma::mat &data, int p){
     
     int n = data.n_rows;
     int d = data.n_cols;
 	double max_dist = 0;
     arma::mat dist = compute_distances(data);
+    std::map<int, arma::mat> sol_map;
 
 	try {
 		GRBEnv *env = new GRBEnv();
@@ -223,7 +227,7 @@ double compute_comb_bound(arma::mat &data, int p, std::map<int, arma::mat> &sol_
             sol_map[h] = arma::zeros(n, d+1);
             for (int i=0; i < n; ++i) {
                 if (sol(i,h) > 0.9) {
-                    sol_map[h](n_points,0) = i;
+                    sol_map[h](n_points,0) = i+1;
                     sol_map[h].row(n_points).subvec(1,d) = data.row(i);
                     n_points++;
                 }
@@ -243,7 +247,7 @@ double compute_comb_bound(arma::mat &data, int p, std::map<int, arma::mat> &sol_
     std::cout << "Combinatorial BOUND OBJ " << max_dist << std::endl;
     std::cout << "---------------------------------------------------------------" << std::endl;
     
-	return max_dist;
+	return sol_map;
 }
 
 // generate partitions from clusters
@@ -266,7 +270,7 @@ std::map<int, arma::mat> generate_partitions(arma::mat data, int p,
         	int np = 0;
         	part = 0;
         	for (auto point : cls.second) {
-            	sol_map[part](n_points(part),0) = point.first;
+            	sol_map[part](n_points(part),0) = point.first+1;
             	sol_map[part].row(n_points(part)).subvec(1,d) = data.row(point.first);
             	n_points(part)++;
             	np++;
@@ -282,7 +286,7 @@ std::map<int, arma::mat> generate_partitions(arma::mat data, int p,
         	do {
             	part = rand() % (p); // Generate a new random part
         	} while (n_points(part) >= n/p + 1);
-        	sol_map[part](n_points(part),0) = i;
+        	sol_map[part](n_points(part),0) = i+1;
         	sol_map[part].row(n_points(part)).subvec(1,d) = data.row(i);
         	n_points(part)++;
     	}
@@ -370,6 +374,35 @@ std::map<int, arma::mat> generate_partitions(arma::mat data, int n_part) {
     return part_map;
 }
 
+// compute lb
+double compute_lb(std::map<int, arma::mat> &sol_map, int k, int p) {
+
+    std::cout << std::endl << "Generating LB";
+    double lb_mss = 0;
+    UserConstraints constraints;
+    for (auto &part: sol_map) {
+        int np = part.second.n_rows;
+        int d = part.second.n_cols - 1;
+        std::cout << std::endl << "*********************************************************************" << std::endl;
+        std::cout << "Partition " << (part.first + 1) << "\nPoints " << np;
+        std::cout << std::endl << "*********************************************************************" << std::endl;
+        log_file << "Partition " << (part.first + 1) << "\n";
+        arma::mat data = part.second.submat(0, 1, np-1, d);
+        arma::mat sol(np,k);
+        lb_mss += sdp_branch_and_bound(k, data, constraints, sol);
+        arma::mat cls(np,1);
+        for (int i = 0; i < np; i++)
+            for (int c = 0; c < k; c++)
+                if (sol(i,c)==1)
+                    cls(i)= c+1;
+        part.second = std::move(arma::join_horiz(part.second, cls));
+    }
+    std::cout  << std::endl << std::endl << "LB MSS: " << lb_mss << std::endl;
+    log_file << "Merge LB MSS: " << lb_mss << "\n\n\n";
+
+    return lb_mss;
+}
+
 // compute ub
 double compute_ub(arma::mat Ws, arma::mat &sol, std::map<int, arma::mat> &sol_map, int k, int p) {
 
@@ -386,43 +419,14 @@ double compute_ub(arma::mat Ws, arma::mat &sol, std::map<int, arma::mat> &sol_ma
     return ub_mss;
 }
 
-// compute lb
-double compute_lb(std::map<int, arma::mat> &sol_map, int k, int p) {
-
-    std::cout << std::endl << "Generating LB";
-    double lb_mss = 0;
-    UserConstraints constraints;
-    for (auto &part: sol_map) {
-    	int np = part.second.n_rows;
-    	int d = part.second.n_cols - 1;
-        std::cout << std::endl << "*********************************************************************" << std::endl;
-        std::cout << "Partition " << (part.first + 1) << "\nPoints " << np;
-        std::cout << std::endl << "*********************************************************************" << std::endl;
-        log_file << "Partition " << (part.first + 1) << "\n";
-        arma::mat data = part.second.submat(0, 1, np-1, d);
-        arma::mat sol(np,k);
-        lb_mss += sdp_branch_and_bound(k, data, constraints, sol);
-        arma::mat cls(np,1);
-        for (int i = 0; i < np; i++)
-        	for (int c = 0; c < k; c++)
-        		if (sol(i,c)==1)
-        			cls(i)= c+1;
-        part.second = std::move(arma::join_horiz(part.second, cls));
-    }
-    std::cout  << std::endl << std::endl << "LB MSS: " << lb_mss << std::endl;
-    log_file << "Merge LB MSS: " << lb_mss << "\n\n\n";
-
-    return lb_mss;
-}
-
 // compute lb sol by merging partitions sol
 arma::mat save_lb(std::map<int, arma::mat> &sol_map, int p){
 
-	arma::mat np = arma::ones(sol_map[0].n_rows,1);
-    arma::mat sol = std::move(arma::join_horiz(np, sol_map[0]));
+	arma::mat part = arma::ones(sol_map[0].n_rows,1);
+    arma::mat sol = std::move(arma::join_horiz(part, sol_map[0]));
     for (int h = 1; h < p; ++h) {
-        np = arma::vec(sol_map[h].n_rows,1).fill(h+1);
-        arma::mat solp = std::move(arma::join_horiz(np, sol_map[h]));
+        part = arma::vec(sol_map[h].n_rows,1).fill(h+1);
+        arma::mat solp = std::move(arma::join_horiz(part, sol_map[h]));
         sol = std::move(arma::join_vert(sol, solp));
     }
 
@@ -468,7 +472,7 @@ double solve_with_ray(arma::mat Ws, arma::mat init_sol, int k, int p, int &ub_up
     std::cout << std::endl << "---------------------------------------------------------------" << std::endl;
     log_file << "--------------------------------------------------------------\n";
     log_file << "Solving with moving ray" << "\n\n";
-    for (int i = 0; i < 5; i++) {
+    for (int i = 0; i < 0; i++) {
         ray = 0.85 - i * 0.15;
         int_ray = ray*100;
         std::cout << std::endl << std::endl;
@@ -543,11 +547,11 @@ ResultData mr_heuristic(int k, int p, arma::mat Ws) {
         if (it == 0) {
             if (part_m == 'c') {
                 std::cout << "Solving Comb Bound" << std::endl;
-                compute_comb_bound(Ws, p, sol_map);
+                sol_map = compute_comb_bound(Ws, p);
             }
             else if (part_m == 'f') {
                 std::cout << "Loading part from file" << std::endl;
-                sol_map = read_sol_map_data(Ws.n_rows, Ws.n_cols, p);
+                sol_map = read_part_data(Ws.n_rows, Ws.n_cols, k, p);
             }
             else {
                 std::cout << "Generating randomly" << std::endl;
@@ -659,7 +663,7 @@ ResultData mr_heuristic_only_ray(int k, int p, arma::mat Ws) {
     std::cout << "Comb bound" << std::endl;
 
     std::cout << "Solving Comb Bound" << std::endl;
-    compute_comb_bound(Ws, p, sol_map);
+    sol_map = compute_comb_bound(Ws, p);
 
     // generating lb
     auto start_time_lb = std::chrono::high_resolution_clock::now();

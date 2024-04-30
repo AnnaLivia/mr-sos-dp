@@ -1,0 +1,2 @@
+iteration 0 : 6925.24
+iteration 1 : 6491.47

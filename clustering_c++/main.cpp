@@ -290,7 +290,7 @@ void run(int argc, char **argv) {
         kmeans.start(kmeans_max_iter, kmeans_n_start, kmeans_permutations);
         std::cout << std::endl << "** Done computing initial Kmean solution **" << std::endl;
         std::cout << "Iter:" << kmeans_max_iter << std::endl << "Start:" << kmeans_n_start;
-        std::cout << std::endl << "Permutation:" << kmeans_permutations << std::endl << std::endl;
+        std::cout << std::endl << "Permutation:" << kmeans_permutations;
         init_sol = kmeans.getAssignments();
 		//    save_to_file(init_sol, result_path, "_init");
     }

@@ -1,3 +1,5 @@
-iteration 0 : 300.315
-after ray 0.850000 : 298.997
+iteration 0 : 300.71
+iteration 1 : 308.553
+iteration 2 : 301.797
+after ray 0.850000 : 299.335
 after ray 0.400000 : 298.478

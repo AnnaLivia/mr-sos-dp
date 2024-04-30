@@ -1,0 +1,11 @@
+./bb	../instances/data/ruspini.txt	../instances/opt/ruspini.txt	../instances/h_sol/part_ruspini_single.txt	4	0	3	f
+./bb	../instances/data/ruspini.txt	../instances/opt/ruspini.txt	../instances/h_sol/part_ruspini_complete.txt	4	0	3	f
+./bb	../instances/data/gr202.txt	../instances/opt/gr202_2.txt	../instances/h_sol/part_gr202_2_complete.txt	2	0	3	f
+./bb	../instances/data/gr202.txt	../instances/opt/gr202_3.txt	../instances/h_sol/part_gr202_3_complete.txt	3	0	3	f
+./bb	../instances/data/gr202.txt	../instances/opt/gr202_4.txt	../instances/h_sol/part_gr202_4_complete.txt	4	0	3	f
+./bb	../instances/data/gr202.txt	../instances/opt/gr202_5.txt	../instances/h_sol/part_gr202_5_complete.txt	5	0	3	f
+./bb	../instances/data/gr202.txt	../instances/opt/gr202_6.txt	../instances/h_sol/part_gr202_6_complete.txt	6	0	3	f
+./bb	../instances/data/gr202.txt	../instances/opt/gr202_7.txt	../instances/h_sol/part_gr202_7_complete.txt	7	0	3	f
+./bb	../instances/data/gr202.txt	../instances/opt/gr202_8.txt	../instances/h_sol/part_gr202_8_complete.txt	8	0	3	f
+./bb	../instances/data/gr202.txt	../instances/opt/gr202_9.txt	../instances/h_sol/part_gr202_9_complete.txt	9	0	3	f
+./bb	../instances/data/gr202.txt	../instances/opt/gr202_10.txt	../instances/h_sol/part_gr202_10_complete.txt	10	0	3	f

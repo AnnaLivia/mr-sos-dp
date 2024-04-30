@@ -762,6 +762,11 @@ bool is_thread_pool_working(std::vector<bool> &thread_state) {
 
 double sdp_branch_and_bound(int k, arma::mat &Ws, UserConstraints &constraints, arma::mat &sol) {
 
+    if (Ws.n_rows == k) {
+        sol = arma::mat(k, k, arma::fill::eye);
+        return 0.0;
+    }
+
     int n_thread = branch_and_bound_parallel;
 
     JobAbstractQueue *queue = nullptr;
@@ -801,6 +806,7 @@ double sdp_branch_and_bound(int k, arma::mat &Ws, UserConstraints &constraints, 
 	//input_data->distances = compute_distances(Ws);
 
     ThreadPool pool(shared_data, input_data, n_thread);
+
     
     print_header_sdp(log_file);
 

@@ -31,7 +31,7 @@ typedef struct ResultData {
 } ResultData;
 
 void save_to_file(arma::mat X, std::string name);
-std::map<int, arma::mat> read_sol_map_data(int n, int d, int p);
+std::map<int, arma::mat> read_part_data(int n, int d, int k, int p);
 
 double compute_clusters(arma::mat data, arma::mat sol, std::map<int, std::list<std::pair<int, double>>> &cls_map);
 
@@ -41,7 +41,7 @@ UserConstraints generate_constraints(std::map<int, std::list<std::pair<int, doub
 // generate must link constraints on partition sol
 int generate_part_constraints(std::map<int, arma::mat> sol_map, int k, int p, UserConstraints &constraints);
 double compute_part_lb(std::map<int, arma::mat> &sol_map);
-double compute_comb_bound(arma::mat &data, int p, std::map<int, arma::mat> &sol_map);
+std::map<int, arma::mat> compute_comb_bound(arma::mat &data, int p);
 
 // generate partitions from clusters
 std::map<int, arma::mat> generate_partitions(arma::mat data, int n_part,
@@ -53,13 +53,9 @@ void take_n_from_p(arma::mat data, std::map<int, int> &new_p, std::map<int, int>
 // generate partitions
 std::map<int, arma::mat> generate_partitions(arma::mat data, int p);
 
-// compute ub
-double compute_ub(arma::mat Ws, arma::mat &sol, std::map<int, arma::mat> &sol_map, int k, int p);
-
-// compute lb
+// compute lb and compute ub, print lb and ub sol
 double compute_lb(std::map<int, arma::mat> &sol_map, int k, int p);
-
-// compute lb e ub sol to print
+double compute_ub(arma::mat Ws, arma::mat &sol, std::map<int, arma::mat> &sol_map, int k, int p);
 arma::mat save_lb(std::map<int, arma::mat> &sol_map, int p);
 arma::mat save_ub(arma::mat data, arma::mat sol);
 
