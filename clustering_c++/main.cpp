@@ -268,9 +268,14 @@ void run(int argc, char **argv) {
         std::filesystem::create_directories(result_path);
     result_path += "/" + inst_name + "_" + std::to_string(k) + "_" + part_m;
 
-    lb_file.open(result_path + "_LB.txt");
-    ub_file.open(result_path + "_UB.txt");
-    log_file.open(result_path + "_LOG.txt");
+    if (!std::strchr("crfka", part_m)) {
+        std::printf("ERROR: invalid partition method!\n");
+        exit(EXIT_FAILURE);
+    }
+
+    //lb_file.open(result_path + "_LB.txt");
+    //ub_file.open(result_path + "_UB.txt");
+    log_file.open(result_path + "_LOG2.txt");
 
     arma::mat Ws = read_data(data_path, n, d);
     arma::mat opt_sol = read_sol(opt_path, n, k);
@@ -331,19 +336,20 @@ void run(int argc, char **argv) {
     log_file << "optimal MSS: " << opt_mss << "\n";
     log_file << "Heuristic MSS: " << init_mss << "\n\n";
 
-    ResultData results;
-    /*
-    if (part_m == 'c')
-        results = mr_heuristic_only_ray(k, p, Ws);
-    else if (part_m == 'r' or part_m == 'f')
-        results = mr_heuristic(k, p, Ws);
-    else {
-        std::printf("ERROR param: invalid partition method!\n");
-        exit(EXIT_FAILURE);
-    }
-    */
+    part_m = 'a';
+    log_file << "Method k \n" << test_lb(Ws, p, k) << "\n";
+    part_m = 'f';
+    log_file << "Method f \n" << test_lb(Ws, p, k) << "\n";
 
-    results = mr_heuristic(k, p, Ws);
+    /*
+    part_m = 'k';
+    log_file << "Method a \n" << test_lb(Ws, p, k) << "\n";
+    part_m = 'c';
+    log_file << "Method c \n" << test_lb(Ws, p, k) << "\n";
+    part_m = 'r';
+    log_file << "Method r \n" << test_lb(Ws, p, k) << "\n";
+
+    ResultData results = mr_heuristic(k, p, Ws);
 
     int it = results.it;
     double ub_mss = results.ub_mss;
@@ -400,9 +406,12 @@ void run(int argc, char **argv) {
     << round((init_mss - lb_mss) / init_mss * 100) << "%" << "\t"
     << round((ub_mss - init_mss) / init_mss * 100) << "%" << "\t"
     << "\n";
-    
+
+    */
+
+    log_file.close();
 	test_SUMMARY.close();
- 
+
 }
 
 int main(int argc, char **argv) {

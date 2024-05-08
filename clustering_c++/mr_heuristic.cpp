@@ -2,6 +2,7 @@
 // Created by moden on 08/04/2024.
 //
 #include "comb_model.h"
+#include "Kmeans.h"
 #include "kmeans_util.h"
 #include "matlab_util.h"
 #include "sdp_branch_and_bound.h"
@@ -710,5 +711,190 @@ ResultData mr_heuristic_only_ray(int k, int p, arma::mat Ws) {
     results.all_time = all_time;
 
     return results;
+
+}
+
+double test_lb(arma::mat Ws, int p, int k) {
+
+    double lb_mss;
+    double ub_mss;
+    arma::mat sdp_sol;
+    UserConstraints constraints;
+    std::map<int, arma::mat> sol_map;
+
+    std::cout << std::endl << "--------------------------------------------------------------------" << std::endl;
+
+    // generating lb
+    int n = Ws.n_rows;
+    int d = Ws.n_cols;
+    if (part_m == 'c')
+        sol_map = compute_comb_bound(Ws, p);
+    if (part_m == 'r') {
+        std::map < int, std::list < std::pair < int, double>>> cls_map;
+        sol_map = generate_partitions(Ws, p, cls_map);
+    }
+    if (part_m == 'f') {
+        sol_map = read_part_data(n, d, k, p);
+    }
+    if (part_m == 'k') {
+        arma::mat cent = arma::repmat(arma::mean(Ws, 0), n, 1);
+        arma::mat dist = arma::sqrt(arma::sum(arma::square(Ws - cent), 1));
+        arma::mat new_dist = dist.max() - dist;
+        arma::mat Ws2 = Ws.each_col() + new_dist*0.5;
+
+        arma::mat sol;
+        std::map<int, std::set<int>> ml_map = {};
+        std::vector <std::pair<int, int>> local_cl = {};
+        std::vector <std::pair<int, int>> global_ml = {};
+        std::vector <std::pair<int, int>> global_cl = {};
+        Kmeans kmeans(Ws2, p, ml_map, local_cl, global_ml, global_cl, 0);
+        kmeans.start(100, 100, 5);
+        sol = kmeans.getAssignments();
+        for (int h=0; h < p; ++h) {
+            int n_points = 0;
+            sol_map[h] = arma::zeros(n, d+1);
+            for (int i=0; i < n; ++i) {
+                if (sol(i,h) == 1) {
+                    sol_map[h](n_points,0) = i+1;
+                    sol_map[h].row(n_points).subvec(1,d) = Ws.row(i);
+                    n_points++;
+                }
+            }
+            sol_map[h] = sol_map[h].submat(0, 0, n_points - 1, d);
+        }
+    }
+    if (part_m == 'a') {
+
+        /* Start main iteration loop for exchange procedure */
+
+        int h = 0;
+        std::map<int, std::list<int>> part_map;
+        arma::mat centroids = arma::zeros(p, d);
+        arma::vec part = arma::zeros(n) - 1;
+        arma::vec count = arma::zeros(p);
+        for (int h = 0; h < p; h++)
+            part_map[h] = {};
+
+        // random point to partitions
+        for (int i=0; i < n; ++i) {
+            do {
+                h = rand() % (p);
+            } while (count(h) >= n/p + 1);
+            part(i) = h;
+            part_map[h].push_back(i);
+            centroids.row(h) += Ws.row(i);
+            count(h)++;
+        }
+
+        // compute part' centroids and mss
+        double mss = 0;
+        arma::vec part_mss(p);
+        for (int h = 0; h < p; ++h) {
+            centroids.row(h) = centroids.row(h) / count(h);
+            for (int i : part_map[h])
+                part_mss(h) += squared_distance(Ws.row(i).t(), centroids.row(h).t());
+            mss += part_mss(h);
+        }
+
+        /* 1. Level: Iterate through `n` data points */
+        for (int i = 0; i < n-1; i++) {
+            double best_obj = mss;
+            int h1 = part(i);
+
+            // Initialize `best` variable for the i'th item
+            arma::mat centroids_h1 = arma::zeros(d,1);
+            arma::mat centroids_h2 = arma::zeros(d,1);
+            double mss_h1;
+            double mss_h2;
+            double best_mss_h1 = 0;
+            double best_mss_h2 = 0;
+            std::pair<int, int> best_swap(NULL,NULL);
+
+            /* 2. Level: Iterate through the exchange partners */
+            for (int j = i+1; j < n; j++) {
+
+                if (part(j) != h1) {
+
+					int h2 = part(j);
+
+					mss_h1 = 0;
+					mss_h2 = 0;
+            		double swap_obj = 0;
+
+                    // Update objective
+                    for (int h3 = 0; h3 < p; h3++)
+                        if (h3 != h1 and h3 != h2)
+                            swap_obj += part_mss(h3);
+
+                    // Cluster h1: Loses distances to element i and gains j
+                    centroids_h1 = (centroids.row(h1) * count(h1) - Ws.row(i) + Ws.row(j)) / count(h1);
+            		for (int l : part_map[h1])
+                		mss_h1 += squared_distance(Ws.row(l).t(), centroids_h1.t());
+                	mss_h1 -= squared_distance(Ws.row(i).t(), centroids_h1.t());
+                	mss_h1 += squared_distance(Ws.row(j).t(), centroids_h1.t());
+                    swap_obj += mss_h1;
+
+                    // Cluster h2: Loses distances to element j and gains i
+                    centroids_h2 = (centroids.row(h2) * count(h2) - Ws.row(j) + Ws.row(i))/count(h2);
+            		for (int l : part_map[h2])
+                		mss_h2 += squared_distance(Ws.row(l).t(), centroids_h2.t());
+                	mss_h2 -= squared_distance(Ws.row(j).t(), centroids_h2.t());
+                	mss_h2 += squared_distance(Ws.row(i).t(), centroids_h2.t());
+                    swap_obj += mss_h2;
+
+                    // Update `best` if objective was improved
+                    if (swap_obj > best_obj) {
+                        best_obj = swap_obj;
+                        best_mss_h1 = mss_h1;
+                        best_mss_h2 = mss_h2;
+                        best_swap = std::pair<int, int>(i, j);
+                    }
+                }
+            }
+
+            // Only if objective is improved: Do the swap
+            if (best_obj > mss) {
+                mss = best_obj;
+                int a = best_swap.first;
+                int b = best_swap.second;
+                int h2 = part(b);
+                part_map[h1].remove(a);
+                part_map[h1].push_back(b);
+                part_map[h2].remove(b);
+                part_map[h2].push_back(a);
+                part(a) = h2;
+                part(b) = h1;
+                part_mss(h1) = best_mss_h1;
+                part_mss(h2) = best_mss_h2;
+                centroids.row(h1) = (centroids.row(h1) * count(h1) - Ws.row(a) + Ws.row(b))/count(h1);
+                centroids.row(h2) = (centroids.row(h2) * count(h2) - Ws.row(b) + Ws.row(a))/count(h2);
+            }
+        }
+
+        // create sol map
+        for (int h=0; h < p; ++h) {
+            sol_map[h] = arma::zeros(count(h), d+1);
+            int np = 0;
+            for (int i : part_map[h]) {
+                sol_map[h](np,0) = i+1;
+                sol_map[h].row(np).subvec(1,d) = Ws.row(i);
+                np++;
+            }
+        }
+
+    }
+
+    // create lower bound
+    lb_mss = compute_lb(sol_map, k, p);
+
+    // create upper bound
+    ub_mss = compute_ub(Ws, sdp_sol, sol_map, k, p);
+    std::cout << ub_mss  << "\n";
+
+    std::cout << std::endl << std::endl << "--------------------------------------------------------------------";
+    std::cout << std::endl << "Method " << part_m << " GAP UB-LB " << round((ub_mss - lb_mss) / ub_mss * 100) << "%" << std::endl;
+    std::cout << "--------------------------------------------------------------------" << std::endl;
+
+    return lb_mss;
 
 }

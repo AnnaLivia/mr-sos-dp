@@ -1,0 +1,2 @@
+iteration 0 : 6.83499e+06
+iteration 1 : 8.36461e+06

@@ -1,6 +1,3 @@
-//
-// Created by moden on 08/04/2024.
-//
 #ifndef CLUSTERING_MR_HEURISTICS_H
 #define CLUSTERING_MR_HEURISTICS_H
 
@@ -67,5 +64,7 @@ ResultData mr_heuristic(int k, int p, arma::mat Ws);
 
 // define moving ray routine only with ray mechanism
 ResultData mr_heuristic_only_ray(int k, int p, arma::mat Ws);
+
+double test_lb(arma::mat Ws, int p, int k);
 
 #endif //CLUSTERING_MR_HEURISTICS_H

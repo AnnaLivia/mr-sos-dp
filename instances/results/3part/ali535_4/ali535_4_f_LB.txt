@@ -1,0 +1,2 @@
+iteration 0 : 319472
+iteration 1 : 312320
