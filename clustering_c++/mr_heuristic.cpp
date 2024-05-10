@@ -58,6 +58,40 @@ std::map<int, arma::mat> read_part_data(int n, int d, int k, int p) {
     return sol_map;
 }
 
+// read lb data
+std::map<int, arma::mat> read_part_data2(int n, int d, int k, int p, arma::mat data) {
+
+    std::ifstream file(sol_path);
+    if (!file) {
+        std::cerr << strerror(errno) << "\n";
+        exit(EXIT_FAILURE);
+    }
+
+    // create sol map
+    std::map<int, arma::mat> sol_map;
+    arma::vec n_points = arma::zeros(p);
+    for (int h=0; h < p; h++)
+        sol_map[h] = arma::zeros(n, d+2);
+
+    int part;
+    for (int i = 0; i < n; i++) {
+        file >> part;
+        sol_map[part](n_points(part), 0) = i+1;
+        sol_map[part].row(n_points(part)).subvec(1,d) = data.row(i);
+        n_points(part)++;
+    }
+
+    for (int h=0; h < p; h++) {
+        sol_map[h] = sol_map[h].submat(0, 0, n_points(h) - 1, d);
+        if (n_points(h) < k) {
+            std::cerr << "read_part_data(): not enough point in partition " << h << " \n";
+            exit(EXIT_FAILURE);
+        }
+    }
+
+    return sol_map;
+}
+
 double compute_clusters(arma::mat data, arma::mat sol, std::map<int, std::list<std::pair<int, double>>> &cls_map) {
 
     int n = data.n_rows;
@@ -714,7 +748,7 @@ ResultData mr_heuristic_only_ray(int k, int p, arma::mat Ws) {
 
 }
 
-double test_lb(arma::mat Ws, int p, int k) {
+std::pair<double, double> test_lb(arma::mat Ws, int p, int k) {
 
     double lb_mss;
     double ub_mss;
@@ -734,7 +768,7 @@ double test_lb(arma::mat Ws, int p, int k) {
         sol_map = generate_partitions(Ws, p, cls_map);
     }
     if (part_m == 'f') {
-        sol_map = read_part_data(n, d, k, p);
+        sol_map = read_part_data2(n, d, k, p, Ws);
     }
     if (part_m == 'k') {
         arma::mat cent = arma::repmat(arma::mean(Ws, 0), n, 1);
@@ -891,10 +925,11 @@ double test_lb(arma::mat Ws, int p, int k) {
     ub_mss = compute_ub(Ws, sdp_sol, sol_map, k, p);
     std::cout << ub_mss  << "\n";
 
+    double gap = round((ub_mss - lb_mss) / ub_mss * 100);
     std::cout << std::endl << std::endl << "--------------------------------------------------------------------";
-    std::cout << std::endl << "Method " << part_m << " GAP UB-LB " << round((ub_mss - lb_mss) / ub_mss * 100) << "%" << std::endl;
+    std::cout << std::endl << "Method " << part_m << " GAP UB-LB " << gap << "%" << std::endl;
     std::cout << "--------------------------------------------------------------------" << std::endl;
 
-    return lb_mss;
+    return std::pair<double, double>(lb_mss, gap);
 
 }

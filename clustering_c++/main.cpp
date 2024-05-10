@@ -261,7 +261,7 @@ void run(int argc, char **argv) {
     std::string str_path = data_path;
     std::string inst_name = str_path.substr(str_path.find_last_of("/\\")+1);
     inst_name = inst_name.substr(0, inst_name.find("."));
-    std::ofstream test_SUMMARY(result_folder.substr(0, result_folder.find_last_of("/\\")) + "/test_SUMMARY.txt", std::ios::app);
+    std::ofstream test_SUMMARY(result_folder.substr(0, result_folder.find_last_of("/\\")) + "/test_SUMMARY2.txt", std::ios::app);
 
     result_path = result_folder + "/" + std::to_string(p) + "part/" + inst_name + "_" + std::to_string(k);
     if (!std::filesystem::exists(result_path))
@@ -337,9 +337,25 @@ void run(int argc, char **argv) {
     log_file << "Heuristic MSS: " << init_mss << "\n\n";
 
     part_m = 'a';
-    log_file << "Method k \n" << test_lb(Ws, p, k) << "\n";
+    log_file << "Method anticluster \n" << "\n";
+    std::pair<double, double> bb = test_lb(Ws, p, k);
+
+    test_SUMMARY << inst_name << "\t"
+    << k << "\t"
+    << p << "\t"
+    << opt_mss << "\t"
+    << part_m << "\t"
+    << bb.first << "\t"
+    << bb.second << "\t";
+
     part_m = 'f';
-    log_file << "Method f \n" << test_lb(Ws, p, k) << "\n";
+    log_file << "Method from file \n" << "\n";
+    bb = test_lb(Ws, p, k);
+
+    test_SUMMARY << part_m << "\t"
+    << sol_path << "\t"
+    << bb.first << "\t"
+    << bb.second << "\n";
 
     /*
     part_m = 'k';
@@ -383,7 +399,7 @@ void run(int argc, char **argv) {
     std::cout << "GAP LB Heur " << round((init_mss - lb_mss) / init_mss * 100) << "%" << std::endl;
     std::cout << "GAP UB Heur " << round((ub_mss - init_mss) / init_mss * 100) << "%" << std::endl;
     std::cout << "**********************************************************" << std::endl << std::endl;
-    
+
 	test_SUMMARY << inst_name << "\t"
 	<< p << "\t"
 	<< k << "\t"
@@ -406,8 +422,8 @@ void run(int argc, char **argv) {
     << round((init_mss - lb_mss) / init_mss * 100) << "%" << "\t"
     << round((ub_mss - init_mss) / init_mss * 100) << "%" << "\t"
     << "\n";
-
     */
+
 
     log_file.close();
 	test_SUMMARY.close();

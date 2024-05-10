@@ -29,6 +29,7 @@ typedef struct ResultData {
 
 void save_to_file(arma::mat X, std::string name);
 std::map<int, arma::mat> read_part_data(int n, int d, int k, int p);
+std::map<int, arma::mat> read_part_data2(int n, int d, int k, int p, arma::mat Ws);
 
 double compute_clusters(arma::mat data, arma::mat sol, std::map<int, std::list<std::pair<int, double>>> &cls_map);
 
@@ -65,6 +66,6 @@ ResultData mr_heuristic(int k, int p, arma::mat Ws);
 // define moving ray routine only with ray mechanism
 ResultData mr_heuristic_only_ray(int k, int p, arma::mat Ws);
 
-double test_lb(arma::mat Ws, int p, int k);
+std::pair<double, double> test_lb(arma::mat Ws, int p, int k);
 
 #endif //CLUSTERING_MR_HEURISTICS_H
