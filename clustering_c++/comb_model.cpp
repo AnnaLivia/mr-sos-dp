@@ -23,42 +23,41 @@ std::string comb_model::get_x_variable_name(int i, int h){
 
 std::string comb_model::get_y_variable_name(int i, int j, int h){
 	std::ostringstream os;
-	os << "y" << i << "_" << j << "_p" << h;
+	os << "y" << i << "_" << j << "_" << h;
 	return os.str();
 }
 
 std::string comb_model::get_point_constraint_name(int i){
 	std::ostringstream os;
-	os << "point" << i;
+	os << "X" << i;
 	return os.str();
 }
 
 std::string comb_model::get_part_constraint_name(int h){
 	std::ostringstream os;
-	os << "part" << h;
+	os << "P" << h;
 	return os.str();
 }
 
-/*
+
 std::string comb_model::get_edge_constraint_name(int i, int j, int h){
 	std::ostringstream os;
-	os << "y" << i << " " << j << "_p" << h;
+	os << "C" << i << "_" << j << "_" << h;
 	return os.str();
 }
-*/
 
 
-comb_gurobi_model::comb_gurobi_model(GRBEnv *env, int n, int p) : model(*env), X(n,p) {
+
+comb_gurobi_model::comb_gurobi_model(GRBEnv *env, int n, int p) : model(*env), X(n,p), Y(n*(n-1)/2,p) {
 	this->n = n;
 	this->p = p;
-	this->m = n*(n-1)/2;
 	this->env = env;
 	this->X = create_X_variables(this->model);
-	//this->Y = create_Y_variables(this->model);
+	this->Y = create_Y_variables(this->model);
     this->model.set("OutputFlag", "1");
-//    this->model.set("Threads", "4");
-    this->model.set("TimeLimit", "60");
-    //this->model.set("Presolve", std::to_string(lp_solver_presolve));
+	this->model.set("Threads", "4");
+    //this->model.set("TimeLimit", "60");
+    //this->model.set("Presolve", 1);
 }
 
 Matrix<GRBVar> comb_gurobi_model::create_X_variables(GRBModel &model) {
@@ -72,10 +71,10 @@ Matrix<GRBVar> comb_gurobi_model::create_X_variables(GRBModel &model) {
     return X;
 }
 
-/*
+
 Matrix<GRBVar> comb_gurobi_model::create_Y_variables(GRBModel &model) {
-    Matrix<GRBVar> Y(m, p);
-    for (int h = 0; h < m; h++) {
+    Matrix<GRBVar> Y(n*(n-1)/2, p);
+    for (int h = 0; h < p; h++) {
         int s = 0;
         for (int i = 0; i < n - 1; i++) {
             for (int j = i + 1; j < n; j++) {
@@ -87,7 +86,7 @@ Matrix<GRBVar> comb_gurobi_model::create_Y_variables(GRBModel &model) {
     }
     return Y;
 }
-*/
+
 
 void comb_gurobi_model::add_point_constraints() {
     for (int i = 0; i < n; i++) {
@@ -111,31 +110,33 @@ void comb_gurobi_model::add_part_constraints() {
     }
 }
 
-/*
+
 void comb_gurobi_model::add_edge_constraints() {
-    int s;
     for (int h = 0; h < p; h++) {
-        s = 0;
+        int s = 0;
         for (int i = 0; i < n-1; i++) {
             for (int j = i+1; j < n; j++) {
+                model.addConstr(Y(s, h) <= X(i, h));
+                model.addConstr(Y(s, h) <= X(j, h));
                 std::string name = get_edge_constraint_name(i, j, h);
-                model.addConstr(Y(s, h) <= (X(i, h) + X(j, h)) / 2, name);
+                model.addConstr(Y(s, h) >= X(i, h) + X(j, h)  -1 , name);
                 s++;
             }
 		}
     }
 }
- */
+
 
 
 void comb_gurobi_model::set_objective_function(arma::mat &dist) {
     GRBQuadExpr obj = 0;
     for (int h = 0; h < p; h++) {
-//        int s = 0;
+        int s = 0;
         for (int i = 0; i < n - 1; i++) {
             for (int j = i + 1; j < n; j++) {
-                obj += dist(i, j) * X(i, h) * X(j, h);
-//                s++;
+                // obj += dist(i, j) * X(i, h) * X(j, h);
+                obj += dist(i, j) * Y(s, h);
+                s++;
             }
         }
     }
@@ -144,10 +145,10 @@ void comb_gurobi_model::set_objective_function(arma::mat &dist) {
 
 void comb_gurobi_model::optimize(){
 	try {
-        //std::string file = log_path;
-        //auto name = file.substr(0, file.find_last_of("."));
-        //model.write(name + ".lp");
-        
+        std::string file = sol_path;
+        auto name = file.substr(0, file.find_last_of("."));
+        model.write(name + ".lp");
+
 		model.optimize();
 		status = model.get(GRB_IntAttr_Status);
     } catch (GRBException &e) {
@@ -167,6 +168,7 @@ arma::mat comb_gurobi_model::get_x_solution() {
 	arma::mat Xopt(n, p);
 	for (int i = 0; i < n; i++) {
 		for (int h = 0; h < p; h++) {
+        	std::cout << X(i, h).get(GRB_DoubleAttr_X);
 			Xopt(i, h) = X(i, h).get(GRB_DoubleAttr_X);
 		}
 	}

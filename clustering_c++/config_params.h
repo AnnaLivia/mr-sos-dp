@@ -74,5 +74,6 @@ extern int kmeans_max_iter;
 extern int kmeans_n_start;
 extern int kmeans_permutations;
 extern bool kmeans_verbose;
+extern arma::mat init_sol;
 
 #endif //CLUSTERING_CONFIG_PARAMS_H

@@ -56,6 +56,7 @@ int kmeans_max_iter;
 int kmeans_n_start;
 int kmeans_permutations;
 bool kmeans_verbose;
+arma::mat init_sol;
 
 // read parameters in config file
 std::map<std::string, std::string> read_params(std::string &config_file) {
@@ -280,7 +281,6 @@ void run(int argc, char **argv) {
     arma::mat Ws = read_data(data_path, n, d);
     arma::mat opt_sol = read_sol(opt_path, n, k);
     double opt_mss = compute_mss(Ws, opt_sol);
-    arma::mat init_sol;
     if (h == -1)
         init_sol = read_sol(sol_path, n, k);
     else if (h > 0) {
@@ -336,26 +336,31 @@ void run(int argc, char **argv) {
     log_file << "optimal MSS: " << opt_mss << "\n";
     log_file << "Heuristic MSS: " << init_mss << "\n\n";
 
-    part_m = 'a';
-    log_file << "Method anticluster \n" << "\n";
-    std::pair<double, double> bb = test_lb(Ws, p, k);
-
+    std::pair<double, double> bb;
     test_SUMMARY << inst_name << "\t"
     << k << "\t"
     << p << "\t"
-    << opt_mss << "\t"
-    << part_m << "\t"
+    << opt_mss << "\t";
+
+    /*
+    part_m = 'p';
+    log_file << "Method cluster-part model \n" << "\n";
+    bb = test_lb(Ws, p, k);
+
+    test_SUMMARY << part_m << "\t"
     << bb.first << "\t"
     << bb.second << "\t";
+    */
 
-    part_m = 'f';
-    log_file << "Method from file \n" << "\n";
+    part_m = 'p';
+    log_file << "Method anticlust \n" << "\n";
     bb = test_lb(Ws, p, k);
 
     test_SUMMARY << part_m << "\t"
     << sol_path << "\t"
     << bb.first << "\t"
-    << bb.second << "\n";
+    << bb.second << "\n"
+    << round((init_mss - bb.first) / init_mss * 100);;
 
     /*
     part_m = 'k';

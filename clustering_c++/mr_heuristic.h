@@ -40,6 +40,7 @@ UserConstraints generate_constraints(std::map<int, std::list<std::pair<int, doub
 int generate_part_constraints(std::map<int, arma::mat> sol_map, int k, int p, UserConstraints &constraints);
 double compute_part_lb(std::map<int, arma::mat> &sol_map);
 std::map<int, arma::mat> compute_comb_bound(arma::mat &data, int p);
+std::map<int, arma::mat> compute_cluster_bound(arma::mat &data, int p);
 
 // generate partitions from clusters
 std::map<int, arma::mat> generate_partitions(arma::mat data, int n_part,
