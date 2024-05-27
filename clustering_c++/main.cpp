@@ -6,7 +6,8 @@
 #include <armadillo>
 #include "Kmeans.h"
 #include "kmeans_util.h"
-#include "mr_heuristic.h"
+//#include "mr_heuristic.h"
+#include "ac_heuristic.h"
 
 // data file
 const char *data_path;
@@ -262,7 +263,7 @@ void run(int argc, char **argv) {
     std::string str_path = data_path;
     std::string inst_name = str_path.substr(str_path.find_last_of("/\\")+1);
     inst_name = inst_name.substr(0, inst_name.find("."));
-    std::ofstream test_SUMMARY(result_folder.substr(0, result_folder.find_last_of("/\\")) + "/test_SUMMARY2.txt", std::ios::app);
+    std::ofstream test_SUMMARY(result_folder.substr(0, result_folder.find_last_of("/\\")) + "/test_SUMMARY4.txt", std::ios::app);
 
     result_path = result_folder + "/" + std::to_string(p) + "part/" + inst_name + "_" + std::to_string(k);
     if (!std::filesystem::exists(result_path))
@@ -276,11 +277,13 @@ void run(int argc, char **argv) {
 
     //lb_file.open(result_path + "_LB.txt");
     //ub_file.open(result_path + "_UB.txt");
-    log_file.open(result_path + "_LOG2.txt");
+    log_file.open(result_path + "_LOG3.txt");
 
     arma::mat Ws = read_data(data_path, n, d);
-    arma::mat opt_sol = read_sol(opt_path, n, k);
-    double opt_mss = compute_mss(Ws, opt_sol);
+    //arma::mat opt_sol = read_sol(opt_path, n, k);
+    //double opt_mss = compute_mss(Ws, opt_sol);
+    arma::mat opt_sol = arma::mat(n,k);
+    double opt_mss = 0;
     if (h == -1)
         init_sol = read_sol(sol_path, n, k);
     else if (h > 0) {
@@ -297,12 +300,13 @@ void run(int argc, char **argv) {
         std::cout << "Iter:" << kmeans_max_iter << std::endl << "Start:" << kmeans_n_start;
         std::cout << std::endl << "Permutation:" << kmeans_permutations;
         init_sol = kmeans.getAssignments();
-		//    save_to_file(init_sol, result_path, "_init");
     }
     double init_mss = compute_mss(Ws, init_sol);
     std::cout << std::endl << std::endl;
     std::cout << std::endl << "******************************************************************" << std::endl;
     std::cout << "Instance " << inst_name << std::endl;
+    std::cout << "Num Points " << n << std::endl;
+    std::cout << "Num Features " << d << std::endl;
     std::cout << "Num Partitions " << p << std::endl;
     std::cout << "Num Clusters " << k << std::endl << std::endl;
     std::cout << "Heuristic MSS: " << init_mss << std::endl;
@@ -336,39 +340,52 @@ void run(int argc, char **argv) {
     log_file << "optimal MSS: " << opt_mss << "\n";
     log_file << "Heuristic MSS: " << init_mss << "\n\n";
 
-    std::pair<double, double> bb;
+    HResult results;
     test_SUMMARY << inst_name << "\t"
     << k << "\t"
     << p << "\t"
     << opt_mss << "\t";
 
-    /*
-    part_m = 'p';
+    part_m = 'o';
     log_file << "Method cluster-part model \n" << "\n";
-    bb = test_lb(Ws, p, k);
+    results = heuristic(Ws, p, k);
 
     test_SUMMARY << part_m << "\t"
-    << bb.first << "\t"
-    << bb.second << "\t";
-    */
+    << results.h_obj << "\t"
+    << results.lb_mss << "\t"
+    << round((init_mss - results.lb_mss) / init_mss * 100) << "\t"
+    << round(results.h_time) << "\t"
+    << round(results.lb_time) << "\t"
+    << round(results.ub_time) << "\t"
+    << round(results.all_time) << "\n";
 
-    part_m = 'p';
-    log_file << "Method anticlust \n" << "\n";
-    bb = test_lb(Ws, p, k);
-
-    test_SUMMARY << part_m << "\t"
-    << sol_path << "\t"
-    << bb.first << "\t"
-    << bb.second << "\n"
-    << round((init_mss - bb.first) / init_mss * 100);;
+    std::cout << std::endl << "--------------------------------------------------------------------";
+    std::cout << std::endl << "Method " << part_m << " GAP SOL-LB " <<  round((init_mss - results.lb_mss) / init_mss * 100) << "%" << std::endl;
+    std::cout << "--------------------------------------------------------------------" << std::endl;
 
     /*
+    part_m = 'a';
+    log_file << "Method antic total \n" << "\n";
+    bb = test_lb(Ws, p, k);
+
+    test_SUMMARY << part_m << "\t"
+    << bb.first << "\t"
+    << round((init_mss - bb.first) / init_mss * 100) << "\t"
+    << round((bb.second - bb.first) / bb.second * 100) << "\n";
+
+    std::cout << std::endl << "--------------------------------------------------------------------";
+    std::cout << std::endl << "Method " << part_m << " GAP SOL-LB " <<  round((init_mss - bb.first) / init_mss * 100) << "%" << std::endl;
+    std::cout << "--------------------------------------------------------------------" << std::endl;
+
+
     part_m = 'k';
     log_file << "Method a \n" << test_lb(Ws, p, k) << "\n";
     part_m = 'c';
     log_file << "Method c \n" << test_lb(Ws, p, k) << "\n";
     part_m = 'r';
     log_file << "Method r \n" << test_lb(Ws, p, k) << "\n";
+    part_m = 'f';
+    << sol_path << "\t"
 
     ResultData results = mr_heuristic(k, p, Ws);
 
@@ -427,8 +444,8 @@ void run(int argc, char **argv) {
     << round((init_mss - lb_mss) / init_mss * 100) << "%" << "\t"
     << round((ub_mss - init_mss) / init_mss * 100) << "%" << "\t"
     << "\n";
-    */
 
+    */
 
     log_file.close();
 	test_SUMMARY.close();

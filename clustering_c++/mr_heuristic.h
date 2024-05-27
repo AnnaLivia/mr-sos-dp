@@ -27,6 +27,17 @@ typedef struct ResultData {
 
 } ResultData;
 
+typedef struct HResult {
+
+	double lb_mss;
+	double ub_mss;
+	double h_time;
+	double lb_time;
+	double ub_time;
+	double all_time;
+
+} HResult;
+
 void save_to_file(arma::mat X, std::string name);
 std::map<int, arma::mat> read_part_data(int n, int d, int k, int p);
 std::map<int, arma::mat> read_part_data2(int n, int d, int k, int p, arma::mat Ws);
@@ -41,6 +52,9 @@ int generate_part_constraints(std::map<int, arma::mat> sol_map, int k, int p, Us
 double compute_part_lb(std::map<int, arma::mat> &sol_map);
 std::map<int, arma::mat> compute_comb_bound(arma::mat &data, int p);
 std::map<int, arma::mat> compute_cluster_bound(arma::mat &data, int p);
+std::map<int, arma::mat> compute_part_bound(arma::mat &data, int p);
+std::map<int, arma::mat> heuristic_part(arma::mat &data, int p);
+std::map<int, arma::mat> kmeans_part(arma::mat &data, int p);
 
 // generate partitions from clusters
 std::map<int, arma::mat> generate_partitions(arma::mat data, int n_part,
@@ -67,6 +81,6 @@ ResultData mr_heuristic(int k, int p, arma::mat Ws);
 // define moving ray routine only with ray mechanism
 ResultData mr_heuristic_only_ray(int k, int p, arma::mat Ws);
 
-std::pair<double, double> test_lb(arma::mat Ws, int p, int k);
+HResult test_lb(arma::mat Ws, int p, int k);
 
 #endif //CLUSTERING_MR_HEURISTICS_H

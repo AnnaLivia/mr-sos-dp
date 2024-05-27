@@ -59,7 +59,7 @@ cluster_gurobi_model::cluster_gurobi_model(GRBEnv *env, int n, int p, int k, arm
     this->model.set("OutputFlag", "1");
 	this->model.set("Threads", "4");
 	this->model.set("OptimalityTol", "1e-5");
-    //this->model.set("TimeLimit", "60");
+    this->model.set("TimeLimit", "300");
     //this->model.set("Presolve", 1);
 }
 
@@ -68,7 +68,7 @@ GRBMatrix<GRBVar> cluster_gurobi_model::create_X_variables(GRBModel &model) {
     for (int i = 0; i < n; i++) {
         for (int h = 0; h < p; h++) {
 			std::string name = get_x_variable_name(i, h);
-            X(i, h) = model.addVar(0.0, 1, 0.0, GRB_CONTINUOUS, name);
+            X(i, h) = model.addVar(0.0, 1, 0.0, GRB_BINARY, name);
         }
     }
     return X;
@@ -115,22 +115,22 @@ void cluster_gurobi_model::add_point_constraints() {
 }
 
 void cluster_gurobi_model::add_part_constraints() {
-	int k = init_sol.n_cols;
-    for (int c = 0; c < k; c++) {
+    //for (int c = 0; c < k; c++) {
 	    for (int h = 0; h < p; h++) {
     		int nc = 0;
 	        GRBLinExpr lhs_sum = 0;
-	        for (int i = 0; i < n; i++)
-	        	if (init_sol(i,c) == 1) {
+	        for (int i = 0; i < n; i++) {
+	        	//if (init_sol(i,c) == 1) {
 	            	lhs_sum += X(i, h);
 	            	nc++;
 	            }
-	        std::string name = get_part_constraint_name(c, h);
-	    	model.addConstr(lhs_sum >= std::floor(nc/p), name);
+	    	model.addConstr(lhs_sum >= std::floor(n/p), "P" + std::to_string(h));
+	        //std::string name = get_part_constraint_name(c, h);
+	    	//model.addConstr(lhs_sum >= std::floor(nc/p), name);
 	    	//model.addConstr(lhs_sum <= nc/(p - 1), name);
 	    	//model.addConstr(lhs_sum >= nc/(p + 1) , name);
 	    }
-    }
+    //}
 }
 
 
@@ -140,12 +140,12 @@ void cluster_gurobi_model::add_edge_constraints() {
         for (int i = 0; i < n-1; i++) {
             for (int j = i+1; j < n; j++) {
             	for (int c = 0; c < k; c++)
-            		if (init_sol(i,c) == 1 and init_sol(j,c) ==1) {
+            		//if (init_sol(i,c) == 1 and init_sol(j,c) ==1) {
 	                	model.addConstr(Y(s, h) <= X(i, h));
 	                	model.addConstr(Y(s, h) <= X(j, h));
 	                	std::string name = get_edge_constraint_name(i, j, h);
 	                	model.addConstr(Y(s, h) >= X(i, h) + X(j, h)  -1 , name);
-                	}
+                	//}
                 s++;
             }
 		}
@@ -158,10 +158,10 @@ void cluster_gurobi_model::add_min_constraints(arma::mat dist) {
 		int s = 0;
 		for (int i = 0; i < n-1; i++) {
 			for (int j = i+1; j < n; j++) {
-    			for (int c = 0; c < k; c++) {
-					if (init_sol(i,c) == 1 and init_sol(j,c) ==1)
+    			//for (int c = 0; c < k; c++) {
+					//if (init_sol(i,c) == 1 and init_sol(j,c) ==1)
 						con += dist(i, j) * Y(s, h);
-				}
+				//}
 				s++;
 			}
 		}

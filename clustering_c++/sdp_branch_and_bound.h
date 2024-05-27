@@ -69,6 +69,18 @@ typedef struct ResultData {
 
 } ResultData;
 
+typedef struct HResult {
+
+	double h_obj;
+	double lb_mss;
+	double ub_mss;
+	double h_time;
+	double lb_time;
+	double ub_time;
+	double all_time;
+
+} HResult;
+
 double sdp_branch_and_bound(int k, arma::mat &Ws, UserConstraints &constraints, arma::mat &sol);
 std::pair<JobData *, JobData *> build_root_problem(MatlabStruct *matlab_struct, InputData *input_data, SharedData *shared_data);
 std::pair<JobData *, JobData *> build_cl_problem(MatlabStruct *matlab_struct, NodeData *job_data, InputData *input_data, SharedData *shared_data);

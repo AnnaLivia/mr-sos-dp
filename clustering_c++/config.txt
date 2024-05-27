@@ -17,7 +17,7 @@ SDP_SOLVER_SESSION_THREADS = 1
 # sdp solver path
 SDP_SOLVER_FOLDER = /home/aelle/mr-sos-dp/SDPNAL
 # precision of the sdp solver
-SDP_SOLVER_TOL = 1e-5
+SDP_SOLVER_TOL = 1e-4
 # do not display log (0), display log (1)
 SDP_SOLVER_VERBOSE = 0
 # max cutting plane iterations (root)

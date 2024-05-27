@@ -80,4 +80,9 @@ ruspini	4	2	12881.1	a	../instances/anticlust/ruspini_2.txt	12732.2	1
 1ruspini	4	2	12881.1	p	../instances/results/2part/ruspini_4/ruspini_4_f_LB_method_v.txt	12851.7	0
 0ruspini	4	2	12881.1	p	../instances/results/2part/ruspini_4/ruspini_4_f_LB_method_v.txt	12777.9	1
 1ruspini	4	2	12881.1	p	../instances/results/2part/ruspini_4/ruspini_4_f_LB_method_v.txt	12851.7	0
-0
+0ruspini	4	2	12881.1	p	../instances/variance/ruspini_2.txt	12366.1	4
+4ruspini	4	2	12881.1	p	../instances/variance/ruspini_2.txt	12178.5	5
+5ruspini	4	2	12881.1	p	../instances/variance/ruspini_2.txt	12426.8	4
+4ruspini	4	2	12881.1	p	../instances/variance/ruspini_2.txt	12851.7	0
+0ruspini	4	2	12881.1	v	../instances/results/2part/ruspini_4/ruspini_4_f_LB_method_p.txt	12672.2	2	2
+ruspini	4	2	12881.1	a	../instances/results/2part/ruspini_4/ruspini_4_f_LB_method_p.txt	12191.9	5	5
