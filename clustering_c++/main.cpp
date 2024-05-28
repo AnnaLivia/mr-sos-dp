@@ -23,6 +23,8 @@ std::ofstream ub_file;
 
 // partition method
 char part_m;
+int n_threads_partition;
+int n_threads_anticlustering;
 
 // branch and bound
 double branch_and_bound_tol;
@@ -215,7 +217,13 @@ void run(int argc, char **argv) {
     branch_and_bound_parallel = std::stoi(config_map["BRANCH_AND_BOUND_PARALLEL"]);
     branch_and_bound_max_nodes = std::stoi(config_map["BRANCH_AND_BOUND_MAX_NODES"]);
     branch_and_bound_visiting_strategy = std::stoi(config_map["BRANCH_AND_BOUND_VISITING_STRATEGY"]);
-    
+
+    // number of thread for computing the partition bound
+    n_threads_partition = std::stoi(config_map["PARTITION_THREADS"]);
+    n_threads_anticlustering = std::stoi(config_map["ANTICLUSTERING_THREADS"]);
+
+
+
     // sdp solver
     // sdp_solver_matlab_session = config_map["SDP_SOLVER_MATLAB_SESSION"].c_str();
     sdp_solver_session_threads_root = std::stoi(config_map["SDP_SOLVER_SESSION_THREADS_ROOT"]);
@@ -320,7 +328,10 @@ void run(int argc, char **argv) {
     log_file << "BRANCH_AND_BOUND_PARALLEL: " << branch_and_bound_parallel << "\n";
     log_file << "BRANCH_AND_BOUND_MAX_NODES: " << branch_and_bound_max_nodes << "\n";
     log_file << "BRANCH_AND_BOUND_VISITING_STRATEGY: " << branch_and_bound_visiting_strategy << "\n\n";
-    
+
+    log_file << "PARTITION_THREADS: " << n_threads_partition << "\n";
+    log_file << "ANTICLUSTERING_THREADS: " << n_threads_anticlustering << "\n\n";
+
     log_file << "SDP_SOLVER_SESSION_THREADS_ROOT: " << sdp_solver_session_threads_root << "\n";
     log_file << "SDP_SOLVER_SESSION_THREADS: " << sdp_solver_session_threads << "\n";
     log_file << "SDP_SOLVER_FOLDER: " << sdp_solver_folder << "\n";

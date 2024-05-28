@@ -4,12 +4,8 @@
 #include <unordered_map>
 #include "MatlabEngine.hpp"
 #include "MatlabDataArray.hpp"
+#include "sdp_branch_and_bound.h"
 
-typedef struct UserConstraints {
-
-	std::vector<std::pair<int,int>> ml_pairs, cl_pairs;
-
-} UserConstraints;
 
 typedef struct HResult {
 
@@ -34,5 +30,7 @@ arma::mat save_lb(std::map<int, arma::mat> &sol_map, int p);
 arma::mat save_ub(arma::mat data, arma::mat sol);
 
 HResult heuristic(arma::mat Ws, int p, int k);
+
+std::pair<int, std::unordered_map<int, std::vector<int>>> compute_anti_single_cluster(int num_rep, std::vector<int> &cls_points, std::vector<std::vector<double>> &all_dist, int p, int n, double max_d);
 
 #endif //CLUSTERING_AC_HEURISTICS_H

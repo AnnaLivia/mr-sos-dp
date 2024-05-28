@@ -3,6 +3,7 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/.idea/mr-sos-sdp.iml" filepath="$PROJECT_DIR$/.idea/mr-sos-sdp.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/plot_sol.ipynb.iml" filepath="$PROJECT_DIR$/.idea/plot_sol.ipynb.iml" />
     </modules>
   </component>
 </project>

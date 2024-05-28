@@ -38,6 +38,8 @@ extern std::ofstream ub_file;
 
 // partition method
 extern char part_m;
+extern int n_threads_partition;
+extern int n_threads_anticlustering;
 
 // branch and bound
 extern double branch_and_bound_tol;

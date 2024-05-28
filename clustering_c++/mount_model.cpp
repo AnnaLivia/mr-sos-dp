@@ -28,7 +28,7 @@ std::string mount_model::get_y_variable_name(int c1, int h1, int c2, int h2, int
 }
 
 
-mount_gurobi_model::mount_gurobi_model(GRBEnv *env, int n, int p, int k, int m, arma::mat dist, std::map<int, std::map<int, arma::mat>> sol_cls) : model(*env), X(k*p,p), Y(m,p) {
+mount_gurobi_model::mount_gurobi_model(GRBEnv *env, int n, int p, int k, int m, arma::mat &dist, std::unordered_map<int, std::unordered_map<int, arma::mat>> &sol_cls) : model(*env), X(k*p,p), Y(m,p) {
 	this->n = n;
 	this->p = p;
 	this->k = k;

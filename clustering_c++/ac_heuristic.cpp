@@ -6,6 +6,9 @@
 #include "matlab_util.h"
 #include "mount_model.h"
 #include "sdp_branch_and_bound.h"
+#include "ThreadPoolPartition.h"
+#include "ac_heuristic.h"
+#include "ThreadPoolAnti.h"
 
 void save_to_file(arma::mat X, std::string name){
     
@@ -179,6 +182,156 @@ arma::mat save_ub(arma::mat data, arma::mat sol) {
 
 }
 
+std::pair<int, std::unordered_map<int, std::vector<int>>> compute_anti_single_cluster(int num_rep, std::vector<int> &cls_points, std::vector<std::vector<double>> &all_dist, int p, int n, double max_d) {
+
+    int nc = (int) cls_points.size();
+
+    /* Start main iteration loop for exchange procedure */
+    std::unordered_map<int, std::vector<int>> best_part_map;
+    double best_dist = 0;
+
+    for (int l = 0; l < num_rep; l++) {
+
+        // create partition vector
+        double dist = 0;
+        std::unordered_map<int, std::vector<int>> part_map(p);
+        std::vector<double> part_dist(p);
+        std::vector<int> part(n);
+        std::vector<int> pp(p);
+        std::vector<double> min_dist(p);
+        for (int h = 0; h < p; h++) {
+            if (h < nc % p)
+                pp[h] = floor(nc/p) + 1;
+            else
+                pp[h] = floor(nc/p);
+            part_map[h].resize(pp[h]);
+        }
+
+        // assign random point to partitions and compute dist of current partition
+        std::vector<int> cls_copy = cls_points;
+        for (int h = 0; h < p && !cls_copy.empty(); ++h) {
+            for (int t = 0; t < pp[h]; ++t) {
+                int idx = rand() % (cls_copy.size());
+                int i = cls_copy[idx];
+                cls_copy.erase(cls_copy.begin() + idx);
+
+                part[i] = h;
+                for (const int& j : part_map[h]) {
+                    dist += all_dist[i][j];
+                    part_dist[h] += all_dist[i][j];
+                    if (min_dist[h] > all_dist[i][j])
+                        min_dist[h] = all_dist[i][j];
+                }
+                part_map[h][t] = i;
+            }
+            dist += min_dist[h];
+        }
+
+        if (l == 0) {
+            best_part_map = part_map;
+            best_dist = dist;
+        }
+
+        // Iterate through cluster data points
+        for (int id1 = 0; id1 < nc - 1; ++id1) {
+
+            int i = cls_points[id1];
+            double best_obj = dist;
+            int h1 = part[i];
+            int idh1 = -1;
+
+            // Initialize `best` variable for the i-th item
+            double best_h1 = 0;
+            double best_h2 = 0;
+            double best_min_h1 = min_dist[h1];
+            double best_min_h2 = max_d;
+            std::pair<int, int> best_swap(NULL,NULL);
+
+            // Iterate through the exchange partners
+            for (int id2 = id1+1; id2 < nc; ++id2) {
+                int j = cls_points[id2];
+
+                int h2 = part[j];
+                int idh2 = -1;
+
+                if (h2 != h1) {
+
+                    double swap_obj = 0;
+
+                    for (int h3= 0; h3 < p; h3++)
+                        if (h3 != h1 and h3!=h2)
+                            swap_obj += part_dist[h3] + min_dist[h3];
+
+                    double dist_h1 = part_dist[h1];
+                    double min_dist_h1 = min_dist[h1];
+                    for (int ids = 0; ids < pp[h1]; ids++) {
+                        int s = part_map[h1][ids];
+                        if (s != i) {
+                            dist_h1 += all_dist[j][s] - all_dist[i][s];
+                            if (min_dist_h1 > all_dist[j][s])
+                                min_dist_h1 = all_dist[j][s];
+                        }
+                        else
+                            idh1 = ids;
+                    }
+
+                    double dist_h2 = part_dist[h2];
+                    double min_dist_h2 = min_dist[h2];
+                    for (int ids = 0; ids < pp[h2]; ids++) {
+                        int s = part_map[h2][ids];
+                        if (s != j) {
+                            dist_h2 += all_dist[i][s] - all_dist[j][s];
+                            if (min_dist_h2 > all_dist[i][s])
+                                min_dist_h2 = all_dist[i][s];
+                        }
+                        else
+                            idh2 = ids;
+                    }
+
+                    swap_obj += dist_h1 + dist_h2 + min_dist_h1 + min_dist_h2;
+
+                    // Update `best` if objective was improved
+                    if (swap_obj > best_obj) {
+                        best_obj = swap_obj;
+                        best_h1 = dist_h1;
+                        best_h2 = dist_h2;
+                        best_min_h1 = min_dist_h1;
+                        best_min_h2 = min_dist_h2;
+                        best_swap = std::pair<int, int>(id2, idh2);
+                    }
+                }
+            }
+
+            // Only if objective is improved: Do the swap
+            if (best_obj > dist) {
+                dist = best_obj;
+                int id2 = best_swap.first;
+                int idh2 = best_swap.second;
+                int j = cls_points[id2];
+                int h2 = part[j];
+                part_map[h1][idh1] = j;
+                part_map[h2][idh2] = i;
+                part[i] = h2;
+                part[j] = h1;
+                part_dist[h1] = best_h1;
+                part_dist[h2] = best_h2;
+                min_dist[h1] = best_min_h1;
+                min_dist[h2] = best_min_h2;
+                best_swap = std::pair<int, int>(NULL, NULL);
+            }
+        }
+
+        if (dist > best_dist) {
+            best_dist = dist;
+            best_part_map = part_map;
+        }
+
+    }
+
+    return std::make_pair(best_dist, best_part_map);
+
+}
+
 HResult heuristic(arma::mat data, int p, int k) {
 
 	HResult results;
@@ -226,17 +379,18 @@ HResult heuristic(arma::mat data, int p, int k) {
 		cls[c].resize(cp[c]);
 
 	int num_update = 0;
-	std::map<int, std::map<int, arma::mat> > sol_cls;
+    std::unordered_map<int, std::unordered_map<int, arma::mat>> sol_cls;
 
 	auto start_time_h = std::chrono::high_resolution_clock::now();
 
     for (int c = 0; c < k; c++) {
 
+        /*
     	std::cout << "Cluster " << c << std::endl;
     	std::vector<int> cls_points = cls[c];
     	int nc = cp[c];
 
-        /* Start main iteration loop for exchange procedure */
+        // Start main iteration loop for exchange procedure
     	std::unordered_map<int, std::vector<int>> best_part_map;
         double best_dist = 0;
 
@@ -290,7 +444,7 @@ HResult heuristic(arma::mat data, int p, int k) {
             	int h1 = part[i];
             	int idh1 = -1;
 
-	            // Initialize `best` variable for the i'th item
+	            // Initialize `best` variable for the i-th item
     	        double best_h1 = 0;
         		double best_h2 = 0;
         		double best_min_h1 = min_dist[h1];
@@ -394,16 +548,71 @@ HResult heuristic(arma::mat data, int p, int k) {
     		sol_cls[c][h] = sol_cls[c][h].submat(0, 0, np - 1, d);
     	}
 
+        */
+
+        int num_rep = 100;
+
+        auto *input_data = new InputDataAnti();
+        input_data->data = data;
+        input_data->p = p;
+        input_data->num_rep = num_rep;
+        input_data->all_dist = all_dist;
+        input_data->max_d = max_d;
+
+        auto *shared_data = new SharedDataAnti();
+
+        for (auto &part: sol_map) {
+            auto *job = new AntiJob();
+            job->c = c;
+            job->cls_points = cls[c];
+            shared_data->queue.push_back(job);
+        }
+
+        shared_data->threadStates.reserve(n_threads_partition);
+        for (int i = 0; i < n_threads_partition; i++) {
+            shared_data->threadStates.push_back(false);
+        }
+
+        ThreadPoolAnti pool(input_data, shared_data, n_threads_anticlustering);
+
+        while (true) {
+
+            {
+                std::unique_lock<std::mutex> l(shared_data->queueMutex);
+                while (is_thread_pool_working(shared_data->threadStates)) {
+                    shared_data->mainConditionVariable.wait(l);
+                }
+
+                if (shared_data->queue.empty())
+                    break;
+            }
+
+        }
+
+        // collect all the results
+        results.h_obj = 0;
+        for (auto &obj : shared_data->dist_cls) {
+            results.h_obj += obj;
+        }
+
+        sol_cls = shared_data->sol_cls;
+
+        std::cout << std::endl << std::endl << "Heuristic total dist " << results.h_obj << std::endl;
+
+        pool.quitPool();
+
+        // free memory
+        delete (input_data);
+        delete (shared_data);
+
 
     }
-
-	std::cout << std::endl << std::endl << "Heuristic total dist " << results.h_obj << std::endl;
-	std::cout << "Num update " << num_update << std::endl << std::endl;
 
     // mount cluster partitions
     try {
     	GRBEnv *env = new GRBEnv();
-    	mount_model *model = new mount_gurobi_model(env, n, p, k, k*p*(k-1)*p/2, compute_distances(data), sol_cls);
+        arma::mat distances = compute_distances(data);
+    	mount_model *model = new mount_gurobi_model(env, n, p, k, k*p*(k-1)*p/2, distances, sol_cls);
 
     	model->add_point_constraints();
     	model->add_cls_constraints();
@@ -419,7 +628,7 @@ HResult heuristic(arma::mat data, int p, int k) {
     			if (c==0)
     				sol_map[t] = sol_cls[c][sol[t](c)];
     			else
-    				sol_map[t] = std::move(arma::join_vert(sol_map[t], sol_cls[c][sol[t](c)]));
+    				sol_map[t] = arma::join_vert(sol_map[t], sol_cls[c][sol[t](c)]);
     		}
     	}
 
@@ -440,21 +649,87 @@ HResult heuristic(arma::mat data, int p, int k) {
 
 	// create lower bound
 	auto start_time_lb = std::chrono::high_resolution_clock::now();
-    results.lb_mss = compute_lb(sol_map, k);
-    sdp_sol = save_lb(sol_map, p);
-	save_to_file(sdp_sol, "LB_method_" + std::string(1,part_m));
+
+    auto *input_data = new InputDataPartition();
+    input_data->k = k;
+    input_data->p = p;
+    input_data->d = d;
+
+    auto *shared_data = new SharedDataPartition();
+
+    for (auto &part: sol_map) {
+        auto *job = new PartitionJob();
+        job->part_id = part.first;
+        job->part = part.second;
+        shared_data->queue.push_back(job);
+    }
+
+    shared_data->threadStates.reserve(n_threads_partition);
+    for (int i = 0; i < n_threads_partition; i++) {
+        shared_data->threadStates.push_back(false);
+    }
+
+    ThreadPoolPartition pool(input_data, shared_data, n_threads_partition);
+
+    while (true) {
+
+        {
+            std::unique_lock<std::mutex> l(shared_data->queueMutex);
+            while (is_thread_pool_working(shared_data->threadStates)) {
+                shared_data->mainConditionVariable.wait(l);
+            }
+
+            if (shared_data->queue.empty())
+                break;
+        }
+
+    }
+
+    // collect all the results
+    results.lb_mss = 0;
+    for (auto &bound : shared_data->lb_part) {
+        results.lb_mss += bound;
+    }
+
+    std::cout  << std::endl << std::endl << "LB MSS: " << results.lb_mss << std::endl;
+    log_file << "Merge LB MSS: " << results.lb_mss << "\n\n\n";
+
+    arma::mat part;
+    arma::mat sol;
+    for (int h = 0; h < p; ++h) {
+        if (h == 0) {
+            part = arma::ones(shared_data->sol_part[h].n_rows,1);
+            sol = arma::join_horiz(part, shared_data->sol_part[h]);
+        }
+        part = arma::vec(shared_data->sol_part[h].n_rows,1).fill(h+1);
+        arma::mat solp = arma::join_horiz(part, shared_data->sol_part[h]);
+        sol = arma::join_vert(sol, solp);
+    }
+
+    pool.quitPool();
+
+    // free memory
+    delete (input_data);
+    delete (shared_data);
+
+    //results.lb_mss = compute_lb(sol_map, k);
+    //sdp_sol = save_lb(sol_map, p);
+	//save_to_file(sdp_sol, "LB_method_" + std::string(1,part_m));
+
 	auto end_time_lb = std::chrono::high_resolution_clock::now();
+
 	results.lb_time = std::chrono::duration_cast<std::chrono::minutes>(end_time_lb - start_time_lb).count();
 
     // create upper bound
-	auto start_time_ub = std::chrono::high_resolution_clock::now();
-    results.ub_mss = compute_ub(data, sdp_sol, sol_map, k, p);
-    sdp_sol = save_ub(data	, sdp_sol);
+	/*
+	 * auto start_time_ub = std::chrono::high_resolution_clock::now();
+    results.ub_mss = compute_ub(data, sol, sol_map, k, p);
+    sdp_sol = save_ub(data	, sol);
 	save_to_file(sdp_sol, "UB_method_" + std::string(1,part_m));
 	auto end_time_ub = std::chrono::high_resolution_clock::now();
 	results.ub_time = std::chrono::duration_cast<std::chrono::minutes>(end_time_ub - start_time_ub).count();
-
 	results.all_time = results.h_time + results.lb_time + results.ub_time;
+    */
 
 
     return results;
