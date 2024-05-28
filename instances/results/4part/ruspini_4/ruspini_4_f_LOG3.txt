@@ -1,10 +1,13 @@
 DATA_FILE, SOL_FILE, n, d, k: ../instances/data/ruspini.txt ../instances/anticlust/ruspini_4.txt 75 2 4
-BRANCH_AND_BOUND_TOL: 0.001
-BRANCH_AND_BOUND_PARALLEL: 16
+BRANCH_AND_BOUND_TOL: 1e-06
+BRANCH_AND_BOUND_PARALLEL: 1
 BRANCH_AND_BOUND_MAX_NODES: 1
 BRANCH_AND_BOUND_VISITING_STRATEGY: 0
 
-SDP_SOLVER_SESSION_THREADS_ROOT: 16
+PARTITION_THREADS: 1
+ANTICLUSTERING_THREADS: 1
+
+SDP_SOLVER_SESSION_THREADS_ROOT: 2
 SDP_SOLVER_SESSION_THREADS: 1
 SDP_SOLVER_FOLDER: /home/aelle/mr-sos-dp/SDPNAL
 SDP_SOLVER_TOL: 0.0001
@@ -27,5 +30,31 @@ Heuristic MSS: 12881.1
 Method cluster-part model 
 
 Partition 1
+
+|    N| NODE_PAR|    NODE|      LB_PAR|          LB|  FLAG|  TIME (s)| CP_ITER| CP_FLAG|   CP_INEQ|     PAIR  TRIANGLE    CLIQUE|          UB|         GUB|     I      J|     NODE_GAP|          GAP|  OPEN|
+|   19|       -1|       0|        -inf|     2612.17|     0|         0|       1|       0|        45|        0        45         0|     2612.17|    2612.17*|    -1     -1|  4.64729e-07|  4.64729e-07|     0|
+
+WALL_TIME: 2 sec
+N_NODES: 1
+AVG_INEQ: 45
+AVG_CP_ITER: 1
+ROOT_GAP: 4.64729e-07
+GAP: 0
+BEST: 2612.17
+
+Partition 2
+
+|    N| NODE_PAR|    NODE|      LB_PAR|          LB|  FLAG|  TIME (s)| CP_ITER| CP_FLAG|   CP_INEQ|     PAIR  TRIANGLE    CLIQUE|          UB|         GUB|     I      J|     NODE_GAP|          GAP|  OPEN|
+|   19|       -1|       0|        -inf|     3458.08|     0|         0|       1|       0|        96|        1        95         0|     3458.08|    3458.08*|    -1     -1|  2.71908e-07|  2.71908e-07|     0|
+
+WALL_TIME: 2 sec
+N_NODES: 1
+AVG_INEQ: 96
+AVG_CP_ITER: 1
+ROOT_GAP: 2.71908e-07
+GAP: 0
+BEST: 3458.08
+
+Partition 3
 
 |    N| NODE_PAR|    NODE|      LB_PAR|          LB|  FLAG|  TIME (s)| CP_ITER| CP_FLAG|   CP_INEQ|     PAIR  TRIANGLE    CLIQUE|          UB|         GUB|     I      J|     NODE_GAP|          GAP|  OPEN|

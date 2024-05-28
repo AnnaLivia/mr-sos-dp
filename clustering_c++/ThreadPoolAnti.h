@@ -14,12 +14,10 @@ typedef struct AntiJob {
 
 typedef struct InputDataAnti {
 
-    arma::mat data;
     int p;
-    int num_rep; // number of repetitions
-
-    std::vector<std::vector<double>> all_dist;
     double max_d;
+    arma::mat data;
+    std::vector<std::vector<double>> all_dist;
 
 } InputDataAnti;
 

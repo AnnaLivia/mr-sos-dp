@@ -6,7 +6,6 @@
 #include <armadillo>
 #include "Kmeans.h"
 #include "kmeans_util.h"
-//#include "mr_heuristic.h"
 #include "ac_heuristic.h"
 
 // data file
@@ -23,6 +22,9 @@ std::ofstream ub_file;
 
 // partition method
 char part_m;
+
+// partition and anticlustering param
+int num_rep;
 int n_threads_partition;
 int n_threads_anticlustering;
 
@@ -221,8 +223,7 @@ void run(int argc, char **argv) {
     // number of thread for computing the partition bound
     n_threads_partition = std::stoi(config_map["PARTITION_THREADS"]);
     n_threads_anticlustering = std::stoi(config_map["ANTICLUSTERING_THREADS"]);
-
-
+    num_rep = std::stoi(config_map["ANTICLUSTERING_REP"]);
 
     // sdp solver
     // sdp_solver_matlab_session = config_map["SDP_SOLVER_MATLAB_SESSION"].c_str();

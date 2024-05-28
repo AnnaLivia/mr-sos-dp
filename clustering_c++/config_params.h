@@ -40,6 +40,7 @@ extern std::ofstream ub_file;
 extern char part_m;
 extern int n_threads_partition;
 extern int n_threads_anticlustering;
+extern int num_rep;
 
 // branch and bound
 extern double branch_and_bound_tol;

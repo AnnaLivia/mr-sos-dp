@@ -182,9 +182,10 @@ arma::mat save_ub(arma::mat data, arma::mat sol) {
 
 }
 
-std::pair<int, std::unordered_map<int, std::vector<int>>> compute_anti_single_cluster(int num_rep, std::vector<int> &cls_points, std::vector<std::vector<double>> &all_dist, int p, int n, double max_d) {
+std::pair<int, std::unordered_map<int, std::vector<int>>> compute_anti_single_cluster(std::vector<int> &cls_points, int p, double max_d, std::vector<std::vector<double>> &all_dist) {
 
     int nc = (int) cls_points.size();
+    int n = all_dist.size();
 
     /* Start main iteration loop for exchange procedure */
     std::unordered_map<int, std::vector<int>> best_part_map;
@@ -383,9 +384,10 @@ HResult heuristic(arma::mat data, int p, int k) {
 
 	auto start_time_h = std::chrono::high_resolution_clock::now();
 
+
+    /*
     for (int c = 0; c < k; c++) {
 
-        /*
     	std::cout << "Cluster " << c << std::endl;
     	std::vector<int> cls_points = cls[c];
     	int nc = cp[c];
@@ -547,66 +549,61 @@ HResult heuristic(arma::mat data, int p, int k) {
     		}
     		sol_cls[c][h] = sol_cls[c][h].submat(0, 0, np - 1, d);
     	}
+	}
+    */
 
-        */
+    auto *input_data_anti = new InputDataAnti();
+    input_data_anti->p = p;
+    input_data_anti->max_d = max_d;
+    input_data_anti->data = data;
+    input_data_anti->all_dist = all_dist;
 
-        int num_rep = 100;
+    auto *shared_data_anti = new SharedDataAnti();
 
-        auto *input_data = new InputDataAnti();
-        input_data->data = data;
-        input_data->p = p;
-        input_data->num_rep = num_rep;
-        input_data->all_dist = all_dist;
-        input_data->max_d = max_d;
+    for (int c = 0; c < k; c++) {
+        auto *job = new AntiJob();
+        job->c = c;
+        job->cls_points = cls[c];
+        shared_data_anti->queue.push_back(job);
+    }
 
-        auto *shared_data = new SharedDataAnti();
+    shared_data_anti->threadStates.reserve(n_threads_partition);
+    for (int i = 0; i < n_threads_partition; i++) {
+        shared_data_anti->threadStates.push_back(false);
+    }
 
-        for (auto &part: sol_map) {
-            auto *job = new AntiJob();
-            job->c = c;
-            job->cls_points = cls[c];
-            shared_data->queue.push_back(job);
-        }
+    ThreadPoolAnti a_pool(input_data_anti, shared_data_anti, n_threads_anticlustering);
 
-        shared_data->threadStates.reserve(n_threads_partition);
-        for (int i = 0; i < n_threads_partition; i++) {
-            shared_data->threadStates.push_back(false);
-        }
+    while (true) {
 
-        ThreadPoolAnti pool(input_data, shared_data, n_threads_anticlustering);
-
-        while (true) {
-
-            {
-                std::unique_lock<std::mutex> l(shared_data->queueMutex);
-                while (is_thread_pool_working(shared_data->threadStates)) {
-                    shared_data->mainConditionVariable.wait(l);
-                }
-
-                if (shared_data->queue.empty())
-                    break;
+        {
+            std::unique_lock<std::mutex> l(shared_data_anti->queueMutex);
+            while (is_thread_pool_working(shared_data_anti->threadStates)) {
+                shared_data_anti->mainConditionVariable.wait(l);
             }
 
+            if (shared_data_anti->queue.empty())
+                break;
         }
-
-        // collect all the results
-        results.h_obj = 0;
-        for (auto &obj : shared_data->dist_cls) {
-            results.h_obj += obj;
-        }
-
-        sol_cls = shared_data->sol_cls;
-
-        std::cout << std::endl << std::endl << "Heuristic total dist " << results.h_obj << std::endl;
-
-        pool.quitPool();
-
-        // free memory
-        delete (input_data);
-        delete (shared_data);
-
 
     }
+
+    // collect all the results
+    results.h_obj = 0;
+    for (auto &obj : shared_data_anti->dist_cls) {
+        results.h_obj += obj;
+    }
+
+    sol_cls = shared_data_anti->sol_cls;
+
+    std::cout << std::endl << std::endl << "Heuristic total dist " << results.h_obj << std::endl;
+
+    a_pool.quitPool();
+
+    // free memory
+    delete (input_data_anti);
+    delete (shared_data_anti);
+
 
     // mount cluster partitions
     try {
@@ -650,36 +647,36 @@ HResult heuristic(arma::mat data, int p, int k) {
 	// create lower bound
 	auto start_time_lb = std::chrono::high_resolution_clock::now();
 
-    auto *input_data = new InputDataPartition();
-    input_data->k = k;
-    input_data->p = p;
-    input_data->d = d;
+    auto *input_data_part = new InputDataPartition();
+    input_data_part->k = k;
+    input_data_part->p = p;
+    input_data_part->d = d;
 
-    auto *shared_data = new SharedDataPartition();
+    auto *shared_data_part = new SharedDataPartition();
 
     for (auto &part: sol_map) {
         auto *job = new PartitionJob();
         job->part_id = part.first;
         job->part = part.second;
-        shared_data->queue.push_back(job);
+        shared_data_part->queue.push_back(job);
     }
 
-    shared_data->threadStates.reserve(n_threads_partition);
+    shared_data_part->threadStates.reserve(n_threads_partition);
     for (int i = 0; i < n_threads_partition; i++) {
-        shared_data->threadStates.push_back(false);
+        shared_data_part->threadStates.push_back(false);
     }
 
-    ThreadPoolPartition pool(input_data, shared_data, n_threads_partition);
+    ThreadPoolPartition p_pool(input_data_part, shared_data_part, n_threads_partition);
 
     while (true) {
 
         {
-            std::unique_lock<std::mutex> l(shared_data->queueMutex);
-            while (is_thread_pool_working(shared_data->threadStates)) {
-                shared_data->mainConditionVariable.wait(l);
+            std::unique_lock<std::mutex> l(shared_data_part->queueMutex);
+            while (is_thread_pool_working(shared_data_part->threadStates)) {
+                shared_data_part->mainConditionVariable.wait(l);
             }
 
-            if (shared_data->queue.empty())
+            if (shared_data_part->queue.empty())
                 break;
         }
 
@@ -687,7 +684,7 @@ HResult heuristic(arma::mat data, int p, int k) {
 
     // collect all the results
     results.lb_mss = 0;
-    for (auto &bound : shared_data->lb_part) {
+    for (auto &bound : shared_data_part->lb_part) {
         results.lb_mss += bound;
     }
 
@@ -698,19 +695,19 @@ HResult heuristic(arma::mat data, int p, int k) {
     arma::mat sol;
     for (int h = 0; h < p; ++h) {
         if (h == 0) {
-            part = arma::ones(shared_data->sol_part[h].n_rows,1);
-            sol = arma::join_horiz(part, shared_data->sol_part[h]);
+            part = arma::ones(shared_data_part->sol_part[h].n_rows,1);
+            sol = arma::join_horiz(part, shared_data_part->sol_part[h]);
         }
-        part = arma::vec(shared_data->sol_part[h].n_rows,1).fill(h+1);
-        arma::mat solp = arma::join_horiz(part, shared_data->sol_part[h]);
+        part = arma::vec(shared_data_part->sol_part[h].n_rows,1).fill(h+1);
+        arma::mat solp = arma::join_horiz(part, shared_data_part->sol_part[h]);
         sol = arma::join_vert(sol, solp);
     }
 
-    pool.quitPool();
+    p_pool.quitPool();
 
     // free memory
-    delete (input_data);
-    delete (shared_data);
+    delete (input_data_part);
+    delete (shared_data_part);
 
     //results.lb_mss = compute_lb(sol_map, k);
     //sdp_sol = save_lb(sol_map, p);

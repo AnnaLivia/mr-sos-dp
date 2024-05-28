@@ -83,13 +83,11 @@ void ThreadPoolAnti::doWork(int id) {
         }
 
         // run anti
-        std::cout << "Cluster " << job->c << std::endl;
         std::cout << std::endl << "*********************************************************************" << std::endl;
-        std::cout << "Cluster " << job->c + 1 << " processed by Thread "<< id << "\nPoints " << job->cls_points.size() << "\n";
+        std::cout << "Cluster " << job->c + 1 << " processed by Thread "<< id << "\nPoints " << job->cls_points.size();
         std::cout << std::endl << "*********************************************************************" << std::endl;
-        std::pair<int, std::unordered_map<int, std::vector<int>>> sol = compute_anti_single_cluster(input_data->num_rep, job->cls_points,
-                                                                                                              input_data->all_dist, input_data->p,
-                                                                                                              input_data->data.n_rows, input_data->max_d);
+        std::pair<int, std::unordered_map<int, std::vector<int>>> sol = compute_anti_single_cluster(job->cls_points, input_data->p,
+                                                                                                    input_data->max_d, input_data->all_dist);
 
         int best_dist = sol.first;
         std::unordered_map<int, std::vector<int>> best_part_map = sol.second;
