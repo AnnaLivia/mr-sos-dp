@@ -27,7 +27,7 @@ void save_to_file(arma::mat X, std::string name);
 std::map<int, arma::mat> read_part_data(int n, int d, int k, int p, arma::mat Ws);
 
 // compute lb and compute ub, print lb and ub sol
-double compute_lb(std::map<int, arma::mat> &sol_map, int k, int p);
+double compute_lb(std::map<int, arma::mat> &sol_map, int k);
 double compute_ub(arma::mat Ws, arma::mat &sol, std::map<int, arma::mat> &sol_map, int k, int p);
 int generate_part_constraints(std::map<int, arma::mat> sol_map, int k, int p, UserConstraints &constraints);
 arma::mat save_lb(std::map<int, arma::mat> &sol_map, int p);

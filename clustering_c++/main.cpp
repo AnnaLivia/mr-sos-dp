@@ -337,7 +337,7 @@ void run(int argc, char **argv) {
     log_file << "SDP_SOLVER_PAIR_PERC: " << sdp_solver_pair_perc << "\n";
     log_file << "SDP_SOLVER_MAX_TRIANGLE_INEQ: " << sdp_solver_max_triangle_ineq << "\n";
     log_file << "SDP_SOLVER_TRIANGLE_PERC: " << sdp_solver_triangle_perc << "\n\n";
-    log_file << "optimal MSS: " << opt_mss << "\n";
+    log_file << "Optimal MSS: " << opt_mss << "\n";
     log_file << "Heuristic MSS: " << init_mss << "\n\n";
 
     HResult results;

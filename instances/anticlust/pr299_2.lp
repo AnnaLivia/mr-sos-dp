@@ -1,6 +1,6 @@
 \ LP format - for model browsing. Use MPS format to capture full model detail.
 Minimize
-  - 7.6690201139e+10 Y0_0_1_1_0 - 7.6690201139e+10 Y0_0_1_1_1
+  - 7.8697253049e+10 Y0_0_1_1_0 - 7.8697253049e+10 Y0_0_1_1_1
 Subject To
  R0: X0_0_0 + X0_0_1 = 1
  R1: X0_1_0 + X0_1_1 = 1

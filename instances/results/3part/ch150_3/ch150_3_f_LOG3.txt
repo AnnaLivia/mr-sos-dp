@@ -1,0 +1,83 @@
+DATA_FILE, SOL_FILE, n, d, k: ../instances/data/ch150.txt ../instances/anticlust/ch150_3.txt 150 2 3
+BRANCH_AND_BOUND_TOL: 0.001
+BRANCH_AND_BOUND_PARALLEL: 16
+BRANCH_AND_BOUND_MAX_NODES: 1
+BRANCH_AND_BOUND_VISITING_STRATEGY: 0
+
+SDP_SOLVER_SESSION_THREADS_ROOT: 16
+SDP_SOLVER_SESSION_THREADS: 1
+SDP_SOLVER_FOLDER: /home/aelle/mr-sos-dp/SDPNAL
+SDP_SOLVER_TOL: 0.0001
+SDP_SOLVER_VERBOSE: 0
+SDP_SOLVER_MAX_CP_ITER_ROOT: 80
+SDP_SOLVER_MAX_CP_ITER: 40
+SDP_SOLVER_CP_TOL: 1e-05
+SDP_SOLVER_MAX_INEQ: 100000
+SDP_SOLVER_INHERIT_PERC: 1
+SDP_SOLVER_EPS_INEQ: 0.0001
+SDP_SOLVER_EPS_ACTIVE: 1e-06
+SDP_SOLVER_MAX_PAIR_INEQ: 100000
+SDP_SOLVER_PAIR_PERC: 0.05
+SDP_SOLVER_MAX_TRIANGLE_INEQ: 100000
+SDP_SOLVER_TRIANGLE_PERC: 0.05
+
+Optimal MSS: 0
+Heuristic MSS: 4.38851e+06
+
+Method cluster-part model 
+
+Partition 1
+
+|    N| NODE_PAR|    NODE|      LB_PAR|          LB|  FLAG|  TIME (s)| CP_ITER| CP_FLAG|   CP_INEQ|     PAIR  TRIANGLE    CLIQUE|          UB|         GUB|     I      J|     NODE_GAP|          GAP|  OPEN|
+|   50|       -1|       0|        -inf| 1.49163e+06|     0|        13|       2|      -3|      5245|    160.5      4951       8.5| 1.50734e+06|1.50734e+06*|    -1     -1|    0.0104262|    0.0104262|     0|
+
+WALL_TIME: 14 sec
+N_NODES: 1
+AVG_INEQ: 5120
+AVG_CP_ITER: 2
+ROOT_GAP: 0.0104262
+GAP: 0.0104262
+BEST: 1.50734e+06
+
+Partition 2
+
+|    N| NODE_PAR|    NODE|      LB_PAR|          LB|  FLAG|  TIME (s)| CP_ITER| CP_FLAG|   CP_INEQ|     PAIR  TRIANGLE    CLIQUE|          UB|         GUB|     I      J|     NODE_GAP|          GAP|  OPEN|
+|   50|       -1|       0|        -inf| 1.32849e+06|     0|         4|       2|       0|      3374|      123      3083      15.5| 1.32857e+06|1.32857e+06*|    -1     -1|  5.65473e-05|  5.65473e-05|     0|
+
+WALL_TIME: 5 sec
+N_NODES: 1
+AVG_INEQ: 3221.5
+AVG_CP_ITER: 2
+ROOT_GAP: 5.65473e-05
+GAP: 0
+BEST: 1.32857e+06
+
+Partition 3
+
+|    N| NODE_PAR|    NODE|      LB_PAR|          LB|  FLAG|  TIME (s)| CP_ITER| CP_FLAG|   CP_INEQ|     PAIR  TRIANGLE    CLIQUE|          UB|         GUB|     I      J|     NODE_GAP|          GAP|  OPEN|
+|   50|       -1|       0|        -inf| 1.18973e+06|     0|        13|       4|      -3|      1708|       69      1857      4.25| 1.19055e+06|1.19055e+06*|    -1     -1|   0.00069306|   0.00069306|     0|
+
+WALL_TIME: 14 sec
+N_NODES: 1
+AVG_INEQ: 1930.25
+AVG_CP_ITER: 4
+ROOT_GAP: 0.00069306
+GAP: 0
+BEST: 1.19055e+06
+
+Merge LB MSS: 4.02646e+06
+
+
+Generating UB (added constraints 1259)
+
+|    N| NODE_PAR|    NODE|      LB_PAR|          LB|  FLAG|  TIME (s)| CP_ITER| CP_FLAG|   CP_INEQ|     PAIR  TRIANGLE    CLIQUE|          UB|         GUB|     I      J|     NODE_GAP|          GAP|  OPEN|
+|    9|       -1|       0|        -inf| 5.38811e+06|     0|         0|       0|       0|         0|        0         0         0| 5.39214e+06|5.39214e+06*|    -1     -1|  0.000746127|  0.000746127|     0|
+
+WALL_TIME: 1 sec
+N_NODES: 1
+AVG_INEQ: 0
+AVG_CP_ITER: 0
+ROOT_GAP: 0.000746127
+GAP: 0
+BEST: 5.39214e+06
+

@@ -52,23 +52,6 @@ typedef struct InputData {
 
 } InputData;
 
-
-typedef struct ResultData {
-
-	int it;
-	double lb_mss;
-	double ub_mss;
-	int ub_update;
-	int lb_update;
-	int ray_ub_update;
-	int ray_lb_update;
-	double lb_time;
-	double ub_time;
-	double ray_time;
-	double all_time;
-
-} ResultData;
-
 typedef struct HResult {
 
 	double h_obj;

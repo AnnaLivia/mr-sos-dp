@@ -90,7 +90,7 @@ int generate_part_constraints(std::map<int, arma::mat> sol_map, int k, int p, Us
 }
 
 // compute lb
-double compute_lb(std::map<int, arma::mat> &sol_map, int k, int p) {
+double compute_lb(std::map<int, arma::mat> &sol_map, int k) {
 
     std::cout << std::endl << "Generating LB";
     double lb_mss = 0;
@@ -187,22 +187,10 @@ HResult heuristic(arma::mat data, int p, int k) {
     arma::mat sdp_sol;
 	UserConstraints constraints;
 	std::map<int, arma::mat> sol_map;
-    /*
-    std::unordered_map<int, std::vector<std::vector<double>>> sol_map;
-	sol_map.reserve(n);
-	for (int i = 0; i < n; ++i)
-		sol_map[i].reserve(d+1);
-     */
-
-	std::vector<std::vector<double>> Ws(data.n_rows, std::vector<double>(data.n_cols));
-	for (int i = 0; i < data.n_rows; ++i)
-		for (int j = 0; j < data.n_cols; ++j)
-			Ws[i][j] = data(i,j);
-
 
     // generating lb
-	int n = Ws.size();
-	int d = Ws[0].size();
+	int n = data.n_rows;
+	int d = data.n_cols;
 
 	std::cout << "Running heuristics per cluster.." << std::endl;
 
@@ -212,12 +200,10 @@ HResult heuristic(arma::mat data, int p, int k) {
     std::vector<std::vector<double>> all_dist(n, std::vector<double>(n));
 	for (int i = 0; i < n; ++i) {
 		for (int j = i+1; j < n; ++j) {
-			double dist = 0;
-			for (int f = 0; f < d; ++f)
-				dist += std::pow(Ws[i][f] - Ws[j][f], 2);
-			all_dist[i][j] = std::sqrt(dist);
-			all_dist[j][i] = all_dist[i][j];
-			if (all_dist[j][i] > max_d)
+			double dist = std::pow(arma::norm(data.row(i).t() - data.row(j).t(), 2),2);
+			all_dist[i][j] = dist;
+			all_dist[j][i] = dist;
+			if (dist > max_d)
 				max_d = all_dist[j][i];
 		}
 	}
@@ -239,65 +225,41 @@ HResult heuristic(arma::mat data, int p, int k) {
 	for (int c = 0; c < k; c++)
 		cls[c].resize(cp[c]);
 
+	int num_update = 0;
 	std::map<int, std::map<int, arma::mat> > sol_cls;
-	/*
-	std::unordered_map<int, std::vector<std::vector<double>>> sol_cls;
-	sol_cls.reserve(k);
-	for (int c = 0; c < k; c++)
-		sol_cls[c].reserve(cp[c]);
-	*/
 
 	auto start_time_h = std::chrono::high_resolution_clock::now();
-	int num_update = 0;
 
     for (int c = 0; c < k; c++) {
 
     	std::cout << "Cluster " << c << std::endl;
-    	int nc = cp[c];
     	std::vector<int> cls_points = cls[c];
+    	int nc = cp[c];
 
         /* Start main iteration loop for exchange procedure */
-        int max_np = floor(cp[c]/p) + 1;
     	std::unordered_map<int, std::vector<int>> best_part_map;
         double best_dist = 0;
 
-        for (int l = 0; l < 1000; l++) {
+        for (int l = 0; l < 100; l++) {
 
-			// create partition vector (at most max_np point in each partition)
+			// create partition vector
+        	double dist = 0;
         	std::unordered_map<int, std::vector<int>> part_map(p);
+        	std::vector<double> part_dist(p);
+        	std::vector<int> part(n);
         	std::vector<int> pp(p);
+        	std::vector<double> min_dist(p);
         	for (int h = 0; h < p; h++) {
-        		if (nc % p != 0 and nc % p <= h)
-        			pp[h] = floor(cp[c]/p) + 1;
+        		if (h < nc % p)
+        			pp[h] = floor(nc/p) + 1;
         		else
-        			pp[h] = floor(cp[c]/p);
+        			pp[h] = floor(nc/p);
         		part_map[h].resize(pp[h]);
         	}
 
         	// assign random point to partitions and compute dist of current partition
-    		std::cout << "begin random " << std::endl;
-        	double dist = 0;
-			std::vector<double> part_dist(p);
-        	std::vector<int> part;
-        	part.resize(n);
-        	/*
-        	int h = 0;
-    		for (const int& i : cls_points) {
-            	do {
-                	h = rand() % (p);
-            	} while (count[h] >= pp[h]);
-            	part[i] = h;
-    			for (const int& j : part_map[h]) {
-    				dist += all_dist[i][j];
-    				part_dist[h] += all_dist[i][j];
-    			}
-            	part_map[h][count[h]] = i;
-            	count[h]++;
-        	}
-        	*/
-
+        	std::vector<int> cls_copy = cls_points;
         	for (int h = 0; h < p && !cls_copy.empty(); ++h) {
-        		std::vector<int> part_h(pp[h]);
         		for (int t = 0; t < pp[h]; ++t) {
         			int idx = rand() % (cls_copy.size());
         			int i = cls_copy[idx];
@@ -307,13 +269,13 @@ HResult heuristic(arma::mat data, int p, int k) {
         			for (const int& j : part_map[h]) {
         				dist += all_dist[i][j];
         				part_dist[h] += all_dist[i][j];
+        				if (min_dist[h] > all_dist[i][j])
+        					min_dist[h] = all_dist[i][j];
         			}
         			part_map[h][t] = i;
         		}
+        		dist += min_dist[h];
         	}
-
-
-        	std::cout << "end random " << std::endl;
 
         	if (l == 0) {
 				best_part_map = part_map;
@@ -321,7 +283,7 @@ HResult heuristic(arma::mat data, int p, int k) {
         	}
 
         	// Iterate through cluster data points
-    		for (int id1 = 0; id1 < cls_points.size() - 1; ++id1) {
+    		for (int id1 = 0; id1 < nc - 1; ++id1) {
 
     			int i = cls_points[id1];
             	double best_obj = dist;
@@ -331,10 +293,12 @@ HResult heuristic(arma::mat data, int p, int k) {
 	            // Initialize `best` variable for the i'th item
     	        double best_h1 = 0;
         		double best_h2 = 0;
+        		double best_min_h1 = min_dist[h1];
+        		double best_min_h2 = max_d;
             	std::pair<int, int> best_swap(NULL,NULL);
 
 	    		// Iterate through the exchange partners
-    			for (int id2 = id1+1; id2 < cls_points.size(); ++id2) {
+    			for (int id2 = id1+1; id2 < nc; ++id2) {
     				int j = cls_points[id2];
 
     				int h2 = part[j];
@@ -346,33 +310,43 @@ HResult heuristic(arma::mat data, int p, int k) {
 
                 	    for (int h3= 0; h3 < p; h3++)
                     		if (h3 != h1 and h3!=h2)
-                    			swap_obj += part_dist[h3];
+                    			swap_obj += part_dist[h3] + min_dist[h3];
 
         	        	double dist_h1 = part_dist[h1];
-        	        	for (int ids = 0; ids < part_map[h1].size(); ids++) {
+        	        	double min_dist_h1 = min_dist[h1];
+        	        	for (int ids = 0; ids < pp[h1]; ids++) {
         	        		int s = part_map[h1][ids];
-            	    		if (s != i)
+            	    		if (s != i) {
                 				dist_h1 += all_dist[j][s] - all_dist[i][s];
+            	    			if (min_dist_h1 > all_dist[j][s])
+            	    				min_dist_h1 = all_dist[j][s];
+                			}
                 			else
                 				idh1 = ids;
              		   	}
 
         	        	double dist_h2 = part_dist[h2];
-        	        	for (int ids = 0; ids < part_map[h2].size(); ids++) {
+        	        	double min_dist_h2 = min_dist[h2];
+        	        	for (int ids = 0; ids < pp[h2]; ids++) {
         	        		int s = part_map[h2][ids];
-            	    		if (s != j)
-                				dist_h2 += all_dist[i][s] - all_dist[j][s];
+            	    		if (s != j) {
+            	    			dist_h2 += all_dist[i][s] - all_dist[j][s];
+            	    			if (min_dist_h2 > all_dist[i][s])
+            	    				min_dist_h2 = all_dist[i][s];
+                			}
             	    		else
             	    			idh2 = ids;
                 		}
 
-                		swap_obj += dist_h1 + dist_h2;
+                		swap_obj += dist_h1 + dist_h2 + min_dist_h1 + min_dist_h2;
 
 	                    // Update `best` if objective was improved
     	                if (swap_obj > best_obj) {
         	                best_obj = swap_obj;
             	            best_h1 = dist_h1;
                 	    	best_h2 = dist_h2;
+                	    	best_min_h1 = min_dist_h1;
+                	    	best_min_h2 = min_dist_h2;
                     	    best_swap = std::pair<int, int>(id2, idh2);
                     	}
                 	}
@@ -391,9 +365,11 @@ HResult heuristic(arma::mat data, int p, int k) {
             	    part[j] = h1;
                 	part_dist[h1] = best_h1;
                 	part_dist[h2] = best_h2;
+                	min_dist[h1] = best_min_h1;
+                	min_dist[h2] = best_min_h2;
                 	best_swap = std::pair<int, int>(NULL, NULL);
            			num_update++;
-            	}
+           		}
         	}
 
 	        if (dist > best_dist) {
@@ -412,8 +388,7 @@ HResult heuristic(arma::mat data, int p, int k) {
     		int np = 0;
     		for (int i : best_part_map[h]) {
     			sol_cls[c][h](np,0) = i+1;
-    			for (int f = 0; f < d; f++)
-    				sol_cls[c][h](np, f+1) = Ws[i][f];
+    			sol_cls[c][h].row(np).subvec(1,d) = data.row(i);
     			np++;
     		}
     		sol_cls[c][h] = sol_cls[c][h].submat(0, 0, np - 1, d);
@@ -465,7 +440,7 @@ HResult heuristic(arma::mat data, int p, int k) {
 
 	// create lower bound
 	auto start_time_lb = std::chrono::high_resolution_clock::now();
-    results.lb_mss = compute_lb(sol_map, k, p);
+    results.lb_mss = compute_lb(sol_map, k);
     sdp_sol = save_lb(sol_map, p);
 	save_to_file(sdp_sol, "LB_method_" + std::string(1,part_m));
 	auto end_time_lb = std::chrono::high_resolution_clock::now();

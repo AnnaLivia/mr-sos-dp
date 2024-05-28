@@ -661,10 +661,6 @@ std::pair<JobData *, JobData *> build_root_problem(MatlabStruct *matlab_struct,
 		log_file << "Infeasibility: k is too large\n";
         return std::make_pair(nullptr, nullptr);
 	}
-    else if (n > 500) {
-		log_file << "\nBad scaling: n is too large (" << n << ")\n";
-        return std::make_pair(nullptr, nullptr);
-	}
 
     root->Ws = build_Ws(input_data->Ws, root->ml_map);
     root->A = build_A(root->ml_map, root->local_cl_pairs);

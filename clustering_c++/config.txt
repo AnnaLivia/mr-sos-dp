@@ -6,7 +6,7 @@ RESULT_FOLDER = /home/aelle/mr-sos-dp/instances/results
 BRANCH_AND_BOUND_TOL = 1e-3
 # single thread (1), multi-thread (> 1)
 BRANCH_AND_BOUND_PARALLEL = 16
-BRANCH_AND_BOUND_MAX_NODES = 200
+BRANCH_AND_BOUND_MAX_NODES = 1
 # best first (0),  depth first (1), breadth first (2)
 BRANCH_AND_BOUND_VISITING_STRATEGY = 0
 
@@ -25,7 +25,7 @@ SDP_SOLVER_MAX_CP_ITER_ROOT = 80
 # max cutting plane iterations (must-link and cannot-link)
 SDP_SOLVER_MAX_CP_ITER = 40
 # cutting plane tolerance
-SDP_SOLVER_CP_TOL = 1e-6
+SDP_SOLVER_CP_TOL = 1e-5
 # max number cutting planes
 SDP_SOLVER_MAX_INEQ = 100000
 # fraction of the inequalities to inherit
