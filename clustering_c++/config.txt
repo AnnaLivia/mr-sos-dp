@@ -1,36 +1,45 @@
 # log path
-#LOG_FOLDER = /home/aelle/mr-sos-dp/instances/log
+LOG_FOLDER = /home/aelle/mr-sos-dp/instances/log
 # result path
-#RESULT_FOLDER = /home/aelle/mr-sos-dp/instances/results
+RESULT_FOLDER = /home/aelle/mr-sos-dp/instances/results
 # log path
-LOG_FOLDER = /home/antonio/Documenti/GitHub/mr-sos-dp/instances/log
+#LOG_FOLDER = /home/antonio/Documenti/GitHub/mr-sos-dp/instances/log
 # result path
-RESULT_FOLDER = /home/antonio/Documenti/GitHub/mr-sos-dp/instances/results
+#RESULT_FOLDER = /home/antonio/Documenti/GitHub/mr-sos-dp/instances/results
 
+# number of anticlustering repetitions
+ANTICLUSTERING_REP = 100
+# number of threads for anticlustering
+ANTICLUSTERING_THREADS = 4
+# number of threads for computing the partitions
+PARTITION_THREADS = 3
+
+# number of starts of kmeans
+KMEANS_NUM_START = 500
+# number of max iterations of kmeans
+KMEANS_MAX_ITERATION = 200
+# do not display kmeans log (0), display log (1)
+KMEANS_VERBOSE = 0
+
+# precision of the branch and bound
 BRANCH_AND_BOUND_TOL = 1e-4
 # single thread (1), multi-thread (> 1)
 BRANCH_AND_BOUND_PARALLEL = 1
+# max number of the branch and bound nodes (1 - only root)
 BRANCH_AND_BOUND_MAX_NODES = 1
 # best first (0),  depth first (1), breadth first (2)
 BRANCH_AND_BOUND_VISITING_STRATEGY = 0
 
-# number of threads for computing the partitions
-PARTITION_THREADS = 4
-# number of anticlustering repetitions
-ANTICLUSTERING_REP = 50
-# number of threads for anticlustering
-ANTICLUSTERING_THREADS = 4
-
-# numer of threads for the matlab session at root
-SDP_SOLVER_SESSION_THREADS_ROOT = 4
-# numer of threads for the matlab session (must-link and cannot-link)
+# number of threads for the matlab session at root
+SDP_SOLVER_SESSION_THREADS_ROOT = 2
+# number of threads for the matlab session (must-link and cannot-link)
 SDP_SOLVER_SESSION_THREADS = 1
 # sdp solver path
-SDP_SOLVER_FOLDER = /home/antonio/Documenti/GitHub/mr-sos-dp/SDPNAL
-#SDP_SOLVER_FOLDER = /home/aelle/mr-sos-dp/SDPNAL
+#SDP_SOLVER_FOLDER = /home/antonio/Documenti/GitHub/mr-sos-dp/SDPNAL
+SDP_SOLVER_FOLDER = /home/aelle/mr-sos-dp/SDPNAL
 # precision of the sdp solver
 SDP_SOLVER_TOL = 1e-4
-# do not display log (0), display log (1)
+# do not display sdp log (0), display log (1)
 SDP_SOLVER_VERBOSE = 0
 # max cutting plane iterations (root)
 SDP_SOLVER_MAX_CP_ITER_ROOT = 80

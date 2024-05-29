@@ -24,7 +24,7 @@ arma::mat centroids_recovery(arma::mat &Ws_shr, arma::mat &Zopt, int k){
     std::vector<std::pair<int, int>> ml_init = {};
     std::vector<std::pair<int, int>> cl_init = {};
     Kmeans kmeans_init(C, k, ml_init, cl_init, kmeans_verbose);
-    kmeans_init.start(kmeans_max_iter, kmeans_n_start, 1);
+    kmeans_init.start(kmeans_max_it, kmeans_start, 1);
     return kmeans_init.getCentroids();
 }
 
@@ -126,7 +126,7 @@ double cluster_recovery(arma::mat &Ws, arma::mat &Ws_shr, arma::mat &Xopt, int k
 
     // now perform constrained k-means with the smart initialization
     Kmeans kmeans(Ws, k, ml_map, local_cl, global_ml, global_cl, kmeans_verbose);
-    bool flag_partition = kmeans.start(kmeans_max_iter, kmeans_permutations, init_centroid);
+    bool flag_partition = kmeans.start(kmeans_max_it, kmeans_permut, init_centroid);
     if (!flag_partition)
         return std::numeric_limits<double>::infinity();
     assignment_X = kmeans.getAssignments();

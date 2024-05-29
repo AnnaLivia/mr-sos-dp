@@ -84,12 +84,12 @@ void ThreadPoolAnti::doWork(int id) {
 
         // run anti
         std::cout << std::endl << "*********************************************************************" << std::endl;
-        std::cout << "Cluster " << job->c + 1 << " processed by Thread "<< id << "\nPoints " << job->cls_points.size();
+        std::cout << "Cluster " << job->cls_id + 1 << " processed by Thread "<< id << "\nPoints " << job->cls_points.size();
         std::cout << std::endl << "*********************************************************************" << std::endl;
-        std::pair<int, std::unordered_map<int, std::vector<int>>> sol = compute_anti_single_cluster(job->cls_points, input_data->p,
-                                                                                                    input_data->max_d, input_data->all_dist);
+        std::pair<double, std::unordered_map<int, std::vector<int>>> sol = compute_anti_single_cluster(job->cls_points,
+                                                                                                        input_data->max_d, input_data->all_dist);
 
-        int best_dist = sol.first;
+        double best_dist = sol.first;
         std::unordered_map<int, std::vector<int>> best_part_map = sol.second;
 
         {
@@ -98,15 +98,15 @@ void ThreadPoolAnti::doWork(int id) {
             shared_data->dist_cls.push_back(best_dist);
 
             // update sol map
-            for (int h = 0; h < input_data->p; ++h) {
-                shared_data->sol_cls[job->c][h] = arma::mat(job->cls_points.size(), input_data->data.n_cols + 1);
+            for (int h = 0; h < p; ++h) {
+                shared_data->sol_cls[job->cls_id][h] = arma::mat(job->cls_points.size(), d + 1);
                 int np = 0;
                 for (int i : best_part_map[h]) {
-                    shared_data->sol_cls[job->c][h](np,0) = i + 1;
-                    shared_data->sol_cls[job->c][h].row(np).subvec(1, input_data->data.n_cols) = input_data->data.row(i);
+                    shared_data->sol_cls[job->cls_id][h](np,0) = i + 1;
+                    shared_data->sol_cls[job->cls_id][h].row(np).subvec(1, d) = input_data->data.row(i);
                     np++;
                 }
-                shared_data->sol_cls[job->c][h] = shared_data->sol_cls[job->c][h].submat(0, 0, np - 1, input_data->data.n_cols);
+                shared_data->sol_cls[job->cls_id][h] = shared_data->sol_cls[job->cls_id][h].submat(0, 0, np - 1, d);
             }
 
 

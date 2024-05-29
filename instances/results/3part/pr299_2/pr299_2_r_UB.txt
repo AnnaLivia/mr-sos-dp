@@ -1,5 +1,0 @@
-iteration 0 : 4.02886e+08
-iteration 1 : 4.01391e+08
-iteration 2 : 4.01127e+08
-iteration 3 : 4.00743e+08
-after ray 0.850000 : 4.00724e+08

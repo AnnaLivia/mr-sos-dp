@@ -10,8 +10,8 @@
 #include "ac_heuristic.h"
 #include "ThreadPoolAnti.h"
 
-void save_to_file(arma::mat X, std::string name){
-    
+void save_to_file(arma::mat &X, std::string name){
+
     std::ofstream f;
     f.open(result_path + "_" + name + ".txt");
     std::cout << result_path + "_" + name + ".txt" << std::endl << std::endl;
@@ -29,7 +29,7 @@ void save_to_file(arma::mat X, std::string name){
 }
 
 // read lb data
-std::map<int, arma::mat> read_part_data(int n, int d, int k, int p, arma::mat data) {
+std::map<int, arma::mat> read_part_data(arma::mat &data) {
 
     std::ifstream file(sol_path);
     if (!file) {
@@ -64,7 +64,7 @@ std::map<int, arma::mat> read_part_data(int n, int d, int k, int p, arma::mat da
 
 
 // generate must link constraints on partition sol
-int generate_part_constraints(std::map<int, arma::mat> sol_map, int k, int p, UserConstraints &constraints) {
+int generate_part_constraints(std::map<int, arma::mat> &sol_map, UserConstraints &constraints) {
 
     int nc = 0;
 
@@ -93,7 +93,7 @@ int generate_part_constraints(std::map<int, arma::mat> sol_map, int k, int p, Us
 }
 
 // compute lb
-double compute_lb(std::map<int, arma::mat> &sol_map, int k) {
+double compute_lb(std::map<int, arma::mat> &sol_map) {
 
     std::cout << std::endl << "Generating LB";
     double lb_mss = 0;
@@ -125,18 +125,18 @@ double compute_lb(std::map<int, arma::mat> &sol_map, int k) {
 
     }
     std::cout  << std::endl << std::endl << "LB MSS: " << lb_mss << std::endl;
-    log_file << "Merge LB MSS: " << lb_mss << "\n\n\n";
+    log_file << "\n\nMerge LB MSS: " << lb_mss << "\n\n\n";
 
     return lb_mss;
 }
 
 // compute ub
-double compute_ub(arma::mat Ws, arma::mat &sol, std::map<int, arma::mat> &sol_map, int k, int p) {
+double compute_ub(arma::mat &Ws, arma::mat &sol, std::map<int, arma::mat> &sol_map) {
 
     std::cout << std::endl << "Generating UB";
     std::cout << std::endl << "*********************************************************************" << std::endl;
     UserConstraints part_constraints;
-    int n_constr = generate_part_constraints(sol_map, k, p, part_constraints);
+    int n_constr = generate_part_constraints(sol_map, part_constraints);
     std::cout << std::endl << "Added constraints: " << n_constr << std::endl;
     log_file << "Generating UB (added constraints " << n_constr << ")\n";
     double ub_mss = sdp_branch_and_bound(k, Ws, part_constraints, sol);
@@ -146,24 +146,8 @@ double compute_ub(arma::mat Ws, arma::mat &sol, std::map<int, arma::mat> &sol_ma
     return ub_mss;
 }
 
-// compute lb sol by merging partitions sol
-arma::mat save_lb(std::map<int, arma::mat> &sol_map, int p){
+arma::mat save_ub(arma::mat &data, arma::mat &sol) {
 
-	arma::mat part = arma::ones(sol_map[0].n_rows,1);
-    arma::mat sol = std::move(arma::join_horiz(part, sol_map[0]));
-    for (int h = 1; h < p; ++h) {
-        part = arma::vec(sol_map[h].n_rows,1).fill(h+1);
-        arma::mat solp = std::move(arma::join_horiz(part, sol_map[h]));
-        sol = std::move(arma::join_vert(sol, solp));
-    }
-
-    return sol;
-}
-
-arma::mat save_ub(arma::mat data, arma::mat sol) {
-
-	int n = data.n_rows;
-	int k = sol.n_cols;
     arma::mat cls(sol.n_rows,1);
     arma::mat id(sol.n_rows,2);
     for (int i = 0; i < data.n_rows; i++) {
@@ -182,10 +166,9 @@ arma::mat save_ub(arma::mat data, arma::mat sol) {
 
 }
 
-std::pair<int, std::unordered_map<int, std::vector<int>>> compute_anti_single_cluster(std::vector<int> &cls_points, int p, double max_d, std::vector<std::vector<double>> &all_dist) {
+std::pair<double, std::unordered_map<int, std::vector<int>>> compute_anti_single_cluster(std::vector<int> &cls_points, double max_d, std::vector<std::vector<double>> &all_dist) {
 
     int nc = (int) cls_points.size();
-    int n = all_dist.size();
 
     /* Start main iteration loop for exchange procedure */
     std::unordered_map<int, std::vector<int>> best_part_map;
@@ -206,6 +189,7 @@ std::pair<int, std::unordered_map<int, std::vector<int>>> compute_anti_single_cl
             else
                 pp[h] = floor(nc/p);
             part_map[h].resize(pp[h]);
+            min_dist[h] = std::numeric_limits<double>::infinity();
         }
 
         // assign random point to partitions and compute dist of current partition
@@ -244,8 +228,8 @@ std::pair<int, std::unordered_map<int, std::vector<int>>> compute_anti_single_cl
             // Initialize `best` variable for the i-th item
             double best_h1 = 0;
             double best_h2 = 0;
-            double best_min_h1 = min_dist[h1];
-            double best_min_h2 = max_d;
+            //double best_min_h1 = min_dist[h1];
+            //double best_min_h2 = max_d;
             std::pair<int, int> best_swap(NULL,NULL);
 
             // Iterate through the exchange partners
@@ -264,40 +248,41 @@ std::pair<int, std::unordered_map<int, std::vector<int>>> compute_anti_single_cl
                             swap_obj += part_dist[h3] + min_dist[h3];
 
                     double dist_h1 = part_dist[h1];
-                    double min_dist_h1 = min_dist[h1];
+                    //double min_dist_h1 = min_dist[h1];
                     for (int ids = 0; ids < pp[h1]; ids++) {
                         int s = part_map[h1][ids];
                         if (s != i) {
                             dist_h1 += all_dist[j][s] - all_dist[i][s];
-                            if (min_dist_h1 > all_dist[j][s])
-                                min_dist_h1 = all_dist[j][s];
+                            //if (min_dist_h1 > all_dist[j][s])
+                            //    min_dist_h1 = all_dist[j][s];
                         }
                         else
                             idh1 = ids;
                     }
 
                     double dist_h2 = part_dist[h2];
-                    double min_dist_h2 = min_dist[h2];
+                    //double min_dist_h2 = min_dist[h2];
                     for (int ids = 0; ids < pp[h2]; ids++) {
                         int s = part_map[h2][ids];
                         if (s != j) {
                             dist_h2 += all_dist[i][s] - all_dist[j][s];
-                            if (min_dist_h2 > all_dist[i][s])
-                                min_dist_h2 = all_dist[i][s];
+                            //if (min_dist_h2 > all_dist[i][s])
+                            //    min_dist_h2 = all_dist[i][s];
                         }
                         else
                             idh2 = ids;
                     }
 
-                    swap_obj += dist_h1 + dist_h2 + min_dist_h1 + min_dist_h2;
+                    swap_obj += dist_h1 + dist_h2;
+                     //+ min_dist_h1 + min_dist_h2;
 
                     // Update `best` if objective was improved
                     if (swap_obj > best_obj) {
                         best_obj = swap_obj;
                         best_h1 = dist_h1;
                         best_h2 = dist_h2;
-                        best_min_h1 = min_dist_h1;
-                        best_min_h2 = min_dist_h2;
+                        //best_min_h1 = min_dist_h1;
+                        //best_min_h2 = min_dist_h2;
                         best_swap = std::pair<int, int>(id2, idh2);
                     }
                 }
@@ -316,8 +301,8 @@ std::pair<int, std::unordered_map<int, std::vector<int>>> compute_anti_single_cl
                 part[j] = h1;
                 part_dist[h1] = best_h1;
                 part_dist[h2] = best_h2;
-                min_dist[h1] = best_min_h1;
-                min_dist[h2] = best_min_h2;
+                //min_dist[h1] = best_min_h1;
+                //min_dist[h2] = best_min_h2;
                 best_swap = std::pair<int, int>(NULL, NULL);
             }
         }
@@ -333,7 +318,7 @@ std::pair<int, std::unordered_map<int, std::vector<int>>> compute_anti_single_cl
 
 }
 
-HResult heuristic(arma::mat data, int p, int k) {
+HResult heuristic(arma::mat &data) {
 
 	HResult results;
     double lb_mss;
@@ -342,15 +327,10 @@ HResult heuristic(arma::mat data, int p, int k) {
 	UserConstraints constraints;
 	std::map<int, arma::mat> sol_map;
 
-    // generating lb
-	int n = data.n_rows;
-	int d = data.n_cols;
-
 	std::cout << "Running heuristics per cluster.." << std::endl;
 
 	// create matrix of all distances
 	double max_d = 0;
-    results.h_obj = 0;
     std::vector<std::vector<double>> all_dist(n, std::vector<double>(n));
 	for (int i = 0; i < n; ++i) {
 		for (int j = i+1; j < n; ++j) {
@@ -379,7 +359,6 @@ HResult heuristic(arma::mat data, int p, int k) {
 	for (int c = 0; c < k; c++)
 		cls[c].resize(cp[c]);
 
-	int num_update = 0;
     std::unordered_map<int, std::unordered_map<int, arma::mat>> sol_cls;
 
 	auto start_time_h = std::chrono::high_resolution_clock::now();
@@ -553,7 +532,6 @@ HResult heuristic(arma::mat data, int p, int k) {
     */
 
     auto *input_data_anti = new InputDataAnti();
-    input_data_anti->p = p;
     input_data_anti->max_d = max_d;
     input_data_anti->data = data;
     input_data_anti->all_dist = all_dist;
@@ -562,17 +540,17 @@ HResult heuristic(arma::mat data, int p, int k) {
 
     for (int c = 0; c < k; c++) {
         auto *job = new AntiJob();
-        job->c = c;
+        job->cls_id = c;
         job->cls_points = cls[c];
         shared_data_anti->queue.push_back(job);
     }
 
-    shared_data_anti->threadStates.reserve(n_threads_partition);
-    for (int i = 0; i < n_threads_partition; i++) {
+    shared_data_anti->threadStates.reserve(n_threads_anti);
+    for (int i = 0; i < n_threads_anti; i++) {
         shared_data_anti->threadStates.push_back(false);
     }
 
-    ThreadPoolAnti a_pool(input_data_anti, shared_data_anti, n_threads_anticlustering);
+    ThreadPoolAnti a_pool(input_data_anti, shared_data_anti, n_threads_anti);
 
     while (true) {
 
@@ -590,13 +568,12 @@ HResult heuristic(arma::mat data, int p, int k) {
 
     // collect all the results
     results.h_obj = 0;
-    for (auto &obj : shared_data_anti->dist_cls) {
+    for (auto &obj : shared_data_anti->dist_cls)
         results.h_obj += obj;
-    }
 
     sol_cls = shared_data_anti->sol_cls;
 
-    std::cout << std::endl << std::endl << "Heuristic total dist " << results.h_obj << std::endl;
+    std::cout << std::endl << std::endl << "Heuristic total dist " << std::fixed << results.h_obj << std::endl << std::endl;
 
     a_pool.quitPool();
 
@@ -608,8 +585,7 @@ HResult heuristic(arma::mat data, int p, int k) {
     // mount cluster partitions
     try {
     	GRBEnv *env = new GRBEnv();
-        arma::mat distances = compute_distances(data);
-    	mount_model *model = new mount_gurobi_model(env, n, p, k, k*p*(k-1)*p/2, distances, sol_cls);
+    	mount_model *model = new mount_gurobi_model(env, k*(k-1)*p*p/2, all_dist, sol_cls);
 
     	model->add_point_constraints();
     	model->add_cls_constraints();
@@ -629,8 +605,6 @@ HResult heuristic(arma::mat data, int p, int k) {
     		}
     	}
 
-
-
     	delete model;
     	delete env;
 
@@ -642,15 +616,10 @@ HResult heuristic(arma::mat data, int p, int k) {
 
 	// save heuristic time
 	auto end_time_h = std::chrono::high_resolution_clock::now();
-	results.h_time = std::chrono::duration_cast<std::chrono::minutes>(end_time_h - start_time_h).count();
+	results.h_time = std::chrono::duration_cast<std::chrono::seconds>(end_time_h - start_time_h).count();
 
 	// create lower bound
 	auto start_time_lb = std::chrono::high_resolution_clock::now();
-
-    auto *input_data_part = new InputDataPartition();
-    input_data_part->k = k;
-    input_data_part->p = p;
-    input_data_part->d = d;
 
     auto *shared_data_part = new SharedDataPartition();
 
@@ -661,12 +630,11 @@ HResult heuristic(arma::mat data, int p, int k) {
         shared_data_part->queue.push_back(job);
     }
 
-    shared_data_part->threadStates.reserve(n_threads_partition);
-    for (int i = 0; i < n_threads_partition; i++) {
+    shared_data_part->threadStates.reserve(n_threads_part);
+    for (int i = 0; i < n_threads_part; i++)
         shared_data_part->threadStates.push_back(false);
-    }
 
-    ThreadPoolPartition p_pool(input_data_part, shared_data_part, n_threads_partition);
+    ThreadPoolPartition p_pool(shared_data_part, n_threads_part);
 
     while (true) {
 
@@ -688,9 +656,11 @@ HResult heuristic(arma::mat data, int p, int k) {
         results.lb_mss += bound;
     }
 
-    std::cout  << std::endl << std::endl << "LB MSS: " << results.lb_mss << std::endl;
-    log_file << "Merge LB MSS: " << results.lb_mss << "\n\n\n";
+    std::cout  << "\n\nLB MSS: " << results.lb_mss << std::endl;
+    log_file << "\n\nMerge LB MSS: " << results.lb_mss << "\n\n\n";
 
+	/*
+	// compute lb sol by merging partitions sol
     arma::mat part;
     arma::mat sol;
     for (int h = 0; h < p; ++h) {
@@ -703,31 +673,23 @@ HResult heuristic(arma::mat data, int p, int k) {
         sol = arma::join_vert(sol, solp);
     }
 
+	save_to_file(sol, "LB_method_" + std::string(1,part_m));
+	*/
+
     p_pool.quitPool();
 
     // free memory
-    delete (input_data_part);
     delete (shared_data_part);
 
-    //results.lb_mss = compute_lb(sol_map, k);
-    //sdp_sol = save_lb(sol_map, p);
-	//save_to_file(sdp_sol, "LB_method_" + std::string(1,part_m));
-
 	auto end_time_lb = std::chrono::high_resolution_clock::now();
-
 	results.lb_time = std::chrono::duration_cast<std::chrono::minutes>(end_time_lb - start_time_lb).count();
 
-    // create upper bound
 	/*
-	 * auto start_time_ub = std::chrono::high_resolution_clock::now();
+    // create upper bound
     results.ub_mss = compute_ub(data, sol, sol_map, k, p);
     sdp_sol = save_ub(data	, sol);
 	save_to_file(sdp_sol, "UB_method_" + std::string(1,part_m));
-	auto end_time_ub = std::chrono::high_resolution_clock::now();
-	results.ub_time = std::chrono::duration_cast<std::chrono::minutes>(end_time_ub - start_time_ub).count();
-	results.all_time = results.h_time + results.lb_time + results.ub_time;
     */
-
 
     return results;
 

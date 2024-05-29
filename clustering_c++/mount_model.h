@@ -27,8 +27,8 @@ class mount_model {
 
 	protected:
 	int status;
-	int n, p, k, m;
-	arma::mat dist;
+	int m;
+	std::vector<std::vector<double>> dist;
     std::unordered_map<int, std::unordered_map<int, arma::mat>> sol_cls;
 
 	std::string get_x_variable_name(int c1, int h1, int t);
@@ -57,7 +57,7 @@ private:
 
 
 public:
-	mount_gurobi_model(GRBEnv *env, int n, int p, int k, int m, arma::mat &dist, std::unordered_map<int, std::unordered_map<int, arma::mat>> &sol_cls);
+	mount_gurobi_model(GRBEnv *env, int m, std::vector<std::vector<double>> &dist, std::unordered_map<int, std::unordered_map<int, arma::mat>> &sol_cls);
 	virtual int get_n_constraints();
 	virtual void add_point_constraints();
 	virtual void add_cls_constraints();

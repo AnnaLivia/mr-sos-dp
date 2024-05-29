@@ -7,14 +7,13 @@
 
 typedef struct AntiJob {
 
+    int cls_id;
     std::vector<int> cls_points;
-    int c; // cluster id
 
 } AntiJob;
 
 typedef struct InputDataAnti {
 
-    int p;
     double max_d;
     arma::mat data;
     std::vector<std::vector<double>> all_dist;

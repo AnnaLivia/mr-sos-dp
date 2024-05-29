@@ -36,10 +36,15 @@ extern std::ofstream log_file;
 extern std::ofstream lb_file;
 extern std::ofstream ub_file;
 
-// partition method
-extern char part_m;
-extern int n_threads_partition;
-extern int n_threads_anticlustering;
+// instance data
+extern int n;
+extern int d;
+extern int k;
+extern int p;
+
+// partition and anticlustering
+extern int n_threads_part;
+extern int n_threads_anti;
 extern int num_rep;
 
 // branch and bound
@@ -49,7 +54,6 @@ extern int branch_and_bound_max_nodes;
 extern int branch_and_bound_visiting_strategy;
 
 // sdp solver
-// extern const char *sdp_solver_matlab_session;
 extern int sdp_solver_session_threads_root;
 extern int sdp_solver_session_threads;
 extern const char *sdp_solver_folder;
@@ -58,7 +62,6 @@ extern int sdp_solver_stopoption;
 extern int sdp_solver_maxiter;
 extern int sdp_solver_maxtime;
 extern int sdp_solver_verbose;
-// extern int sdp_solver_type;
 extern int sdp_solver_max_cp_iter_root;
 extern int sdp_solver_max_cp_iter;
 extern double sdp_solver_cp_tol;
@@ -72,11 +75,10 @@ extern double sdp_solver_triangle_perc;
 extern double sdp_solver_inherit_perc;
 
 // kmeans
-extern bool kmeans_sdp_based;
-extern int kmeans_max_iter;
-extern int kmeans_n_start;
-extern int kmeans_permutations;
+extern int kmeans_max_it;
+extern int kmeans_start;
 extern bool kmeans_verbose;
+extern int kmeans_permut;
 extern arma::mat init_sol;
 
 #endif //CLUSTERING_CONFIG_PARAMS_H

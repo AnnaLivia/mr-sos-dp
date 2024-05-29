@@ -5,13 +5,12 @@
 #include "config_params.h"
 
 
-ThreadPoolPartition::ThreadPoolPartition(InputDataPartition *input_data, SharedDataPartition *shared_data, int n_thread) {
+ThreadPoolPartition::ThreadPoolPartition(SharedDataPartition *shared_data, int n_thread) {
 
     // This returns the number of threads supported by the system.
     // auto numberOfThreads = std::thread::hardware_concurrency();
     int numberOfThreads = n_thread;
 
-    this->input_data = input_data;
     this->shared_data = shared_data;
 
     done = false;
@@ -87,13 +86,13 @@ void ThreadPoolPartition::doWork(int id) {
         std::cout << "Partition " << (job->part_id + 1) << " processed by Thread "<< id << "\nPoints " << np;
         std::cout << std::endl << "*********************************************************************" << std::endl;
         log_file << "Partition " << (job->part_id + 1) << "\n";
-        arma::mat data = job->part.submat(0, 1, np-1, input_data->d);
-        arma::mat sol(np, input_data->k);
-        double lb_mssc = sdp_branch_and_bound(input_data->k, data, constraints, sol);
+        arma::mat data = job->part.submat(0, 1, np-1, d);
+        arma::mat sol(np, k);
+        double lb_mssc = sdp_branch_and_bound(k, data, constraints, sol);
 
         arma::mat cls(np, 1);
         for (int i = 0; i < np; i++)
-            for (int c = 0; c < input_data->k; c++)
+            for (int c = 0; c < k; c++)
                 if (sol(i,c) == 1)
                     cls(i)= c + 1;
 

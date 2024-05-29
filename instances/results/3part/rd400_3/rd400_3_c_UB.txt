@@ -1,7 +1,0 @@
-iteration 0 : 2.97158e+07
-iteration 1 : 2.74582e+07
-after ray 0.850000 : 2.63001e+07
-after ray 0.700000 : 2.58421e+07
-after ray 0.550000 : 2.57951e+07
-after ray 0.400000 : 2.55443e+07
-after ray 0.250000 : 2.54293e+07

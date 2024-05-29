@@ -20,13 +20,23 @@ std::ofstream log_file;
 std::ofstream lb_file;
 std::ofstream ub_file;
 
-// partition method
-char part_m;
+// instance data
+int n;
+int d;
+int p;
+int k;
 
-// partition and anticlustering param
+// partition and anticlustering
 int num_rep;
-int n_threads_partition;
-int n_threads_anticlustering;
+int n_threads_part;
+int n_threads_anti;
+
+// heuristic
+int kmeans_max_it;
+int kmeans_start;
+int kmeans_permut;
+bool kmeans_verbose;
+arma::mat init_sol;
 
 // branch and bound
 double branch_and_bound_tol;
@@ -55,13 +65,6 @@ double sdp_solver_pair_perc;
 int sdp_solver_max_triangle_ineq;
 double sdp_solver_triangle_perc;
 
-// heuristic
-bool kmeans_sdp_based;
-int kmeans_max_iter;
-int kmeans_n_start;
-int kmeans_permutations;
-bool kmeans_verbose;
-arma::mat init_sol;
 
 // read parameters in config file
 std::map<std::string, std::string> read_params(std::string &config_file) {
@@ -90,7 +93,7 @@ std::map<std::string, std::string> read_params(std::string &config_file) {
 }
 
 // read data Ws
-arma::mat read_data(const char *filename, int &n, int &d) {
+arma::mat read_data(const char *filename) {
 
     std::ifstream file(filename);
     if (!file) {
@@ -111,7 +114,7 @@ arma::mat read_data(const char *filename, int &n, int &d) {
 }
 
 // read initial sol
-arma::mat read_sol(const char *filename, int n, int k) {
+arma::mat read_sol(const char *filename) {
 
     std::ifstream file(filename);
     if (!file) {
@@ -172,11 +175,7 @@ void flip(arma::mat &sol, int f) {
     std::cout << std::endl << "** Done flipping " << f << " points **" << std::endl;
 }
 
-double compute_mss(arma::mat data, arma::mat sol) {
-
-    int n = data.n_rows;
-    int d = data.n_cols;
-    int k = sol.n_cols;
+double compute_mss(arma::mat &data, arma::mat &sol) {
 
     arma::mat assignment_mat = arma::zeros(n, k);
     arma::vec count = arma::zeros(k);
@@ -206,7 +205,7 @@ double compute_mss(arma::mat data, arma::mat sol) {
     return arma::dot(m.as_col(), m.as_col());
 }
 
-std::vector<int> read_assignment(const char *filename, int &n) {
+std::vector<int> read_assignment(const char *filename) {
     std::ifstream file(filename);
     if (!file) {
         //std::cerr << strerror(errno) << "\n";
@@ -227,19 +226,18 @@ void run(int argc, char **argv) {
 
     result_folder = config_map["RESULT_FOLDER"];
 
+    // number of thread for computing the partition bound
+    num_rep = std::stoi(config_map["ANTICLUSTERING_REP"]);
+    n_threads_anti = std::stoi(config_map["ANTICLUSTERING_THREADS"]);
+    n_threads_part = std::stoi(config_map["PARTITION_THREADS"]);
+
     // branch and bound
     branch_and_bound_tol = std::stod(config_map["BRANCH_AND_BOUND_TOL"]);
     branch_and_bound_parallel = std::stoi(config_map["BRANCH_AND_BOUND_PARALLEL"]);
     branch_and_bound_max_nodes = std::stoi(config_map["BRANCH_AND_BOUND_MAX_NODES"]);
     branch_and_bound_visiting_strategy = std::stoi(config_map["BRANCH_AND_BOUND_VISITING_STRATEGY"]);
 
-    // number of thread for computing the partition bound
-    n_threads_partition = std::stoi(config_map["PARTITION_THREADS"]);
-    n_threads_anticlustering = std::stoi(config_map["ANTICLUSTERING_THREADS"]);
-    num_rep = std::stoi(config_map["ANTICLUSTERING_REP"]);
-
     // sdp solver
-    // sdp_solver_matlab_session = config_map["SDP_SOLVER_MATLAB_SESSION"].c_str();
     sdp_solver_session_threads_root = std::stoi(config_map["SDP_SOLVER_SESSION_THREADS_ROOT"]);
     sdp_solver_session_threads = std::stoi(config_map["SDP_SOLVER_SESSION_THREADS"]);
     sdp_solver_folder = config_map["SDP_SOLVER_FOLDER"].c_str();
@@ -261,10 +259,10 @@ void run(int argc, char **argv) {
     sdp_solver_maxtime = 3600;
     
     // kmeans
-    kmeans_max_iter = 200;
-    kmeans_n_start = 500;
-    kmeans_verbose = 0;
-    kmeans_permutations = 1;
+    kmeans_start = std::stoi(config_map["KMEANS_NUM_START"]);
+    kmeans_max_it = std::stoi(config_map["KMEANS_MAX_ITERATION"]);
+    kmeans_verbose = std::stoi(config_map["KMEANS_VERBOSE"]);
+    kmeans_permut = 1;
     
     if (argc != 7) {
         std::cerr << "Input: <DATA_FILE> <OPT_SOL_FILE> <H_SOL_FILE> <K> <FLIP> <P>" << std::endl;
@@ -274,13 +272,11 @@ void run(int argc, char **argv) {
     data_path = argv[1];
     opt_path = argv[2];
     sol_path = argv[3];
-    
-    int n, d;
-    int k = std::stoi(argv[4]);
-    int h = std::stoi(argv[5]);
-    int p = std::stoi(argv[6]);
 
-    
+    k = std::stoi(argv[4]);
+    int i = std::stoi(argv[5]);
+    p = std::stoi(argv[6]);
+
     std::string str_path = data_path;
     std::string inst_name = str_path.substr(str_path.find_last_of("/\\")+1);
     inst_name = inst_name.substr(0, inst_name.find("."));
@@ -302,16 +298,16 @@ void run(int argc, char **argv) {
     //ub_file.open(result_path + "_UB.txt");
     log_file.open(result_path + "_LOG.txt");
 
-    arma::mat Ws = read_data(data_path, n, d);
-    //arma::mat opt_sol = read_sol(opt_path, n, k);
+    arma::mat Ws = read_data(data_path);
+    //arma::mat opt_sol = read_sol(opt_path);
     //double opt_mss = compute_mss(Ws, opt_sol);
-    arma::mat opt_sol = arma::mat(n,k);
+    arma::mat opt_sol = arma::mat(n, k);
     double opt_mss = 0;
-    if (h == -1)
-        init_sol = read_sol(sol_path, n, k);
-    else if (h > 0) {
+    if (i == -1)
+        init_sol = read_sol(sol_path);
+    else if (i > 0) {
         init_sol = opt_sol;
-        flip(init_sol, h);
+        flip(init_sol, i);
     } else {
 
         std::map<int, std::set<int>> ml_map = {};
@@ -319,12 +315,10 @@ void run(int argc, char **argv) {
         std::vector <std::pair<int, int>> global_ml = {};
         std::vector <std::pair<int, int>> global_cl = {};
         Kmeans kmeans(Ws, k, ml_map, local_cl, global_ml, global_cl, kmeans_verbose);
-        kmeans.start(kmeans_max_iter, kmeans_n_start, kmeans_permutations);
-        std::cout << std::endl << "** Done computing initial Kmean solution **" << std::endl;
-        std::cout << "Iter:" << kmeans_max_iter << std::endl << "Start:" << kmeans_n_start;
-        std::cout << std::endl << "Permutation:" << kmeans_permutations;
+        kmeans.start(kmeans_max_it, kmeans_start, kmeans_permut);
+        std::cout << "\n** Done computing initial Kmean solution **\n";
+        std::cout << "Iter:" << kmeans_max_it << "\nStart:" << kmeans_start << "\nPermutation:" << kmeans_permut;
         init_sol = kmeans.getAssignments();
-        // std::cout << "\n\nk-means c++ " << std::fixed << compute_mss(Ws, init_sol) << "\n";
 
         /*
         std::string command = "python run_kmeans.py ";
@@ -362,14 +356,15 @@ void run(int argc, char **argv) {
 
     log_file << "DATA_FILE, SOL_FILE, n, d, k: ";
     log_file << data_path << " " << sol_path << " " << n << " " << d << " " << k << "\n";
-    
+
+    log_file << "ANTICLUSTERING_REP: " << num_rep << "\n\n";
+    log_file << "ANTICLUSTERING_THREADS: " << n_threads_anti << "\n\n";
+    log_file << "PARTITION_THREADS: " << n_threads_part << "\n";
+
     log_file << "BRANCH_AND_BOUND_TOL: " << branch_and_bound_tol << "\n";
     log_file << "BRANCH_AND_BOUND_PARALLEL: " << branch_and_bound_parallel << "\n";
     log_file << "BRANCH_AND_BOUND_MAX_NODES: " << branch_and_bound_max_nodes << "\n";
     log_file << "BRANCH_AND_BOUND_VISITING_STRATEGY: " << branch_and_bound_visiting_strategy << "\n\n";
-
-    log_file << "PARTITION_THREADS: " << n_threads_partition << "\n";
-    log_file << "ANTICLUSTERING_THREADS: " << n_threads_anticlustering << "\n\n";
 
     log_file << "SDP_SOLVER_SESSION_THREADS_ROOT: " << sdp_solver_session_threads_root << "\n";
     log_file << "SDP_SOLVER_SESSION_THREADS: " << sdp_solver_session_threads << "\n";
@@ -387,26 +382,23 @@ void run(int argc, char **argv) {
     log_file << "SDP_SOLVER_PAIR_PERC: " << sdp_solver_pair_perc << "\n";
     log_file << "SDP_SOLVER_MAX_TRIANGLE_INEQ: " << sdp_solver_max_triangle_ineq << "\n";
     log_file << "SDP_SOLVER_TRIANGLE_PERC: " << sdp_solver_triangle_perc << "\n\n";
+    log_file << std::fixed <<  std::setprecision(1);
     log_file << "Optimal MSS: " << opt_mss << "\n";
     log_file << "Heuristic MSS: " << init_mss << "\n\n";
 
-    HResult results;
-    test_SUMMARY << inst_name << "\t"
+    HResult results = heuristic(Ws);
+    test_SUMMARY << std::fixed <<  std::setprecision(1)
+    << inst_name << "\t"
     << k << "\t"
     << p << "\t"
-    << opt_mss << "\t";
-
-    log_file << "Method cluster-part model \n" << "\n";
-    results = heuristic(Ws, p, k);
-
-    test_SUMMARY << "\t"
     << results.h_obj << "\t"
+    << opt_mss << "\t"
+    << init_mss << "\t"
     << results.lb_mss << "\t"
-    << round((init_mss - results.lb_mss) / init_mss * 100) << "\t"
-    << round(results.h_time) << "\t"
-    << round(results.lb_time) << "\t"
-    << round(results.ub_time) << "\t"
-    << round(results.all_time) << "\n";
+    << (init_mss - results.lb_mss) / init_mss * 100 << "%\t"
+    << results.h_time << "\t"
+    << results.lb_time << "\t"
+    << results.h_time/60 + results.lb_time << "\n";
 
     std::cout << std::endl << "--------------------------------------------------------------------";
     std::cout << std::endl << "GAP SOL-LB " <<  round((init_mss - results.lb_mss) / init_mss * 100) << "%" << std::endl;

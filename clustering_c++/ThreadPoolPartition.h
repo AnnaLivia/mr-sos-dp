@@ -7,19 +7,10 @@
 
 typedef struct PartitionJob {
 
-    arma::mat part;
     int part_id;
+    arma::mat part;
 
 } PartitionJob;
-
-typedef struct InputDataPartition {
-
-    int k;
-    int d;
-    int p;
-
-} InputDataPartition;
-
 
 
 typedef struct SharedDataPartition {
@@ -44,7 +35,6 @@ class ThreadPoolPartition {
 
 private:
 
-    InputDataPartition  *input_data;
     SharedDataPartition  *shared_data;
 
     // We store the threads in a vector, so we can later stop them gracefully
@@ -59,7 +49,7 @@ private:
 
 public:
 
-    ThreadPoolPartition(InputDataPartition *input_data, SharedDataPartition *shared_data, int n_thread);
+    ThreadPoolPartition(SharedDataPartition *shared_data, int n_thread);
     void quitPool();
     void addJob(PartitionJob *partitionJob);
 

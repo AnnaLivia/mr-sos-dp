@@ -28,10 +28,7 @@ std::string mount_model::get_y_variable_name(int c1, int h1, int c2, int h2, int
 }
 
 
-mount_gurobi_model::mount_gurobi_model(GRBEnv *env, int n, int p, int k, int m, arma::mat &dist, std::unordered_map<int, std::unordered_map<int, arma::mat>> &sol_cls) : model(*env), X(k*p,p), Y(m,p) {
-	this->n = n;
-	this->p = p;
-	this->k = k;
+mount_gurobi_model::mount_gurobi_model(GRBEnv *env, int m, std::vector<std::vector<double>> &dist, std::unordered_map<int, std::unordered_map<int, arma::mat>> &sol_cls) : model(*env), X(k*p,p), Y(m,p) {
 	this->m = m;
 	this->dist = dist;
 	this->sol_cls = sol_cls;
@@ -71,7 +68,7 @@ MMatrix<GRBVar> mount_gurobi_model::create_Y_variables(GRBModel &model) {
     					double obj = 0;
     					for (int i = 0; i < sol_cls[c1][h1].n_rows; i++)
     						for (int j = 0; j < sol_cls[c2][h2].n_rows; j++)
-    							obj += dist(sol_cls[c1][h1](i,0) - 1, sol_cls[c2][h2](j,0) - 1);
+    							obj += dist[sol_cls[c1][h1](i,0) - 1][sol_cls[c2][h2](j,0) - 1];
     					for (int t=0; t < p; ++t) {
     						std::string name = get_y_variable_name(c1, h1, c2, h2, t);
     						Y(s, t) = model.addVar(0.0, 1, -obj, GRB_BINARY, name);
@@ -141,9 +138,7 @@ void mount_gurobi_model::optimize(){
 	try {
         std::string file = sol_path;
         auto name = file.substr(0, file.find_last_of("."));
-        model.write(name + ".lp");
-        std::cout << std::endl << std::endl << name << std::endl;
-
+        //model.write(name + ".lp");
 		model.optimize();
 		status = model.get(GRB_IntAttr_Status);
     } catch (GRBException &e) {
