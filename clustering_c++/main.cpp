@@ -262,7 +262,7 @@ void run(int argc, char **argv) {
     
     // kmeans
     kmeans_max_iter = 200;
-    kmeans_n_start = 100;
+    kmeans_n_start = 500;
     kmeans_verbose = 0;
     kmeans_permutations = 1;
     
@@ -313,7 +313,7 @@ void run(int argc, char **argv) {
         init_sol = opt_sol;
         flip(init_sol, h);
     } else {
-    	/*
+
         std::map<int, std::set<int>> ml_map = {};
         std::vector <std::pair<int, int>> local_cl = {};
         std::vector <std::pair<int, int>> global_ml = {};
@@ -324,10 +324,11 @@ void run(int argc, char **argv) {
         std::cout << "Iter:" << kmeans_max_iter << std::endl << "Start:" << kmeans_n_start;
         std::cout << std::endl << "Permutation:" << kmeans_permutations;
         init_sol = kmeans.getAssignments();
-		*/
+        // std::cout << "\n\nk-means c++ " << std::fixed << compute_mss(Ws, init_sol) << "\n";
 
+        /*
         std::string command = "python run_kmeans.py ";
-        std::string out_assignment = "./kmeans/" + inst_name + "_" + std::to_string(k) + ".txt";
+        std::string out_assignment = "../kmeans/" + inst_name + "_" + std::to_string(k) + ".txt";
         std::string data_path_str = data_path;
         std::string args = data_path_str + " " + std::to_string(k) + " " + std::to_string(kmeans_n_start) + " " + out_assignment;
         command += args;
@@ -344,6 +345,8 @@ void run(int argc, char **argv) {
     	for (int i = 0 ; i < init_assignment.size(); i++)
             init_sol(i, init_assignment[i]) = 1;
 
+        std::cout << "k-means python " << std::fixed << compute_mss(Ws, init_sol) << "\n";
+        */
     }
     double init_mss = compute_mss(Ws, init_sol);
     std::cout << std::endl << std::endl;
