@@ -33,6 +33,8 @@ typedef struct SharedData {
     // Mutex to protect queue
     std::mutex queueMutex;
 
+    double root_lb;
+    double best_lb;
     double global_ub;
     double gap;
     arma::sp_mat global_X;

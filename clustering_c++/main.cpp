@@ -206,6 +206,19 @@ double compute_mss(arma::mat data, arma::mat sol) {
     return arma::dot(m.as_col(), m.as_col());
 }
 
+std::vector<int> read_assignment(const char *filename, int &n) {
+    std::ifstream file(filename);
+    if (!file) {
+        //std::cerr << strerror(errno) << "\n";
+        //exit(EXIT_FAILURE);
+        return {};
+    }
+    std::vector<int> v(n);
+    for (int i = 0; i < n; i++) {
+        file >> v[i];
+    }
+    return v;
+}
 
 void run(int argc, char **argv) {
     
@@ -310,6 +323,23 @@ void run(int argc, char **argv) {
         std::cout << "Iter:" << kmeans_max_iter << std::endl << "Start:" << kmeans_n_start;
         std::cout << std::endl << "Permutation:" << kmeans_permutations;
         init_sol = kmeans.getAssignments();
+
+        std::string command = "python run_kmeans.py ";
+        std::string out_assignment = "./kmeans/" + inst_name + "_" + std::to_string(k) + ".txt";
+        std::string data_path_str = data_path;
+        std::string args = data_path_str + " " + std::to_string(k) + " " + std::to_string(kmeans_n_start) + " " + out_assignment;
+        command += args;
+        std::cout << command << "\n";
+        int system_val = system(command.c_str());
+        if (system_val == -1) {
+            // The system method failed
+            std::cout << "Failed to call Python script" << "\n";
+            exit(EXIT_FAILURE);
+        }
+
+        std::vector<int> init_assignment = read_assignment(out_assignment.c_str(), n);
+
+
     }
     double init_mss = compute_mss(Ws, init_sol);
     std::cout << std::endl << std::endl;

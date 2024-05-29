@@ -344,12 +344,12 @@ std::pair<JobData *, JobData *> build_cl_problem(MatlabStruct *matlab_struct, No
 
         node_gap = (shared_data->global_ub - cl_node->lb) / shared_data->global_ub;
 
-        double gap = node_gap;
+        //double gap = node_gap;
         Node *min_lb_node = shared_data->queue->getMinLb();
-        if (min_lb_node != nullptr)
-            gap = (shared_data->global_ub - min_lb_node->lb) / shared_data->global_ub;
-
-        shared_data->gap = gap;
+        if (min_lb_node != nullptr && min_lb_node->lb > shared_data->best_lb) {
+            shared_data->gap = (shared_data->global_ub - min_lb_node->lb) / shared_data->global_ub;
+            shared_data->best_lb = min_lb_node->lb;
+        }
 
         auto end_time = std::chrono::high_resolution_clock::now();
         auto duration = std::chrono::duration_cast<std::chrono::seconds>(end_time - start_time);
@@ -524,12 +524,12 @@ std::pair<JobData *, JobData *> build_ml_problem(MatlabStruct *matlab_struct, No
 
         node_gap = (shared_data->global_ub - ml_node->lb) / shared_data->global_ub;
 
-        double gap = node_gap;
+        //double gap = node_gap;
         Node *min_lb_node = shared_data->queue->getMinLb();
-        if (min_lb_node != nullptr)
-            gap = (shared_data->global_ub - min_lb_node->lb) / shared_data->global_ub;
-
-        shared_data->gap = gap;
+        if (min_lb_node != nullptr && min_lb_node->lb > shared_data->best_lb) {
+            shared_data->gap = (shared_data->global_ub - min_lb_node->lb) / shared_data->global_ub;
+            shared_data->best_lb = min_lb_node->lb;
+        }
 
         auto end_time = std::chrono::high_resolution_clock::now();
         auto duration = std::chrono::duration_cast<std::chrono::seconds>(end_time - start_time);
@@ -718,6 +718,8 @@ std::pair<JobData *, JobData *> build_root_problem(MatlabStruct *matlab_struct,
 		root->ub = std::min(root->ub, new_ub);
 	}
 
+    shared_data->root_lb = root->lb;
+    shared_data->best_lb = root->lb;
     shared_data->global_ub = root->ub;
     shared_data->global_X = root->assignment_X;
 	shared_data->global_centroids = root->centroids;
@@ -781,7 +783,10 @@ double sdp_branch_and_bound(int k, arma::mat &Ws, UserConstraints &constraints, 
     }
 
     auto *shared_data = new SharedData();
+    shared_data->best_lb = -std::numeric_limits<double>::infinity();
+    shared_data->root_lb = -std::numeric_limits<double>::infinity();
     shared_data->global_ub = std::numeric_limits<double>::infinity();
+    shared_data->gap = std::numeric_limits<double>::infinity();
     shared_data->n_nodes = 0;
     shared_data->sum_ineq = 0.0;
     shared_data->sum_cp_iter = 0.0;
@@ -853,17 +858,19 @@ double sdp_branch_and_bound(int k, arma::mat &Ws, UserConstraints &constraints, 
     log_file << "AVG_CP_ITER: " << (double) shared_data->sum_cp_iter / shared_data->n_nodes << "\n";
     log_file << "ROOT_GAP: " << std::max(0.0, root_gap) << "\n";
     log_file << "GAP: " << std::max(0.0, shared_data->gap) << "\n";
-    log_file << "BEST: " << shared_data->global_ub << "\n\n";
+    log_file << "ROOT_LB: " << shared_data->root_lb << "\n";
+    log_file << "BEST_UB: " << shared_data->global_ub << "\n";
+    log_file << "BEST_LB: " << shared_data->best_lb << "\n\n";
 
     sol = shared_data->global_X;
 
-    double ub = shared_data->global_ub;
+    double lb = shared_data->best_lb;
 
     // free memory
     delete (input_data);
     delete (queue);
     delete (shared_data);
 
-    return ub;
+    return lb;
 
 }

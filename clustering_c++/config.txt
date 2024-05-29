@@ -1,13 +1,13 @@
 # log path
-LOG_FOLDER = /home/aelle/mr-sos-dp/instances/log
+#LOG_FOLDER = /home/aelle/mr-sos-dp/instances/log
 # result path
-RESULT_FOLDER = /home/aelle/mr-sos-dp/instances/results
+#RESULT_FOLDER = /home/aelle/mr-sos-dp/instances/results
 # log path
-#LOG_FOLDER = /home/antonio/Documenti/GitHub/mr-sos-dp/instances/log
+LOG_FOLDER = /home/antonio/Documenti/GitHub/mr-sos-dp/instances/log
 # result path
-#RESULT_FOLDER = /home/antonio/Documenti/GitHub/mr-sos-dp/instances/results
+RESULT_FOLDER = /home/antonio/Documenti/GitHub/mr-sos-dp/instances/results
 
-BRANCH_AND_BOUND_TOL = 1e-6
+BRANCH_AND_BOUND_TOL = 1e-4
 # single thread (1), multi-thread (> 1)
 BRANCH_AND_BOUND_PARALLEL = 1
 BRANCH_AND_BOUND_MAX_NODES = 1
@@ -15,19 +15,19 @@ BRANCH_AND_BOUND_MAX_NODES = 1
 BRANCH_AND_BOUND_VISITING_STRATEGY = 0
 
 # number of threads for computing the partitions
-PARTITION_THREADS = 1
+PARTITION_THREADS = 4
 # number of anticlustering repetitions
-ANTICLUSTERING_REP = 100
+ANTICLUSTERING_REP = 50
 # number of threads for anticlustering
-ANTICLUSTERING_THREADS = 1
+ANTICLUSTERING_THREADS = 4
 
 # numer of threads for the matlab session at root
-SDP_SOLVER_SESSION_THREADS_ROOT = 2
+SDP_SOLVER_SESSION_THREADS_ROOT = 4
 # numer of threads for the matlab session (must-link and cannot-link)
 SDP_SOLVER_SESSION_THREADS = 1
 # sdp solver path
-#SDP_SOLVER_FOLDER = /home/antonio/Documenti/GitHub/mr-sos-dp/SDPNAL
-SDP_SOLVER_FOLDER = /home/aelle/mr-sos-dp/SDPNAL
+SDP_SOLVER_FOLDER = /home/antonio/Documenti/GitHub/mr-sos-dp/SDPNAL
+#SDP_SOLVER_FOLDER = /home/aelle/mr-sos-dp/SDPNAL
 # precision of the sdp solver
 SDP_SOLVER_TOL = 1e-4
 # do not display log (0), display log (1)
