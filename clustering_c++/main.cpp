@@ -313,6 +313,7 @@ void run(int argc, char **argv) {
         init_sol = opt_sol;
         flip(init_sol, h);
     } else {
+    	/*
         std::map<int, std::set<int>> ml_map = {};
         std::vector <std::pair<int, int>> local_cl = {};
         std::vector <std::pair<int, int>> global_ml = {};
@@ -323,6 +324,7 @@ void run(int argc, char **argv) {
         std::cout << "Iter:" << kmeans_max_iter << std::endl << "Start:" << kmeans_n_start;
         std::cout << std::endl << "Permutation:" << kmeans_permutations;
         init_sol = kmeans.getAssignments();
+		*/
 
         std::string command = "python run_kmeans.py ";
         std::string out_assignment = "./kmeans/" + inst_name + "_" + std::to_string(k) + ".txt";
@@ -338,7 +340,9 @@ void run(int argc, char **argv) {
         }
 
         std::vector<int> init_assignment = read_assignment(out_assignment.c_str(), n);
-
+        init_sol = arma::zeros(n,k);
+    	for (int i = 0 ; i < init_assignment.size(); i++)
+            init_sol(i, init_assignment[i]) = 1;
 
     }
     double init_mss = compute_mss(Ws, init_sol);
