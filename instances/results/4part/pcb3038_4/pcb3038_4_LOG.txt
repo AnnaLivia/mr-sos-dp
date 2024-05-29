@@ -1,4 +1,4 @@
-DATA_FILE, SOL_FILE, n, d, k: ../instances/data/pr299.txt ../instances/anticlust/pr299_3.txt 299 2 3
+DATA_FILE, SOL_FILE, n, d, k: ../instances/data/pcb3038.txt ../instances/data/pcb3038.txt 3038 2 4
 BRANCH_AND_BOUND_TOL: 1e-06
 BRANCH_AND_BOUND_PARALLEL: 1
 BRANCH_AND_BOUND_MAX_NODES: 1
@@ -25,7 +25,7 @@ SDP_SOLVER_MAX_TRIANGLE_INEQ: 100000
 SDP_SOLVER_TRIANGLE_PERC: 0.05
 
 Optimal MSS: 0
-Heuristic MSS: 2.77437e+08
+Heuristic MSS: 1.47895e+09
 
 Method cluster-part model 
 

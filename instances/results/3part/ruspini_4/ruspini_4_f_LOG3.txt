@@ -32,42 +32,42 @@ Method cluster-part model
 Partition 1
 
 |    N| NODE_PAR|    NODE|      LB_PAR|          LB|  FLAG|  TIME (s)| CP_ITER| CP_FLAG|   CP_INEQ|     PAIR  TRIANGLE    CLIQUE|          UB|         GUB|     I      J|     NODE_GAP|          GAP|  OPEN|
-|   23|       -1|       0|        -inf|     2533.43|     0|         0|       0|       0|         0|        0         0         0|     2541.24|    2541.24*|    -1     -1|   0.00307075|   0.00307075|     0|
+|   25|       -1|       0|        -inf|     3575.21|     0|         1|       1|       0|       104|        4       100         0|     3575.21|    3575.21*|    -1     -1|   1.3403e-08|   1.3403e-08|     0|
+
+WALL_TIME: 2 sec
+N_NODES: 1
+AVG_INEQ: 104
+AVG_CP_ITER: 1
+ROOT_GAP: 1.3403e-08
+GAP: 0
+BEST: 3575.21
+
+Partition 2
+
+|    N| NODE_PAR|    NODE|      LB_PAR|          LB|  FLAG|  TIME (s)| CP_ITER| CP_FLAG|   CP_INEQ|     PAIR  TRIANGLE    CLIQUE|          UB|         GUB|     I      J|     NODE_GAP|          GAP|  OPEN|
+|   25|       -1|       0|        -inf|     4075.54|     0|         0|       1|       0|       120|        2       118         0|     4075.54|    4075.54*|    -1     -1|  9.79385e-08|  9.79385e-08|     0|
+
+WALL_TIME: 2 sec
+N_NODES: 1
+AVG_INEQ: 120
+AVG_CP_ITER: 1
+ROOT_GAP: 9.79385e-08
+GAP: 0
+BEST: 4075.54
+
+Partition 3
+
+|    N| NODE_PAR|    NODE|      LB_PAR|          LB|  FLAG|  TIME (s)| CP_ITER| CP_FLAG|   CP_INEQ|     PAIR  TRIANGLE    CLIQUE|          UB|         GUB|     I      J|     NODE_GAP|          GAP|  OPEN|
+|   25|       -1|       0|        -inf|     5136.65|     0|         0|       0|       0|         0|        0         0         0|     5137.63|    5137.63*|    -1     -1|  0.000191048|  0.000191048|     0|
 
 WALL_TIME: 1 sec
 N_NODES: 1
 AVG_INEQ: 0
 AVG_CP_ITER: 0
-ROOT_GAP: 0.00307075
-GAP: 0.00307075
-BEST: 2541.24
+ROOT_GAP: 0.000191048
+GAP: 0.000191048
+BEST: 5137.63
 
-Partition 2
-
-|    N| NODE_PAR|    NODE|      LB_PAR|          LB|  FLAG|  TIME (s)| CP_ITER| CP_FLAG|   CP_INEQ|     PAIR  TRIANGLE    CLIQUE|          UB|         GUB|     I      J|     NODE_GAP|          GAP|  OPEN|
-|   26|       -1|       0|        -inf|     5092.38|     0|         0|       1|       0|        65|        2        63         0|     5092.38|    5092.38*|    -1     -1|  1.20638e-07|  1.20638e-07|     0|
-
-WALL_TIME: 2 sec
-N_NODES: 1
-AVG_INEQ: 65
-AVG_CP_ITER: 1
-ROOT_GAP: 1.20638e-07
-GAP: 0
-BEST: 5092.38
-
-Partition 3
-
-|    N| NODE_PAR|    NODE|      LB_PAR|          LB|  FLAG|  TIME (s)| CP_ITER| CP_FLAG|   CP_INEQ|     PAIR  TRIANGLE    CLIQUE|          UB|         GUB|     I      J|     NODE_GAP|          GAP|  OPEN|
-|   26|       -1|       0|        -inf|     5174.81|     0|         0|       1|       0|        85|        1        84         0|     5174.81|    5174.81*|    -1     -1|  2.85118e-08|  2.85118e-08|     0|
-
-WALL_TIME: 2 sec
-N_NODES: 1
-AVG_INEQ: 85
-AVG_CP_ITER: 1
-ROOT_GAP: 2.85118e-08
-GAP: 0
-BEST: 5174.81
-
-Merge LB MSS: 12808.4
+Merge LB MSS: 12788.4
 
 

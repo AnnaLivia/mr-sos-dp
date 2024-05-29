@@ -253,8 +253,8 @@ void run(int argc, char **argv) {
     kmeans_verbose = 0;
     kmeans_permutations = 1;
     
-    if (argc != 8) {
-        std::cerr << "Input: <DATA_FILE> <OPT_SOL_FILE> <H_SOL_FILE> <K> <FLIP> <P> <METHOD>" << std::endl;
+    if (argc != 7) {
+        std::cerr << "Input: <DATA_FILE> <OPT_SOL_FILE> <H_SOL_FILE> <K> <FLIP> <P>" << std::endl;
         exit(EXIT_FAILURE);
     }
     
@@ -266,27 +266,28 @@ void run(int argc, char **argv) {
     int k = std::stoi(argv[4]);
     int h = std::stoi(argv[5]);
     int p = std::stoi(argv[6]);
-    part_m = *(argv[7]);
 
     
     std::string str_path = data_path;
     std::string inst_name = str_path.substr(str_path.find_last_of("/\\")+1);
     inst_name = inst_name.substr(0, inst_name.find("."));
-    std::ofstream test_SUMMARY(result_folder.substr(0, result_folder.find_last_of("/\\")) + "/test_SUMMARY4.txt", std::ios::app);
+    std::ofstream test_SUMMARY(result_folder.substr(0, result_folder.find_last_of("/\\")) + "/test_SUMMARY.txt", std::ios::app);
 
     result_path = result_folder + "/" + std::to_string(p) + "part/" + inst_name + "_" + std::to_string(k);
     if (!std::filesystem::exists(result_path))
         std::filesystem::create_directories(result_path);
-    result_path += "/" + inst_name + "_" + std::to_string(k) + "_" + part_m;
+    result_path += "/" + inst_name + "_" + std::to_string(k);
 
+	/*
     if (!std::strchr("crfka", part_m)) {
         std::printf("ERROR: invalid partition method!\n");
         exit(EXIT_FAILURE);
     }
+	 */
 
     //lb_file.open(result_path + "_LB.txt");
     //ub_file.open(result_path + "_UB.txt");
-    log_file.open(result_path + "_LOG3.txt");
+    log_file.open(result_path + "_LOG.txt");
 
     arma::mat Ws = read_data(data_path, n, d);
     //arma::mat opt_sol = read_sol(opt_path, n, k);
@@ -358,11 +359,10 @@ void run(int argc, char **argv) {
     << p << "\t"
     << opt_mss << "\t";
 
-    part_m = 'o';
     log_file << "Method cluster-part model \n" << "\n";
     results = heuristic(Ws, p, k);
 
-    test_SUMMARY << part_m << "\t"
+    test_SUMMARY << "\t"
     << results.h_obj << "\t"
     << results.lb_mss << "\t"
     << round((init_mss - results.lb_mss) / init_mss * 100) << "\t"
@@ -372,7 +372,7 @@ void run(int argc, char **argv) {
     << round(results.all_time) << "\n";
 
     std::cout << std::endl << "--------------------------------------------------------------------";
-    std::cout << std::endl << "Method " << part_m << " GAP SOL-LB " <<  round((init_mss - results.lb_mss) / init_mss * 100) << "%" << std::endl;
+    std::cout << std::endl << "GAP SOL-LB " <<  round((init_mss - results.lb_mss) / init_mss * 100) << "%" << std::endl;
     std::cout << "--------------------------------------------------------------------" << std::endl;
 
     /*

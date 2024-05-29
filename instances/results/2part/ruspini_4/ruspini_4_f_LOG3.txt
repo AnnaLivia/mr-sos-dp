@@ -32,30 +32,29 @@ Method cluster-part model
 Partition 1
 
 |    N| NODE_PAR|    NODE|      LB_PAR|          LB|  FLAG|  TIME (s)| CP_ITER| CP_FLAG|   CP_INEQ|     PAIR  TRIANGLE    CLIQUE|          UB|         GUB|     I      J|     NODE_GAP|          GAP|  OPEN|
-|   38|       -1|       0|        -inf|     6511.42|     0|         0|       0|       0|         0|        0         0         0|     6513.33|    6513.33*|    -1     -1|  0.000293514|  0.000293514|     0|
-PRUNING BY OPTIMALITY 0
+|   37|       -1|       0|        -inf|     5604.39|     0|         0|       0|       0|         0|        0         0         0|     5608.05|    5608.05*|    -1     -1|  0.000651697|  0.000651697|     0|
 
 WALL_TIME: 2 sec
 N_NODES: 1
 AVG_INEQ: 0
 AVG_CP_ITER: 0
-ROOT_GAP: 0.000293514
-GAP: 0
-BEST: 6513.33
+ROOT_GAP: 0.000651697
+GAP: 0.000651697
+BEST: 5608.05
 
 Partition 2
 
 |    N| NODE_PAR|    NODE|      LB_PAR|          LB|  FLAG|  TIME (s)| CP_ITER| CP_FLAG|   CP_INEQ|     PAIR  TRIANGLE    CLIQUE|          UB|         GUB|     I      J|     NODE_GAP|          GAP|  OPEN|
-|   37|       -1|       0|        -inf|     6325.09|     0|         0|       1|       0|       298|        8       290         0|     6325.09|    6325.09*|    -1     -1|  4.37357e-08|  4.37357e-08|     0|
+|   38|       -1|       0|        -inf|     7234.19|     0|         0|       0|       0|         0|        0         0         0|     7242.22|    7242.22*|    -1     -1|   0.00110997|   0.00110997|     0|
 
-WALL_TIME: 2 sec
+WALL_TIME: 1 sec
 N_NODES: 1
-AVG_INEQ: 298
-AVG_CP_ITER: 1
-ROOT_GAP: 4.37357e-08
-GAP: 0
-BEST: 6325.09
+AVG_INEQ: 0
+AVG_CP_ITER: 0
+ROOT_GAP: 0.00110997
+GAP: 0.00110997
+BEST: 7242.22
 
-Merge LB MSS: 12838.4
+Merge LB MSS: 12850.3
 
 
