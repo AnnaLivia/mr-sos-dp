@@ -12,15 +12,6 @@ typedef struct AntiJob {
 
 } AntiJob;
 
-typedef struct InputDataAnti {
-
-    double max_d;
-    arma::mat data;
-    std::vector<std::vector<double>> all_dist;
-
-} InputDataAnti;
-
-
 
 typedef struct SharedDataAnti {
 
@@ -35,8 +26,9 @@ typedef struct SharedDataAnti {
     // Mutex to protect queue
     std::mutex queueMutex;
 
+    std::vector<std::vector<double>> all_dist; // matrix of distances
     std::vector<double> dist_cls; // used to store the objective function of each sub-problem
-    std::unordered_map<int, std::unordered_map<int, arma::mat>> sol_cls;
+    std::vector<std::vector<std::vector<int>>> sol_cls; // used to store the partitions for each cluser
 
 } SharedDataAnti;
 
@@ -44,7 +36,6 @@ class ThreadPoolAnti {
 
 private:
 
-    InputDataAnti  *input_data;
     SharedDataAnti  *shared_data;
 
     // We store the threads in a vector, so we can later stop them gracefully
@@ -59,7 +50,7 @@ private:
 
 public:
 
-    ThreadPoolAnti(InputDataAnti *input_data, SharedDataAnti *shared_data, int n_thread);
+    ThreadPoolAnti(SharedDataAnti *shared_data, int n_thread);
     void quitPool();
     void addJob(AntiJob *antiJob);
 

@@ -6,13 +6,12 @@
 #include "ac_heuristic.h"
 
 
-ThreadPoolAnti::ThreadPoolAnti(InputDataAnti *input_data, SharedDataAnti *shared_data, int n_thread) {
+ThreadPoolAnti::ThreadPoolAnti(SharedDataAnti *shared_data, int n_thread) {
 
     // This returns the number of threads supported by the system.
     // auto numberOfThreads = std::thread::hardware_concurrency();
     int numberOfThreads = n_thread;
 
-    this->input_data = input_data;
     this->shared_data = shared_data;
 
     done = false;
@@ -86,29 +85,19 @@ void ThreadPoolAnti::doWork(int id) {
         std::cout << std::endl << "*********************************************************************" << std::endl;
         std::cout << "Cluster " << job->cls_id + 1 << " processed by Thread "<< id << "\nPoints " << job->cls_points.size();
         std::cout << std::endl << "*********************************************************************" << std::endl;
-        std::pair<double, std::unordered_map<int, std::vector<int>>> sol = compute_anti_single_cluster(job->cls_points,
-                                                                                                        input_data->max_d, input_data->all_dist);
+        std::pair<double, std::vector<std::vector<int>>> sol = compute_anti_cls(job->cls_points, shared_data->all_dist);
 
         double best_dist = sol.first;
-        std::unordered_map<int, std::vector<int>> best_part_map = sol.second;
+        std::vector<std::vector<int>> best_part_points = sol.second;
 
         {
             std::lock_guard<std::mutex> l(shared_data->queueMutex);
 
             shared_data->dist_cls.push_back(best_dist);
 
-            // update sol map
-            for (int h = 0; h < p; ++h) {
-                shared_data->sol_cls[job->cls_id][h] = arma::mat(job->cls_points.size(), d + 1);
-                int np = 0;
-                for (int i : best_part_map[h]) {
-                    shared_data->sol_cls[job->cls_id][h](np,0) = i + 1;
-                    shared_data->sol_cls[job->cls_id][h].row(np).subvec(1, d) = input_data->data.row(i);
-                    np++;
-                }
-                shared_data->sol_cls[job->cls_id][h] = shared_data->sol_cls[job->cls_id][h].submat(0, 0, np - 1, d);
-            }
-
+            // update final partition
+            for (int h = 0; h < p; ++h)
+                shared_data->sol_cls[job->cls_id][h] = best_part_points[h];
 
             shared_data->threadStates[id] = false;
         }

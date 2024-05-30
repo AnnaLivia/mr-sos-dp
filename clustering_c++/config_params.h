@@ -43,9 +43,11 @@ extern int k;
 extern int p;
 
 // partition and anticlustering
-extern int n_threads_part;
-extern int n_threads_anti;
+extern double w_diversity;
+extern double w_dispersion;
 extern int num_rep;
+extern int n_threads_anti;
+extern int n_threads_part;
 
 // branch and bound
 extern double branch_and_bound_tol;

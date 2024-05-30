@@ -26,7 +26,7 @@ int generate_part_constraints(std::map<int, arma::mat> &sol_map, UserConstraints
 arma::mat save_lb(std::map<int, arma::mat> &sol_map);
 arma::mat save_ub(arma::mat &data, arma::mat &sol);
 
-std::pair<double, std::unordered_map<int, std::vector<int>>> compute_anti_single_cluster(std::vector<int> &cls_points, double max_d, std::vector<std::vector<double>> &all_dist);
+std::pair<double,  std::vector<std::vector<int>>> compute_anti_cls(std::vector<int> &cls_points, std::vector<std::vector<double>> &all_dist);
 HResult heuristic(arma::mat &Ws);
 
 #endif //CLUSTERING_AC_HEURISTICS_H

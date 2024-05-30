@@ -80,30 +80,27 @@ void ThreadPoolPartition::doWork(int id) {
             shared_data->queue.pop_front();
         }
 
-        UserConstraints constraints;
-        int np = (int) job->part.n_rows;
+        int np = (int) job->part_data.n_rows;
         std::cout << std::endl << "*********************************************************************" << std::endl;
         std::cout << "Partition " << (job->part_id + 1) << " processed by Thread "<< id << "\nPoints " << np;
         std::cout << std::endl << "*********************************************************************" << std::endl;
         log_file << "Partition " << (job->part_id + 1) << "\n";
-        arma::mat data = job->part.submat(0, 1, np-1, d);
         arma::mat sol(np, k);
-        double lb_mssc = sdp_branch_and_bound(k, data, constraints, sol);
+        UserConstraints constraints;
+        double lb_mssc = sdp_branch_and_bound(k, job->part_data, constraints, sol);
 
-        arma::mat cls(np, 1);
+        std::vector<int> cls(np);
         for (int i = 0; i < np; i++)
             for (int c = 0; c < k; c++)
                 if (sol(i,c) == 1)
-                    cls(i)= c + 1;
-
-        arma::mat sol_part = arma::join_horiz(job->part, cls);
+                    cls[i] = c + 1;
 
         delete (job);
 
         {
             std::lock_guard<std::mutex> l(shared_data->queueMutex);
             shared_data->lb_part.push_back(lb_mssc);
-            shared_data->sol_part.push_back(sol_part);
+            shared_data->sol_part.push_back(cls);
             shared_data->threadStates[id] = false;
         }
 

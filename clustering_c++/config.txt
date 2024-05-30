@@ -7,8 +7,12 @@ RESULT_FOLDER = /home/aelle/mr-sos-dp/instances/results
 # result path
 #RESULT_FOLDER = /home/antonio/Documenti/GitHub/mr-sos-dp/instances/results
 
+# weight of diversity objective in anticlustering heuristic
+ANTICLUSTERING_DIVERSITY = 0.8
+# weight of dispersion objective in anticlustering heuristic
+ANTICLUSTERING_DISPERSION = 0.2
 # number of anticlustering repetitions
-ANTICLUSTERING_REP = 100
+ANTICLUSTERING_REP = 1000
 # number of threads for anticlustering
 ANTICLUSTERING_THREADS = 4
 # number of threads for computing the partitions

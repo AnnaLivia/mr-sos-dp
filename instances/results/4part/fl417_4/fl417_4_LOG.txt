@@ -38,59 +38,59 @@ Partition 3
 |    N| NODE_PAR|    NODE|      LB_PAR|          LB|  FLAG|  TIME (s)| CP_ITER| CP_FLAG|   CP_INEQ|     PAIR  TRIANGLE    CLIQUE|          UB|         GUB|     I      J|     NODE_GAP|          GAP|  OPEN|
 
 |    N| NODE_PAR|    NODE|      LB_PAR|          LB|  FLAG|  TIME (s)| CP_ITER| CP_FLAG|   CP_INEQ|     PAIR  TRIANGLE    CLIQUE|          UB|         GUB|     I      J|     NODE_GAP|          GAP|  OPEN|
-|  105|       -1|       0|        -inf|   9057441.0|     0|      24.0|       2|      -3|      5309|    154.5    3368.0       0.0|   9075392.0|  9075392.0*|    -1     -1|          0.0|          0.0|     0|
+|  104|       -1|       0|        -inf|   8231801.5|     0|      10.0|       3|      -3|      7644|    102.0    3369.0       0.0|   8239354.4|  8239354.4*|    -1     -1|          0.0|          0.0|     0|
 
-WALL_TIME: 45 sec
+WALL_TIME: 11 sec
 N_NODES: 1
-AVG_INEQ: 3522.5
-AVG_CP_ITER: 2.0
+AVG_INEQ: 3471.0
+AVG_CP_ITER: 3.0
 ROOT_GAP: 0.0
 GAP: 0.0
-ROOT_LB: 9057441.0
-BEST_UB: 9075392.0
-BEST_LB: 9057441.0
+ROOT_LB: 8231801.5
+BEST_UB: 8239354.4
+BEST_LB: 8231801.5
 
 Partition 4
 
 |    N| NODE_PAR|    NODE|      LB_PAR|          LB|  FLAG|  TIME (s)| CP_ITER| CP_FLAG|   CP_INEQ|     PAIR  TRIANGLE    CLIQUE|          UB|         GUB|     I      J|     NODE_GAP|          GAP|  OPEN|
-|  103|       -1|       0|        -inf|   8147586.1|     0|      50.0|       3|      -3|      7567|     92.3    3648.0       0.0|   8153967.2|  8153967.2*|    -1     -1|          0.0|          0.0|     0|
+|  104|       -1|       0|        -inf|   8328652.7|     0|      12.0|       3|      -3|      9553|    167.3    3389.0       0.0|   8342816.5|  8342816.5*|    -1     -1|          0.0|          0.0|     0|
 
-WALL_TIME: 71 sec
+WALL_TIME: 15 sec
 N_NODES: 1
-AVG_INEQ: 3740.3
+AVG_INEQ: 3556.3
 AVG_CP_ITER: 3.0
 ROOT_GAP: 0.0
 GAP: 0.0
-ROOT_LB: 8147586.1
-BEST_UB: 8153967.2
-BEST_LB: 8147586.1
+ROOT_LB: 8328652.7
+BEST_UB: 8342816.5
+BEST_LB: 8328652.7
 
-|  104|       -1|       0|        -inf|   8719063.1|     0|      63.0|       4|      -3|      9364|    151.0    3650.0       0.0|   9025735.1|  9025735.1*|    -1     -1|          0.0|          0.0|     0|
+|  104|       -1|       0|        -inf|   8691230.8|     0|       4.0|       2|       0|      5967|    153.0    3015.0       0.0|   8694053.6|  8694053.6*|    -1     -1|          0.0|          0.0|     0|
 
-WALL_TIME: 84 sec
+WALL_TIME: 7 sec
 N_NODES: 1
-AVG_INEQ: 3801.0
-AVG_CP_ITER: 4.0
+AVG_INEQ: 3168.0
+AVG_CP_ITER: 2.0
 ROOT_GAP: 0.0
 GAP: 0.0
-ROOT_LB: 8719063.1
-BEST_UB: 9025735.1
-BEST_LB: 8719063.1
+ROOT_LB: 8691230.8
+BEST_UB: 8694053.6
+BEST_LB: 8691230.8
 
-|  105|       -1|       0|        -inf|   9750502.8|     0|      32.0|       3|      -3|      9332|    122.7    4794.0       0.0|   9753390.1|  9753390.1*|    -1     -1|          0.0|          0.0|     0|
+|  105|       -1|       0|        -inf|   9958930.6|     0|      36.0|       5|      -3|     11331|    129.2    4244.0       0.0|  10053122.5| 10053122.5*|    -1     -1|          0.0|          0.0|     0|
 
-WALL_TIME: 41 sec
+WALL_TIME: 38 sec
 N_NODES: 1
-AVG_INEQ: 4916.7
-AVG_CP_ITER: 3.0
+AVG_INEQ: 4373.2
+AVG_CP_ITER: 5.0
 ROOT_GAP: 0.0
 GAP: 0.0
-ROOT_LB: 9750502.8
-BEST_UB: 9753390.1
-BEST_LB: 9750502.8
+ROOT_LB: 9958930.6
+BEST_UB: 10053122.5
+BEST_LB: 9958930.6
 
 
 
-Merge LB MSS: 35674593.0
+Merge LB MSS: 35210615.6
 
 

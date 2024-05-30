@@ -49,8 +49,6 @@ void ILP_model::compute_objective_function_constant(arma::mat &Ws, arma::vec &ca
 
 
 
-
-
 ILP_gurobi_model::ILP_gurobi_model(GRBEnv *env, int n, int k) : model(*env), X(n,k) {
 	this->n = n;
 	this->k = k;

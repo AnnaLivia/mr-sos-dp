@@ -1,18 +1,17 @@
 #include "mount_model.h"
 
 template<class T>
-MMatrix<T>::MMatrix(int row, int col): rows(row), cols(col), data(rows*cols) {}
+Matrix<T>::Matrix(int row, int col): rows(row), cols(col), data(rows*cols) {}
 
 template<class T>
-T &MMatrix<T>::operator()(size_t row, size_t col) {
-    return data[row*cols+col];
+T &Matrix<T>::operator()(size_t row, size_t col) {
+	return data[row*cols+col];
 }
 
 template<class T>
-T MMatrix<T>::operator()(size_t row, size_t col) const {
-    return data[row*cols+col];
+T Matrix<T>::operator()(size_t row, size_t col) const {
+	return data[row*cols+col];
 }
-
 
 
 std::string mount_model::get_x_variable_name(int c1, int h1, int t){
@@ -28,7 +27,7 @@ std::string mount_model::get_y_variable_name(int c1, int h1, int c2, int h2, int
 }
 
 
-mount_gurobi_model::mount_gurobi_model(GRBEnv *env, int m, std::vector<std::vector<double>> &dist, std::unordered_map<int, std::unordered_map<int, arma::mat>> &sol_cls) : model(*env), X(k*p,p), Y(m,p) {
+mount_gurobi_model::mount_gurobi_model(GRBEnv *env, int m, std::vector<std::vector<double>> &dist, std::vector<std::vector<std::vector<int>>> &sol_cls) : model(*env), X(k*p,p), Y(m,p) {
 	this->m = m;
 	this->dist = dist;
 	this->sol_cls = sol_cls;
@@ -42,8 +41,8 @@ mount_gurobi_model::mount_gurobi_model(GRBEnv *env, int m, std::vector<std::vect
     //this->model.set("Presolve", 1);
 }
 
-MMatrix<GRBVar> mount_gurobi_model::create_X_variables(GRBModel &model) {
-	MMatrix<GRBVar> X(k*p, p);
+Matrix<GRBVar> mount_gurobi_model::create_X_variables(GRBModel &model) {
+	Matrix<GRBVar> X(k*p, p);
 	int s = 0;
 	for (int c1 = 0; c1 < k; c1++) {
 		for (int h1=0; h1 < p; ++h1) {
@@ -57,8 +56,8 @@ MMatrix<GRBVar> mount_gurobi_model::create_X_variables(GRBModel &model) {
 	return X;
 }
 
-MMatrix<GRBVar> mount_gurobi_model::create_Y_variables(GRBModel &model) {
-    MMatrix<GRBVar> Y(m, p);
+Matrix<GRBVar> mount_gurobi_model::create_Y_variables(GRBModel &model) {
+    Matrix<GRBVar> Y(m, p);
     int s = 0;
     for (int c1 = 0; c1 < k-1; c1++) {
     	for (int h1=0; h1 < p-1; ++h1) {
@@ -66,9 +65,9 @@ MMatrix<GRBVar> mount_gurobi_model::create_Y_variables(GRBModel &model) {
     			if (c1!=c2) {
     				for (int h2=h1+1; h2 < p; ++h2) {
     					double obj = 0;
-    					for (int i = 0; i < sol_cls[c1][h1].n_rows; i++)
-    						for (int j = 0; j < sol_cls[c2][h2].n_rows; j++)
-    							obj += dist[sol_cls[c1][h1](i,0) - 1][sol_cls[c2][h2](j,0) - 1];
+    					for (int i : sol_cls[c1][h1])
+    						for (int j : sol_cls[c2][h2])
+    							obj += dist[i][j];
     					for (int t=0; t < p; ++t) {
     						std::string name = get_y_variable_name(c1, h1, c2, h2, t);
     						Y(s, t) = model.addVar(0.0, 1, -obj, GRB_BINARY, name);
@@ -148,26 +147,23 @@ void mount_gurobi_model::optimize(){
 }
 
 
-
-int mount_gurobi_model::get_n_constraints(){
-	model.update();
-	return model.get(GRB_IntAttr_NumConstrs);
-}
-
-std::map<int, arma::vec> mount_gurobi_model::get_x_solution() {
-	std::map<int, arma::vec> Xopt;
-	for (int t=0; t < p; ++t) {
-		Xopt[t] = arma::vec(k) - 1;
-		int s = 0;
-		for (int c1 = 0; c1 < k; c1++) {
-			for (int h1 = 0; h1 < p; ++h1) {
-				if (X(s, t).get(GRB_DoubleAttr_X) > 0.8)
-					Xopt[t](c1) = h1;
-				s++;
+std::vector<std::vector<int>> mount_gurobi_model::get_x_solution(std::vector<std::vector<std::vector<int>>> &sol_cls) {
+	std::vector<std::vector<int>> opt(k);
+	for (int t = 0; t < p; ++t)
+		opt[t].reserve(n);
+	int s = 0;
+	for (int c1 = 0; c1 < k; c1++) {
+		for (int h1 = 0; h1 < p; ++h1) {
+			for (int t = 0; t < p; t++) {
+				if (X(s, t).get(GRB_DoubleAttr_X) > 0.8) {
+					for (int i : sol_cls[c1][h1])
+						opt[t].push_back(i);
+				}
 			}
+			s++;
 		}
 	}
-	return Xopt;
+	return opt;
 }
 
 double mount_gurobi_model::get_value(){

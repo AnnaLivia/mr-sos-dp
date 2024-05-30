@@ -8,7 +8,7 @@
 typedef struct PartitionJob {
 
     int part_id;
-    arma::mat part;
+    arma::mat part_data;
 
 } PartitionJob;
 
@@ -27,7 +27,7 @@ typedef struct SharedDataPartition {
     std::mutex queueMutex;
 
     std::vector<double> lb_part; // used to store the lower bound extracted from each sub-problem
-    std::vector<arma::mat> sol_part; // used to store the partial solutions
+    std::vector<std::vector<int>> sol_part; // used to store the partial solutions
 
 } SharedDataPartition;
 

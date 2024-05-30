@@ -92,6 +92,7 @@ int generate_part_constraints(std::map<int, arma::mat> &sol_map, UserConstraints
     return nc;
 }
 
+/*
 // compute lb
 double compute_lb(std::map<int, arma::mat> &sol_map) {
 
@@ -165,20 +166,22 @@ arma::mat save_ub(arma::mat &data, arma::mat &sol) {
     return ub_sol;
 
 }
+*/
 
-std::pair<double, std::unordered_map<int, std::vector<int>>> compute_anti_single_cluster(std::vector<int> &cls_points, double max_d, std::vector<std::vector<double>> &all_dist) {
+
+std::pair<double, std::vector<std::vector<int>>> compute_anti_cls(std::vector<int> &cls_points, std::vector<std::vector<double>> &all_dist) {
 
     int nc = (int) cls_points.size();
 
     /* Start main iteration loop for exchange procedure */
-    std::unordered_map<int, std::vector<int>> best_part_map;
+    std::vector<std::vector<int>> best_part_points;
     double best_dist = 0;
 
     for (int l = 0; l < num_rep; l++) {
 
         // create partition vector
         double dist = 0;
-        std::unordered_map<int, std::vector<int>> part_map(p);
+        std::vector<std::vector<int>> part_points(p);
         std::vector<double> part_dist(p);
         std::vector<int> part(n);
         std::vector<int> pp(p);
@@ -188,11 +191,11 @@ std::pair<double, std::unordered_map<int, std::vector<int>>> compute_anti_single
                 pp[h] = floor(nc/p) + 1;
             else
                 pp[h] = floor(nc/p);
-            part_map[h].resize(pp[h]);
+            part_points[h].resize(pp[h]);
             min_dist[h] = std::numeric_limits<double>::infinity();
         }
 
-        // assign random point to partitions and compute dist of current partition
+        // assign random point to partitions and compute dist of current partition and min dist
         std::vector<int> cls_copy = cls_points;
         for (int h = 0; h < p && !cls_copy.empty(); ++h) {
             for (int t = 0; t < pp[h]; ++t) {
@@ -201,19 +204,19 @@ std::pair<double, std::unordered_map<int, std::vector<int>>> compute_anti_single
                 cls_copy.erase(cls_copy.begin() + idx);
 
                 part[i] = h;
-                for (const int& j : part_map[h]) {
-                    dist += all_dist[i][j];
+                for (const int& j : part_points[h]) {
+                    dist += w_diversity*all_dist[i][j];
                     part_dist[h] += all_dist[i][j];
                     if (min_dist[h] > all_dist[i][j])
                         min_dist[h] = all_dist[i][j];
                 }
-                part_map[h][t] = i;
+                part_points[h][t] = i;
             }
-            dist += min_dist[h];
+            dist += w_dispersion*min_dist[h];
         }
 
         if (l == 0) {
-            best_part_map = part_map;
+            best_part_points = part_points;
             best_dist = dist;
         }
 
@@ -228,8 +231,8 @@ std::pair<double, std::unordered_map<int, std::vector<int>>> compute_anti_single
             // Initialize `best` variable for the i-th item
             double best_h1 = 0;
             double best_h2 = 0;
-            //double best_min_h1 = min_dist[h1];
-            //double best_min_h2 = max_d;
+            double best_min_h1 = min_dist[h1];
+            double best_min_h2;
             std::pair<int, int> best_swap(NULL,NULL);
 
             // Iterate through the exchange partners
@@ -248,41 +251,65 @@ std::pair<double, std::unordered_map<int, std::vector<int>>> compute_anti_single
                             swap_obj += part_dist[h3] + min_dist[h3];
 
                     double dist_h1 = part_dist[h1];
-                    //double min_dist_h1 = min_dist[h1];
+                    double min_dist_h1 = min_dist[h1];
+                    double dist_h2 = part_dist[h2];
+                    double min_dist_h2 = min_dist[h2];
+
+                    for (int s : part_points[h1]) {
+                    	if (all_dist[i][s] == min_dist_h1) {
+                    		// compute new min dist for partition h1
+                    		min_dist_h1 = std::numeric_limits<double>::infinity();
+                    		for (int s1 : part_points[h1])
+                    			for (int s2 : part_points[h1])
+                            		if (s1!=s2 and min_dist_h1 > all_dist[s1][s2])
+                                		min_dist_h1 = all_dist[s1][s2];
+                            break;
+                    	}
+                    }
+
+                    for (int s : part_points[h2]) {
+                    	if (all_dist[j][s] == min_dist_h2) {
+                    		// compute new min dist for partition h2
+                    		min_dist_h2 = std::numeric_limits<double>::infinity();
+                    		for (int s1 : part_points[h2])
+                    			for (int s2 : part_points[h2])
+                            		if (s1!=s2 and min_dist_h2 > all_dist[s1][s2])
+                                		min_dist_h2 = all_dist[s1][s2];
+                            break;
+                    	}
+                    }
+
                     for (int ids = 0; ids < pp[h1]; ids++) {
-                        int s = part_map[h1][ids];
+                        int s = part_points[h1][ids];
                         if (s != i) {
-                            dist_h1 += all_dist[j][s] - all_dist[i][s];
-                            //if (min_dist_h1 > all_dist[j][s])
-                            //    min_dist_h1 = all_dist[j][s];
+                            dist_h1 += w_diversity*(all_dist[j][s] - all_dist[i][s]);
+                            if (min_dist_h1 > all_dist[j][s])
+                                min_dist_h1 = all_dist[j][s];
                         }
                         else
                             idh1 = ids;
                     }
 
-                    double dist_h2 = part_dist[h2];
-                    //double min_dist_h2 = min_dist[h2];
                     for (int ids = 0; ids < pp[h2]; ids++) {
-                        int s = part_map[h2][ids];
+                        int s = part_points[h2][ids];
                         if (s != j) {
-                            dist_h2 += all_dist[i][s] - all_dist[j][s];
-                            //if (min_dist_h2 > all_dist[i][s])
-                            //    min_dist_h2 = all_dist[i][s];
+                            dist_h2 += w_diversity*(all_dist[i][s] - all_dist[j][s]);
+                            if (min_dist_h2 > all_dist[i][s])
+                                min_dist_h2 = all_dist[i][s];
                         }
                         else
                             idh2 = ids;
                     }
 
-                    swap_obj += dist_h1 + dist_h2;
-                     //+ min_dist_h1 + min_dist_h2;
+                    swap_obj += dist_h1 + dist_h2 + w_dispersion*(min_dist_h1 + min_dist_h2);
 
                     // Update `best` if objective was improved
                     if (swap_obj > best_obj) {
                         best_obj = swap_obj;
                         best_h1 = dist_h1;
                         best_h2 = dist_h2;
-                        //best_min_h1 = min_dist_h1;
-                        //best_min_h2 = min_dist_h2;
+                        best_min_h1 = min_dist_h1;
+                        best_min_h2 = min_dist_h2;
                         best_swap = std::pair<int, int>(id2, idh2);
                     }
                 }
@@ -295,74 +322,56 @@ std::pair<double, std::unordered_map<int, std::vector<int>>> compute_anti_single
                 int idh2 = best_swap.second;
                 int j = cls_points[id2];
                 int h2 = part[j];
-                part_map[h1][idh1] = j;
-                part_map[h2][idh2] = i;
+                part_points[h1][idh1] = j;
+                part_points[h2][idh2] = i;
                 part[i] = h2;
                 part[j] = h1;
                 part_dist[h1] = best_h1;
                 part_dist[h2] = best_h2;
-                //min_dist[h1] = best_min_h1;
-                //min_dist[h2] = best_min_h2;
+                min_dist[h1] = best_min_h1;
+                min_dist[h2] = best_min_h2;
                 best_swap = std::pair<int, int>(NULL, NULL);
             }
         }
 
         if (dist > best_dist) {
             best_dist = dist;
-            best_part_map = part_map;
+            best_part_points = part_points;
         }
 
     }
 
-    return std::make_pair(best_dist, best_part_map);
+    return std::make_pair(best_dist, best_part_points);
 
 }
 
 HResult heuristic(arma::mat &data) {
 
 	HResult results;
-    double lb_mss;
-    double ub_mss;
-    arma::mat sdp_sol;
-	UserConstraints constraints;
-	std::map<int, arma::mat> sol_map;
-
 	std::cout << "Running heuristics per cluster.." << std::endl;
 
 	// create matrix of all distances
-	double max_d = 0;
     std::vector<std::vector<double>> all_dist(n, std::vector<double>(n));
 	for (int i = 0; i < n; ++i) {
 		for (int j = i+1; j < n; ++j) {
 			double dist = std::pow(arma::norm(data.row(i).t() - data.row(j).t(), 2),2);
 			all_dist[i][j] = dist;
 			all_dist[j][i] = dist;
-			if (dist > max_d)
-				max_d = all_dist[j][i];
 		}
 	}
 
-	// create map of cluster assignment
-	std::unordered_map<int, std::vector<int>> cls;
-	cls.reserve(k);
+	// create cluster assignments
+	std::vector<std::vector<int>> cls(k);
     for (int c = 0; c < k; c++)
 		cls[c].reserve(n);
 
-    std::vector<int> cp(k);
 	for (int i = 0; i < n; ++i)
     	for (int c = 0; c < k; c++)
-    		if (init_sol(i,c) == 1) {
+    		if (init_sol(i,c) == 1)
     			cls[c].push_back(i);
-    			cp[c]++;
-    		}
 
-	for (int c = 0; c < k; c++)
-		cls[c].resize(cp[c]);
-
-    std::unordered_map<int, std::unordered_map<int, arma::mat>> sol_cls;
-
-	auto start_time_h = std::chrono::high_resolution_clock::now();
-
+	//for (int c = 0; c < k; c++)
+	//	cls[c].resize(cp[c]);
 
     /*
     for (int c = 0; c < k; c++) {
@@ -372,14 +381,14 @@ HResult heuristic(arma::mat &data) {
     	int nc = cp[c];
 
         // Start main iteration loop for exchange procedure
-    	std::unordered_map<int, std::vector<int>> best_part_map;
+    	std::unordered_map<int, std::vector<int>> best_part_points;
         double best_dist = 0;
 
         for (int l = 0; l < 100; l++) {
 
 			// create partition vector
         	double dist = 0;
-        	std::unordered_map<int, std::vector<int>> part_map(p);
+        	std::unordered_map<int, std::vector<int>> part_points(p);
         	std::vector<double> part_dist(p);
         	std::vector<int> part(n);
         	std::vector<int> pp(p);
@@ -389,7 +398,7 @@ HResult heuristic(arma::mat &data) {
         			pp[h] = floor(nc/p) + 1;
         		else
         			pp[h] = floor(nc/p);
-        		part_map[h].resize(pp[h]);
+        		part_points[h].resize(pp[h]);
         	}
 
         	// assign random point to partitions and compute dist of current partition
@@ -401,19 +410,19 @@ HResult heuristic(arma::mat &data) {
         			cls_copy.erase(cls_copy.begin() + idx);
 
         			part[i] = h;
-        			for (const int& j : part_map[h]) {
+        			for (const int& j : part_points[h]) {
         				dist += all_dist[i][j];
         				part_dist[h] += all_dist[i][j];
         				if (min_dist[h] > all_dist[i][j])
         					min_dist[h] = all_dist[i][j];
         			}
-        			part_map[h][t] = i;
+        			part_points[h][t] = i;
         		}
         		dist += min_dist[h];
         	}
 
         	if (l == 0) {
-				best_part_map = part_map;
+				best_part_points = part_points;
 				best_dist = dist;
         	}
 
@@ -450,7 +459,7 @@ HResult heuristic(arma::mat &data) {
         	        	double dist_h1 = part_dist[h1];
         	        	double min_dist_h1 = min_dist[h1];
         	        	for (int ids = 0; ids < pp[h1]; ids++) {
-        	        		int s = part_map[h1][ids];
+        	        		int s = part_points[h1][ids];
             	    		if (s != i) {
                 				dist_h1 += all_dist[j][s] - all_dist[i][s];
             	    			if (min_dist_h1 > all_dist[j][s])
@@ -463,7 +472,7 @@ HResult heuristic(arma::mat &data) {
         	        	double dist_h2 = part_dist[h2];
         	        	double min_dist_h2 = min_dist[h2];
         	        	for (int ids = 0; ids < pp[h2]; ids++) {
-        	        		int s = part_map[h2][ids];
+        	        		int s = part_points[h2][ids];
             	    		if (s != j) {
             	    			dist_h2 += all_dist[i][s] - all_dist[j][s];
             	    			if (min_dist_h2 > all_dist[i][s])
@@ -494,8 +503,8 @@ HResult heuristic(arma::mat &data) {
     	            int idh2 = best_swap.second;
     	            int j = cls_points[id2];
         	        int h2 = part[j];
-            	    part_map[h1][idh1] = j;
-            	    part_map[h2][idh2] = i;
+            	    part_points[h1][idh1] = j;
+            	    part_points[h2][idh2] = i;
         	        part[i] = h2;
             	    part[j] = h1;
                 	part_dist[h1] = best_h1;
@@ -509,7 +518,7 @@ HResult heuristic(arma::mat &data) {
 
 	        if (dist > best_dist) {
     	    	best_dist = dist;
-        		best_part_map = part_map;
+        		best_part_points = part_points;
        		}
 
     	}
@@ -521,7 +530,7 @@ HResult heuristic(arma::mat &data) {
     	for (int h=0; h < p; ++h) {
     		sol_cls[c][h] = arma::mat(nc,d+1);
     		int np = 0;
-    		for (int i : best_part_map[h]) {
+    		for (int i : best_part_points[h]) {
     			sol_cls[c][h](np,0) = i+1;
     			sol_cls[c][h].row(np).subvec(1,d) = data.row(i);
     			np++;
@@ -531,13 +540,22 @@ HResult heuristic(arma::mat &data) {
 	}
     */
 
-    auto *input_data_anti = new InputDataAnti();
-    input_data_anti->max_d = max_d;
-    input_data_anti->data = data;
-    input_data_anti->all_dist = all_dist;
+	auto start_time_h = std::chrono::high_resolution_clock::now();
+
+    std::vector<std::vector<std::vector<int>>> sol_cls(k);
+    for (int c = 0; c < k; ++c)
+        sol_cls[c] = std::vector<std::vector<int>>(p);
 
     auto *shared_data_anti = new SharedDataAnti();
 
+    shared_data_anti->threadStates.reserve(n_threads_anti);
+    for (int i = 0; i < n_threads_anti; i++)
+        shared_data_anti->threadStates.push_back(false);
+    shared_data_anti->all_dist = all_dist;
+    shared_data_anti->sol_cls = sol_cls;
+    shared_data_anti->sol_cls = sol_cls;
+
+	// create pool of job (1 for each cluster)
     for (int c = 0; c < k; c++) {
         auto *job = new AntiJob();
         job->cls_id = c;
@@ -545,20 +563,14 @@ HResult heuristic(arma::mat &data) {
         shared_data_anti->queue.push_back(job);
     }
 
-    shared_data_anti->threadStates.reserve(n_threads_anti);
-    for (int i = 0; i < n_threads_anti; i++) {
-        shared_data_anti->threadStates.push_back(false);
-    }
-
-    ThreadPoolAnti a_pool(input_data_anti, shared_data_anti, n_threads_anti);
+    ThreadPoolAnti a_pool(shared_data_anti, n_threads_anti);
 
     while (true) {
 
         {
             std::unique_lock<std::mutex> l(shared_data_anti->queueMutex);
-            while (is_thread_pool_working(shared_data_anti->threadStates)) {
+            while (is_thread_pool_working(shared_data_anti->threadStates))
                 shared_data_anti->mainConditionVariable.wait(l);
-            }
 
             if (shared_data_anti->queue.empty())
                 break;
@@ -578,11 +590,11 @@ HResult heuristic(arma::mat &data) {
     a_pool.quitPool();
 
     // free memory
-    delete (input_data_anti);
     delete (shared_data_anti);
 
-
     // mount cluster partitions
+    std::vector<std::vector<int>> sol(p);
+
     try {
     	GRBEnv *env = new GRBEnv();
     	mount_model *model = new mount_gurobi_model(env, k*(k-1)*p*p/2, all_dist, sol_cls);
@@ -593,17 +605,7 @@ HResult heuristic(arma::mat &data) {
 
     	model->optimize();
 
-    	std::map<int, arma::vec> sol = model->get_x_solution();
-
-    	// update sol map
-    	for (int t=0; t < p; ++t) {
-    		for (int c = 0; c < k; c++) {
-    			if (c==0)
-    				sol_map[t] = sol_cls[c][sol[t](c)];
-    			else
-    				sol_map[t] = arma::join_vert(sol_map[t], sol_cls[c][sol[t](c)]);
-    		}
-    	}
+    	sol = model->get_x_solution(sol_cls);
 
     	delete model;
     	delete env;
@@ -613,26 +615,29 @@ HResult heuristic(arma::mat &data) {
     	std::cout << e.getMessage() << std::endl;
     }
 
-
 	// save heuristic time
 	auto end_time_h = std::chrono::high_resolution_clock::now();
 	results.h_time = std::chrono::duration_cast<std::chrono::seconds>(end_time_h - start_time_h).count();
+
 
 	// create lower bound
 	auto start_time_lb = std::chrono::high_resolution_clock::now();
 
     auto *shared_data_part = new SharedDataPartition();
 
-    for (auto &part: sol_map) {
-        auto *job = new PartitionJob();
-        job->part_id = part.first;
-        job->part = part.second;
-        shared_data_part->queue.push_back(job);
-    }
-
     shared_data_part->threadStates.reserve(n_threads_part);
     for (int i = 0; i < n_threads_part; i++)
         shared_data_part->threadStates.push_back(false);
+
+    for (int h = 0; h < p; ++h) {
+        auto *job = new PartitionJob();
+        job->part_id = h;
+        arma::mat data_part(sol[h].size(), d);
+		for (int i = 0; i < sol[h].size(); i++)
+			data_part.row(i) = data.row(sol[h][i]);
+        job->part_data = data_part;
+        shared_data_part->queue.push_back(job);
+    }
 
     ThreadPoolPartition p_pool(shared_data_part, n_threads_part);
 
@@ -652,9 +657,8 @@ HResult heuristic(arma::mat &data) {
 
     // collect all the results
     results.lb_mss = 0;
-    for (auto &bound : shared_data_part->lb_part) {
+    for (auto &bound : shared_data_part->lb_part)
         results.lb_mss += bound;
-    }
 
     std::cout  << "\n\nLB MSS: " << results.lb_mss << std::endl;
     log_file << "\n\nMerge LB MSS: " << results.lb_mss << "\n\n\n";
@@ -682,7 +686,7 @@ HResult heuristic(arma::mat &data) {
     delete (shared_data_part);
 
 	auto end_time_lb = std::chrono::high_resolution_clock::now();
-	results.lb_time = std::chrono::duration_cast<std::chrono::minutes>(end_time_lb - start_time_lb).count();
+	results.lb_time = std::chrono::duration_cast<std::chrono::seconds>(end_time_lb - start_time_lb).count();
 
 	/*
     // create upper bound

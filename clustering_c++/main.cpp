@@ -27,9 +27,11 @@ int p;
 int k;
 
 // partition and anticlustering
+double w_diversity;
+double w_dispersion;
 int num_rep;
-int n_threads_part;
 int n_threads_anti;
+int n_threads_part;
 
 // heuristic
 int kmeans_max_it;
@@ -205,6 +207,7 @@ double compute_mss(arma::mat &data, arma::mat &sol) {
     return arma::dot(m.as_col(), m.as_col());
 }
 
+/*
 std::vector<int> read_assignment(const char *filename) {
     std::ifstream file(filename);
     if (!file) {
@@ -218,6 +221,7 @@ std::vector<int> read_assignment(const char *filename) {
     }
     return v;
 }
+*/
 
 void run(int argc, char **argv) {
     
@@ -227,6 +231,8 @@ void run(int argc, char **argv) {
     result_folder = config_map["RESULT_FOLDER"];
 
     // number of thread for computing the partition bound
+    w_diversity = std::stoi(config_map["ANTICLUSTERING_DIVERSITY"]);
+    w_dispersion = std::stoi(config_map["ANTICLUSTERING_DISPERSION"]);
     num_rep = std::stoi(config_map["ANTICLUSTERING_REP"]);
     n_threads_anti = std::stoi(config_map["ANTICLUSTERING_THREADS"]);
     n_threads_part = std::stoi(config_map["PARTITION_THREADS"]);
@@ -302,7 +308,7 @@ void run(int argc, char **argv) {
     //arma::mat opt_sol = read_sol(opt_path);
     //double opt_mss = compute_mss(Ws, opt_sol);
     arma::mat opt_sol = arma::mat(n, k);
-    double opt_mss = 0;
+    double opt_mss;
     if (i == -1)
         init_sol = read_sol(sol_path);
     else if (i > 0) {
@@ -398,10 +404,11 @@ void run(int argc, char **argv) {
     << (init_mss - results.lb_mss) / init_mss * 100 << "%\t"
     << results.h_time << "\t"
     << results.lb_time << "\t"
-    << results.h_time/60 + results.lb_time << "\n";
+    << results.h_time/60 + results.lb_time/60 << "\n";
 
     std::cout << std::endl << "--------------------------------------------------------------------";
-    std::cout << std::endl << "GAP SOL-LB " <<  round((init_mss - results.lb_mss) / init_mss * 100) << "%" << std::endl;
+    std::cout << std::endl << std::fixed <<  std::setprecision(1) << "GAP SOL-LB "
+    <<  (init_mss - results.lb_mss) / init_mss * 100 << "%" << std::endl;
     std::cout << "--------------------------------------------------------------------" << std::endl;
 
     /*
