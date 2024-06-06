@@ -18,10 +18,11 @@ typedef struct HResult {
 
 void save_to_file(arma::mat &X, std::string name);
 std::map<int, arma::mat> read_part_data(arma::mat &Ws);
+double compute_mss(arma::mat &data, arma::mat &sol);
 
 // compute lb and compute ub, print lb and ub sol
-double compute_lb(std::map<int, arma::mat> &sol_map);
-double compute_ub(arma::mat &Ws, arma::mat &sol, std::map<int, arma::mat> &sol_map);
+//double compute_lb(std::map<int, arma::mat> &sol_map);
+//double compute_ub(arma::mat &Ws, arma::mat &sol, std::map<int, arma::mat> &sol_map);
 int generate_part_constraints(std::map<int, arma::mat> &sol_map, UserConstraints &constraints);
 arma::mat save_lb(std::map<int, arma::mat> &sol_map);
 arma::mat save_ub(arma::mat &data, arma::mat &sol);

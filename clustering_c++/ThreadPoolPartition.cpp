@@ -3,6 +3,7 @@
 #include <vector>
 #include "ThreadPoolPartition.h"
 #include "config_params.h"
+#include "ac_heuristic.h"
 
 
 ThreadPoolPartition::ThreadPoolPartition(SharedDataPartition *shared_data, int n_thread) {
@@ -87,6 +88,22 @@ void ThreadPoolPartition::doWork(int id) {
         log_file << "Partition " << (job->part_id + 1) << "\n";
         arma::mat sol(np, k);
         UserConstraints constraints;
+
+        /*
+        // standardize data
+        double lb_mssc;
+        if (stddata) {
+            arma::mat standardized = job->part_data;
+            arma::mat dist = compute_distances(standardized);
+            arma::rowvec means = arma::mean(standardized, 0);
+            arma::rowvec stddevs = arma::stddev(standardized, 0, 0);
+            standardized.each_row() -= means;
+            standardized.each_row() /= stddevs;
+            sdp_branch_and_bound(k, standardized, constraints, sol);
+            lb_mssc = compute_mss(job->part_data, sol);
+        }
+        else
+        */
         double lb_mssc = sdp_branch_and_bound(k, job->part_data, constraints, sol);
 
         std::vector<int> cls(np);

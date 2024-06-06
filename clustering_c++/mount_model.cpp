@@ -34,11 +34,8 @@ mount_gurobi_model::mount_gurobi_model(GRBEnv *env, int m, std::vector<std::vect
 	this->env = env;
 	this->X = create_X_variables(this->model);
 	this->Y = create_Y_variables(this->model);
-    this->model.set("OutputFlag", "1");
-	this->model.set("Threads", "4");
+    this->model.set("OutputFlag", "0");
 	this->model.set("OptimalityTol", "1e-4");
-    //this->model.set("TimeLimit", "120");
-    //this->model.set("Presolve", 1);
 }
 
 Matrix<GRBVar> mount_gurobi_model::create_X_variables(GRBModel &model) {
@@ -135,8 +132,8 @@ void mount_gurobi_model::add_edge_constraints() {
 
 void mount_gurobi_model::optimize(){
 	try {
-        std::string file = sol_path;
-        auto name = file.substr(0, file.find_last_of("."));
+        //std::string file = sol_path;
+        //auto name = file.substr(0, file.find_last_of("."));
         //model.write(name + ".lp");
 		model.optimize();
 		status = model.get(GRB_IntAttr_Status);
@@ -148,7 +145,7 @@ void mount_gurobi_model::optimize(){
 
 
 std::vector<std::vector<int>> mount_gurobi_model::get_x_solution(std::vector<std::vector<std::vector<int>>> &sol_cls) {
-	std::vector<std::vector<int>> opt(k);
+	std::vector<std::vector<int>> opt(p);
 	for (int t = 0; t < p; ++t)
 		opt[t].reserve(n);
 	int s = 0;
@@ -156,8 +153,9 @@ std::vector<std::vector<int>> mount_gurobi_model::get_x_solution(std::vector<std
 		for (int h1 = 0; h1 < p; ++h1) {
 			for (int t = 0; t < p; t++) {
 				if (X(s, t).get(GRB_DoubleAttr_X) > 0.8) {
-					for (int i : sol_cls[c1][h1])
+					for (int i : sol_cls[c1][h1]) {
 						opt[t].push_back(i);
+					}
 				}
 			}
 			s++;

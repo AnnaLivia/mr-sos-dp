@@ -1,7 +1,7 @@
 DATA_FILE, SOL_FILE, n, d, k: ../instances/data/ruspini.txt ../instances/anticlust/ruspini_2.txt 75 2 4
-ANTICLUSTERING_REP: 1000
+ANTICLUSTERING_REP: 100
 
-ANTICLUSTERING_THREADS: 4
+ANTICLUSTERING_THREADS: 3
 
 PARTITION_THREADS: 3
 BRANCH_AND_BOUND_TOL: 0.0001
@@ -29,38 +29,38 @@ SDP_SOLVER_TRIANGLE_PERC: 0.05
 Optimal MSS: 0.0
 Heuristic MSS: 12881.1
 
-Partition 1
 Partition 2
+Partition 1
 
 |    N| NODE_PAR|    NODE|      LB_PAR|          LB|  FLAG|  TIME (s)| CP_ITER| CP_FLAG|   CP_INEQ|     PAIR  TRIANGLE    CLIQUE|          UB|         GUB|     I      J|     NODE_GAP|          GAP|  OPEN|
 
 |    N| NODE_PAR|    NODE|      LB_PAR|          LB|  FLAG|  TIME (s)| CP_ITER| CP_FLAG|   CP_INEQ|     PAIR  TRIANGLE    CLIQUE|          UB|         GUB|     I      J|     NODE_GAP|          GAP|  OPEN|
-|   37|       -1|       0|        -inf|      7139.2|     0|       1.0|       1|       0|       260|      0.0     260.0       0.0|      7139.2|     7139.2*|    -1     -1|          0.0|          0.0|     0|
+|   37|       -1|       0|        -inf|      4849.3|     0|       1.0|       0|       0|         0|      0.0       0.0       0.0|      4851.5|     4851.5*|    -1     -1|          0.0|          0.0|     0|
+
+WALL_TIME: 3 sec
+N_NODES: 1
+AVG_INEQ: 0.0
+AVG_CP_ITER: 0.0
+ROOT_GAP: 0.0
+GAP: 0.0
+ROOT_LB: 4849.3
+BEST_UB: 4851.5
+BEST_LB: 4849.3
+
+|   38|       -1|       0|        -inf|      8015.4|     0|       1.0|       1|       0|        45|      0.0      45.0       0.0|      8015.5|     8015.5*|    -1     -1|          0.0|          0.0|     0|
 
 WALL_TIME: 4 sec
 N_NODES: 1
-AVG_INEQ: 260.0
+AVG_INEQ: 45.0
 AVG_CP_ITER: 1.0
 ROOT_GAP: 0.0
 GAP: 0.0
-ROOT_LB: 7139.2
-BEST_UB: 7139.2
-BEST_LB: 7139.2
-
-|   38|       -1|       0|        -inf|      5595.1|     0|       1.0|       1|       0|        30|      0.0      30.0       0.0|      5595.1|     5595.1*|    -1     -1|          0.0|          0.0|     0|
-
-WALL_TIME: 4 sec
-N_NODES: 1
-AVG_INEQ: 30.0
-AVG_CP_ITER: 1.0
-ROOT_GAP: 0.0
-GAP: 0.0
-ROOT_LB: 5595.1
-BEST_UB: 5595.1
-BEST_LB: 5595.1
+ROOT_LB: 8015.4
+BEST_UB: 8015.5
+BEST_LB: 8015.4
 
 
 
-Merge LB MSS: 12734.3
+Merge LB MSS: 12866.9
 
 

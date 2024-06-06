@@ -1,7 +1,6 @@
 #include <iostream>
 #include <filesystem>
 #include <map>
-#include <list>
 #include <algorithm>
 #include <armadillo>
 #include "Kmeans.h"
@@ -25,6 +24,7 @@ int n;
 int d;
 int p;
 int k;
+bool stddata;
 
 // partition and anticlustering
 double w_diversity;
@@ -112,6 +112,27 @@ arma::mat read_data(const char *filename) {
         }
     }
 
+    /*
+    arma::mat dist = compute_distances(data);
+    double max_d = arma::max(arma::max(dist));
+    if (max_d != 0) {
+        int order = std::floor(std::log10(max_d))/2;
+        std::cout << "Order " << order << "\n\n\n";
+        if (order >= 2)
+            for (int j = 0; j < d; j++)
+                data.col(j) *= std::pow(10, - order);
+    }
+
+    // standardize data
+    if (stddata) {
+        arma::mat dist = compute_distances(data);
+        arma::rowvec means = arma::mean(data, 0);
+        arma::rowvec stddevs = arma::stddev(data, 0, 0);
+        data.each_row() -= means;
+        data.each_row() /= stddevs;
+    }
+    */
+
     return data;
 }
 
@@ -175,36 +196,6 @@ void flip(arma::mat &sol, int f) {
     }
     
     std::cout << std::endl << "** Done flipping " << f << " points **" << std::endl;
-}
-
-double compute_mss(arma::mat &data, arma::mat &sol) {
-
-    arma::mat assignment_mat = arma::zeros(n, k);
-    arma::vec count = arma::zeros(k);
-    arma::mat centroids = arma::zeros(k, d);
-    for (int i = 0; i < n; i++) {
-        for (int j = 0; j < k; j++) {
-            if (sol(i,j) == 1) {
-                assignment_mat(i, j) = 1;
-                ++count(j);
-                centroids.row(j) += data.row(i);
-            }
-        }
-    }
-
-    // compute clusters' centroids
-    for (int j = 0; j < k; j++) {
-        // empty cluster
-        if (count(j) == 0) {
-            std::printf("read_data(): cluster %d is empty!\n", j);
-            return false;
-        }
-        centroids.row(j) = centroids.row(j) / count(j);
-    }
-
-    arma::mat m = data - assignment_mat * centroids;
-
-    return arma::dot(m.as_col(), m.as_col());
 }
 
 /*
@@ -271,7 +262,7 @@ void run(int argc, char **argv) {
     kmeans_permut = 1;
     
     if (argc != 7) {
-        std::cerr << "Input: <DATA_FILE> <OPT_SOL_FILE> <H_SOL_FILE> <K> <FLIP> <P>" << std::endl;
+        std::cerr << "Input: <DATA_FILE> <OPT_SOL_FILE> <H_SOL_FILE> <K> <P> <STD>" << std::endl;
         exit(EXIT_FAILURE);
     }
     
@@ -280,8 +271,8 @@ void run(int argc, char **argv) {
     sol_path = argv[3];
 
     k = std::stoi(argv[4]);
-    int i = std::stoi(argv[5]);
-    p = std::stoi(argv[6]);
+    p = std::stoi(argv[5]);
+    stddata = std::stoi(argv[6]);
 
     std::string str_path = data_path;
     std::string inst_name = str_path.substr(str_path.find_last_of("/\\")+1);
@@ -309,11 +300,12 @@ void run(int argc, char **argv) {
     //double opt_mss = compute_mss(Ws, opt_sol);
     arma::mat opt_sol = arma::mat(n, k);
     double opt_mss;
-    if (i == -1)
+    int flips = 0;
+    if (flips == -1)
         init_sol = read_sol(sol_path);
-    else if (i > 0) {
+    else if (flips > 0) {
         init_sol = opt_sol;
-        flip(init_sol, i);
+        flip(init_sol, flips);
     } else {
 
         std::map<int, std::set<int>> ml_map = {};
@@ -322,8 +314,6 @@ void run(int argc, char **argv) {
         std::vector <std::pair<int, int>> global_cl = {};
         Kmeans kmeans(Ws, k, ml_map, local_cl, global_ml, global_cl, kmeans_verbose);
         kmeans.start(kmeans_max_it, kmeans_start, kmeans_permut);
-        std::cout << "\n** Done computing initial Kmean solution **\n";
-        std::cout << "Iter:" << kmeans_max_it << "\nStart:" << kmeans_start << "\nPermutation:" << kmeans_permut;
         init_sol = kmeans.getAssignments();
 
         /*
@@ -349,16 +339,15 @@ void run(int argc, char **argv) {
         */
     }
     double init_mss = compute_mss(Ws, init_sol);
-    std::cout << std::endl << std::endl;
-    std::cout << std::endl << "******************************************************************" << std::endl;
+    std::cout << std::endl << "---------------------------------------------------------------------" << std::endl;
     std::cout << "Instance " << inst_name << std::endl;
     std::cout << "Num Points " << n << std::endl;
     std::cout << "Num Features " << d << std::endl;
     std::cout << "Num Partitions " << p << std::endl;
     std::cout << "Num Clusters " << k << std::endl << std::endl;
-    std::cout << "Heuristic MSS: " << init_mss << std::endl;
-    std::cout << "Optimal MSS:" << opt_mss << std::endl;
-    std::cout << "******************************************************************" << std::endl << std::endl;
+    std::cout << "Optimal MSS:" << std::fixed << std::setprecision(1) << opt_mss << std::endl;
+    std::cout << "Heuristic MSS: " << init_mss << "  (num_starts " << kmeans_start << ")" << std::endl;
+    std::cout << "---------------------------------------------------------------------" << std::endl << std::endl;
 
     log_file << "DATA_FILE, SOL_FILE, n, d, k: ";
     log_file << data_path << " " << sol_path << " " << n << " " << d << " " << k << "\n";
@@ -406,10 +395,13 @@ void run(int argc, char **argv) {
     << results.lb_time << "\t"
     << results.h_time/60 + results.lb_time/60 << "\n";
 
-    std::cout << std::endl << "--------------------------------------------------------------------";
-    std::cout << std::endl << std::fixed <<  std::setprecision(1) << "GAP SOL-LB "
-    <<  (init_mss - results.lb_mss) / init_mss * 100 << "%" << std::endl;
-    std::cout << "--------------------------------------------------------------------" << std::endl;
+    std::cout << std::endl << "---------------------------------------------------------------------";
+    std::cout << std::endl << "OPT: " << opt_mss << std::endl;
+    std::cout << "HEU: " << init_mss << std::endl;
+    std::cout << "LB MSS: " << results.lb_mss << std::endl;
+    std::cout << std::endl << "HEU - LB " << init_mss - results.lb_mss << std::endl;
+    std::cout << "GAP HEU-LB " <<  (init_mss - results.lb_mss) / init_mss * 100 << "%" << std::endl;
+    std::cout << "---------------------------------------------------------------------" << std::endl;
 
     /*
     part_m = 'a';

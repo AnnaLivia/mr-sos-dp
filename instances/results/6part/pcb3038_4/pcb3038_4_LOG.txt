@@ -1,7 +1,7 @@
 DATA_FILE, SOL_FILE, n, d, k: ../instances/data/pcb3038.txt ../instances/data/pcb3038.txt 3038 2 4
 ANTICLUSTERING_REP: 100
 
-ANTICLUSTERING_THREADS: 4
+ANTICLUSTERING_THREADS: 3
 
 PARTITION_THREADS: 3
 BRANCH_AND_BOUND_TOL: 0.0001
@@ -30,97 +30,12 @@ Optimal MSS: 0.0
 Heuristic MSS: 1478953702.8
 
 Partition 1
-Partition 2
 Partition 3
+Partition 2
 
 |    N| NODE_PAR|    NODE|      LB_PAR|          LB|  FLAG|  TIME (s)| CP_ITER| CP_FLAG|   CP_INEQ|     PAIR  TRIANGLE    CLIQUE|          UB|         GUB|     I      J|     NODE_GAP|          GAP|  OPEN|
 
 |    N| NODE_PAR|    NODE|      LB_PAR|          LB|  FLAG|  TIME (s)| CP_ITER| CP_FLAG|   CP_INEQ|     PAIR  TRIANGLE    CLIQUE|          UB|         GUB|     I      J|     NODE_GAP|          GAP|  OPEN|
 
 |    N| NODE_PAR|    NODE|      LB_PAR|          LB|  FLAG|  TIME (s)| CP_ITER| CP_FLAG|   CP_INEQ|     PAIR  TRIANGLE    CLIQUE|          UB|         GUB|     I      J|     NODE_GAP|          GAP|  OPEN|
-|  507|       -1|       0|        -inf| 240458711.3|     0|     202.0|       5|      -3|      8265|   3063.0    5000.0      54.2| 261086554.6|261086554.6*|    -1     -1|          0.1|          0.1|     0|
-
-WALL_TIME: 207 sec
-N_NODES: 1
-AVG_INEQ: 8117.2
-AVG_CP_ITER: 5.0
-ROOT_GAP: 0.1
-GAP: 0.1
-ROOT_LB: 240458711.3
-BEST_UB: 261086554.6
-BEST_LB: 240458711.3
-
-Partition 4
-
-|    N| NODE_PAR|    NODE|      LB_PAR|          LB|  FLAG|  TIME (s)| CP_ITER| CP_FLAG|   CP_INEQ|     PAIR  TRIANGLE    CLIQUE|          UB|         GUB|     I      J|     NODE_GAP|          GAP|  OPEN|
-|  506|       -1|       0|        -inf| 225478024.4|     0|     291.0|       7|      -3|      9495|   3798.0    5000.0      43.4| 239175407.3|239175407.3*|    -1     -1|          0.1|          0.1|     0|
-
-WALL_TIME: 296 sec
-N_NODES: 1
-AVG_INEQ: 8841.4
-AVG_CP_ITER: 7.0
-ROOT_GAP: 0.1
-GAP: 0.1
-ROOT_LB: 225478024.4
-BEST_UB: 239175407.3
-BEST_LB: 225478024.4
-
-Partition 5
-
-|    N| NODE_PAR|    NODE|      LB_PAR|          LB|  FLAG|  TIME (s)| CP_ITER| CP_FLAG|   CP_INEQ|     PAIR  TRIANGLE    CLIQUE|          UB|         GUB|     I      J|     NODE_GAP|          GAP|  OPEN|
-|  507|       -1|       0|        -inf| 245184222.0|     0|     316.0|       8|      -3|      8892|   2708.0    5000.0      31.7| 259695876.8|259695876.8*|    -1     -1|          0.1|          0.1|     0|
-
-WALL_TIME: 321 sec
-N_NODES: 1
-AVG_INEQ: 7739.7
-AVG_CP_ITER: 8.0
-ROOT_GAP: 0.1
-GAP: 0.1
-ROOT_LB: 245184222.0
-BEST_UB: 259695876.8
-BEST_LB: 245184222.0
-
-Partition 6
-
-|    N| NODE_PAR|    NODE|      LB_PAR|          LB|  FLAG|  TIME (s)| CP_ITER| CP_FLAG|   CP_INEQ|     PAIR  TRIANGLE    CLIQUE|          UB|         GUB|     I      J|     NODE_GAP|          GAP|  OPEN|
-|  506|       -1|       0|        -inf| 223496933.0|     0|     156.0|       4|      -3|      7321|   3174.0    5000.0       1.5| 229834115.5|229834115.5*|    -1     -1|          0.0|          0.0|     0|
-
-WALL_TIME: 161 sec
-N_NODES: 1
-AVG_INEQ: 8175.5
-AVG_CP_ITER: 4.0
-ROOT_GAP: 0.0
-GAP: 0.0
-ROOT_LB: 223496933.0
-BEST_UB: 229834115.5
-BEST_LB: 223496933.0
-
-|  506|       -1|       0|        -inf| 234386754.6|     0|     167.0|       5|      -3|      8232|   3370.0    5000.0      59.2| 245728675.7|245728675.7*|    -1     -1|          0.0|          0.0|     0|
-
-WALL_TIME: 171 sec
-N_NODES: 1
-AVG_INEQ: 8429.2
-AVG_CP_ITER: 5.0
-ROOT_GAP: 0.0
-GAP: 0.0
-ROOT_LB: 234386754.6
-BEST_UB: 245728675.7
-BEST_LB: 234386754.6
-
-|  506|       -1|       0|        -inf| 227194386.7|     0|     217.0|       7|      -3|      7295|   2522.0    5000.0       6.4| 231824475.5|231824475.5*|    -1     -1|          0.0|          0.0|     0|
-
-WALL_TIME: 222 sec
-N_NODES: 1
-AVG_INEQ: 7528.4
-AVG_CP_ITER: 7.0
-ROOT_GAP: 0.0
-GAP: 0.0
-ROOT_LB: 227194386.7
-BEST_UB: 231824475.5
-BEST_LB: 227194386.7
-
-
-
-Merge LB MSS: 1396199032.0
-
-
+|  505|       -1|       0|        -inf| 216354935.8|     0|     217.0|       6|      -3|      7757|   2840.0    5000.0      20.7| 224324937.3|224324937.3*|    -1     -1|          0.0|          0.0|     0|

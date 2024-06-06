@@ -41,6 +41,7 @@ extern int n;
 extern int d;
 extern int k;
 extern int p;
+extern bool stddata;
 
 // partition and anticlustering
 extern double w_diversity;
