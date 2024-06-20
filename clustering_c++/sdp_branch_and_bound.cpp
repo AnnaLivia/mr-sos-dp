@@ -864,6 +864,7 @@ double sdp_branch_and_bound(int k, arma::mat &Ws, UserConstraints &constraints, 
 
     sol = shared_data->global_X;
 
+    //double lb = shared_data->global_ub;
     double lb = shared_data->best_lb;
 
     // free memory

@@ -389,8 +389,6 @@ std::pair<double, std::vector<std::vector<int>>> compute_anti_cls(std::vector<in
 HResult heuristic(arma::mat &data) {
 
 	HResult results;
-	arma::mat dis = compute_distances(data);
-	std::cout << "max dist " << arma::max(arma::max(dis));
 	std::cout << std::endl << "Running heuristics anticluster..";
 
 	// create matrix of all distances

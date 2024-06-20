@@ -112,26 +112,29 @@ arma::mat read_data(const char *filename) {
         }
     }
 
-    /*
-    arma::mat dist = compute_distances(data);
-    double max_d = arma::max(arma::max(dist));
-    if (max_d != 0) {
-        int order = std::floor(std::log10(max_d))/2;
-        std::cout << "Order " << order << "\n\n\n";
-        if (order >= 2)
-            for (int j = 0; j < d; j++)
-                data.col(j) *= std::pow(10, - order);
-    }
-
-    // standardize data
-    if (stddata) {
+    if (!stddata) {
         arma::mat dist = compute_distances(data);
-        arma::rowvec means = arma::mean(data, 0);
-        arma::rowvec stddevs = arma::stddev(data, 0, 0);
-        data.each_row() -= means;
-        data.each_row() /= stddevs;
+        double max_d = arma::max(arma::max(dist));
+        if (max_d != 0) {
+            int order = std::floor(std::log10(max_d))/2;
+            std::cout << "Scaling order > 3 " << "\n\n\n";
+            if (order >= 2)
+                for (int j = 0; j < d; j++)
+                    data.col(j) *= std::pow(10, - order);
+        }
     }
-    */
+    else {
+    	// normalized data between 0 and 1
+        std::cout << "Scaling in 0-1 each feature" << "\n\n\n";
+        for (int j = 0; j < d; j++) {
+        	double mean = arma::mean(data.col(j));
+        	double stddev = arma::stddev(data.col(j));
+        	if (stddev != 0)
+            	data.col(j) = (data.col(j) - mean) / stddev;
+        	else
+            	data.col(j).zeros();
+        }
+    }
 
     return data;
 }
