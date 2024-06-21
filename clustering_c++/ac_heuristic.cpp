@@ -70,40 +70,6 @@ double compute_mss(arma::mat &data, arma::mat &sol) {
     return arma::dot(m.as_col(), m.as_col());
 }
 
-// read lb data
-std::map<int, arma::mat> read_part_data(arma::mat &data) {
-
-    std::ifstream file(sol_path);
-    if (!file) {
-        std::cerr << strerror(errno) << "\n";
-        exit(EXIT_FAILURE);
-    }
-
-    // create sol map
-    std::map<int, arma::mat> sol_map;
-    arma::vec n_points = arma::zeros(p);
-    for (int h=0; h < p; h++)
-        sol_map[h] = arma::zeros(n, d+2);
-
-    int part;
-    for (int i = 0; i < n; i++) {
-        file >> part;
-        sol_map[part](n_points(part), 0) = i+1;
-        sol_map[part].row(n_points(part)).subvec(1,d) = data.row(i);
-        n_points(part)++;
-    }
-
-    for (int h=0; h < p; h++) {
-        sol_map[h] = sol_map[h].submat(0, 0, n_points(h) - 1, d);
-        if (n_points(h) < k) {
-            std::cerr << "read_part_data(): not enough point in partition " << h << " \n";
-            exit(EXIT_FAILURE);
-        }
-    }
-
-    return sol_map;
-}
-
 // generate must link constraints on partition sol
 int generate_part_constraints(std::map<int, arma::mat> &sol_map, UserConstraints &constraints) {
 

@@ -1,7 +1,7 @@
 # log path
-LOG_FOLDER = /home/aelle/mr-sos-dp/instances/log
+LOG_FOLDER = /home/aelle/mr-sos-dp/datasets/log
 # result path
-RESULT_FOLDER = /home/aelle/mr-sos-dp/instances/results
+RESULT_FOLDER = /home/aelle/mr-sos-dp/datasets/results
 # log path
 #LOG_FOLDER = /home/antonio/Documenti/GitHub/mr-sos-dp/instances/log
 # result path
