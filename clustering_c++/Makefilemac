@@ -1,0 +1,27 @@
+# Set paths for MATLAB and Gurobi
+matlab_path = /Applications/MATLAB_R2024a.app
+gurobi_path = /Library/gurobi1102/macos_universal2
+
+# Sources and objects
+sources = main.cpp matlab_util.cpp sdp_solver_util.cpp sdp_branch_and_bound.cpp kmeans_util.cpp Kmeans.cpp JobQueue.cpp util.cpp ThreadPool.cpp feasibility.cpp ub_heuristics.cpp ilp_model.cpp mount_model.cpp ac_heuristic.cpp ThreadPoolPartition.cpp ThreadPoolAnti.cpp
+objects = $(sources:.cpp=.o)
+
+# Compiler and flags
+CXX = clang++
+CXXFLAGS = -O2 -pthread
+LDFLAGS = -L $(matlab_path)/bin/maci64/ -L $(gurobi_path)/lib/ -larmadillo -llapack -lopenblas -lMatlabDataArray -lMatlabEngine -lgurobi_c++ -lgurobi110 -framework Accelerate
+INCLUDES = -I $(matlab_path)/extern/include/ -I $(gurobi_path)/include
+
+# Build target
+all: bb
+
+bb: $(objects)
+	$(CXX) $(CXXFLAGS) -o $@ $^ $(LDFLAGS) -Wl,-rpath,$(matlab_path)/bin/maci64/ -Wl,-rpath,$(gurobi_path)/lib
+
+%.o: %.cpp
+	$(CXX) $(CXXFLAGS) -o $@ -c $< $(INCLUDES)
+
+.PHONY: clean
+
+clean:
+	rm -f bb *.o
