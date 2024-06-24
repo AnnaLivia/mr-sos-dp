@@ -1,4 +1,4 @@
-DATA_FILE, SOL_FILE, n, d, k: ../instances/data/ruspini.txt ../instances/anticlust/ruspini_2.txt 75 2 4
+DATA_FILE, n, d, k: ../instances/data/ruspini.txt 75 2 4
 ANTICLUSTERING_REP: 100
 
 ANTICLUSTERING_THREADS: 3
@@ -12,7 +12,7 @@ BRANCH_AND_BOUND_VISITING_STRATEGY: 0
 SDP_SOLVER_SESSION_THREADS_ROOT: 2
 SDP_SOLVER_SESSION_THREADS: 1
 SDP_SOLVER_FOLDER: /home/aelle/mr-sos-dp/SDPNAL
-SDP_SOLVER_TOL: 0.0001
+SDP_SOLVER_TOL: 1e-05
 SDP_SOLVER_VERBOSE: 0
 SDP_SOLVER_MAX_CP_ITER_ROOT: 80
 SDP_SOLVER_MAX_CP_ITER: 40
@@ -27,40 +27,46 @@ SDP_SOLVER_MAX_TRIANGLE_INEQ: 100000
 SDP_SOLVER_TRIANGLE_PERC: 0.05
 
 Optimal MSS: 0.0
-Heuristic MSS: 12881.1
+Heuristic MSS: 10.1
 
-Partition 2
 Partition 1
+Partition 2
 
 |    N| NODE_PAR|    NODE|      LB_PAR|          LB|  FLAG|  TIME (s)| CP_ITER| CP_FLAG|   CP_INEQ|     PAIR  TRIANGLE    CLIQUE|          UB|         GUB|     I      J|     NODE_GAP|          GAP|  OPEN|
 
 |    N| NODE_PAR|    NODE|      LB_PAR|          LB|  FLAG|  TIME (s)| CP_ITER| CP_FLAG|   CP_INEQ|     PAIR  TRIANGLE    CLIQUE|          UB|         GUB|     I      J|     NODE_GAP|          GAP|  OPEN|
-|   37|       -1|       0|        -inf|      4849.3|     0|       1.0|       0|       0|         0|      0.0       0.0       0.0|      4851.5|     4851.5*|    -1     -1|          0.0|          0.0|     0|
+|   37|       -1|       0|        -inf|         4.6|     0|       1.0|       0|       0|         0|      0.0       0.0       0.0|         4.6|        4.6*|    -1     -1|          0.0|          0.0|     0|
+|   37|       -1|       0|        -inf|         4.6|     0|       1.0|       0|       0|         0|      0.0       0.0       0.0|         4.6|        4.6*|    -1     -1|          0.0|          0.0|     0|
+|   38|       -1|       0|        -inf|         5.4|     0|       1.0|       0|       0|         0|      0.0       0.0       0.0|         5.4|        5.4*|    -1     -1|          0.0|          0.0|     0|
 
-WALL_TIME: 3 sec
+WALL_TIME: 6 sec
 N_NODES: 1
 AVG_INEQ: 0.0
 AVG_CP_ITER: 0.0
 ROOT_GAP: 0.0
 GAP: 0.0
-ROOT_LB: 4849.3
-BEST_UB: 4851.5
-BEST_LB: 4849.3
+ROOT_LB: 4.6
+BEST_UB: 4.6
+BEST_LB: 4.6
 
-|   38|       -1|       0|        -inf|      8015.4|     0|       1.0|       1|       0|        45|      0.0      45.0       0.0|      8015.5|     8015.5*|    -1     -1|          0.0|          0.0|     0|
 
-WALL_TIME: 4 sec
+WALL_TIME: 6 sec
 N_NODES: 1
-AVG_INEQ: 45.0
-AVG_CP_ITER: 1.0
+AVG_INEQ: 0.0
+AVG_CP_ITER: 0.0
 ROOT_GAP: 0.0
 GAP: 0.0
-ROOT_LB: 8015.4
-BEST_UB: 8015.5
-BEST_LB: 8015.4
+ROOT_LB: 5.4
+BEST_UB: 5.4
+BEST_LB: 5.4
 
 
 
-Merge LB MSS: 12866.9
+Merge LB MSS: 10.1
+
+
+
+
+Merge UB MSS: 10.1
 
 

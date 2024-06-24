@@ -1,4 +1,4 @@
-DATA_FILE, SOL_FILE, n, d, k: ../instances/data/gr666.txt ../instances/data/gr666.txt 666 2 4
+DATA_FILE, n, d, k: ../instances/data/gr666.txt 666 2 4
 ANTICLUSTERING_REP: 100
 
 ANTICLUSTERING_THREADS: 3
@@ -12,7 +12,7 @@ BRANCH_AND_BOUND_VISITING_STRATEGY: 0
 SDP_SOLVER_SESSION_THREADS_ROOT: 2
 SDP_SOLVER_SESSION_THREADS: 1
 SDP_SOLVER_FOLDER: /home/aelle/mr-sos-dp/SDPNAL
-SDP_SOLVER_TOL: 0.0001
+SDP_SOLVER_TOL: 1e-05
 SDP_SOLVER_VERBOSE: 0
 SDP_SOLVER_MAX_CP_ITER_ROOT: 80
 SDP_SOLVER_MAX_CP_ITER: 40
@@ -27,70 +27,75 @@ SDP_SOLVER_MAX_TRIANGLE_INEQ: 100000
 SDP_SOLVER_TRIANGLE_PERC: 0.05
 
 Optimal MSS: 0.0
-Heuristic MSS: 613995.1
+Heuristic MSS: 360.7
 
 Partition 1
-Partition 2
 Partition 3
+Partition 2
 
 |    N| NODE_PAR|    NODE|      LB_PAR|          LB|  FLAG|  TIME (s)| CP_ITER| CP_FLAG|   CP_INEQ|     PAIR  TRIANGLE    CLIQUE|          UB|         GUB|     I      J|     NODE_GAP|          GAP|  OPEN|
 
 |    N| NODE_PAR|    NODE|      LB_PAR|          LB|  FLAG|  TIME (s)| CP_ITER| CP_FLAG|   CP_INEQ|     PAIR  TRIANGLE    CLIQUE|          UB|         GUB|     I      J|     NODE_GAP|          GAP|  OPEN|
 
 |    N| NODE_PAR|    NODE|      LB_PAR|          LB|  FLAG|  TIME (s)| CP_ITER| CP_FLAG|   CP_INEQ|     PAIR  TRIANGLE    CLIQUE|          UB|         GUB|     I      J|     NODE_GAP|          GAP|  OPEN|
-|  167|       -1|       0|        -inf|    169779.2|     0|      21.0|       3|      -3|      6698|   1070.3    5000.0      35.3|    172141.3|   172141.3*|    -1     -1|          0.0|          0.0|     0|
+|  165|       -1|       0|        -inf|        75.7|     0|     120.0|       4|       0|      6520|    472.7    5000.0      19.2|        75.7|       75.7*|    -1     -1|          0.0|          0.0|     0|
 
-WALL_TIME: 24 sec
+WALL_TIME: 121 sec
 N_NODES: 1
-AVG_INEQ: 6105.7
-AVG_CP_ITER: 3.0
+AVG_INEQ: 5492.0
+AVG_CP_ITER: 4.0
 ROOT_GAP: 0.0
 GAP: 0.0
-ROOT_LB: 169779.2
-BEST_UB: 172141.3
-BEST_LB: 169779.2
+ROOT_LB: 75.7
+BEST_UB: 75.7
+BEST_LB: 75.7
 
 Partition 4
 
 |    N| NODE_PAR|    NODE|      LB_PAR|          LB|  FLAG|  TIME (s)| CP_ITER| CP_FLAG|   CP_INEQ|     PAIR  TRIANGLE    CLIQUE|          UB|         GUB|     I      J|     NODE_GAP|          GAP|  OPEN|
-|  167|       -1|       0|        -inf|    152145.4|     0|      39.0|       5|      -3|      6810|    542.2    5000.0      11.0|    152595.9|   152595.9*|    -1     -1|          0.0|          0.0|     0|
+|  167|       -1|       0|        -inf|        93.8|     0|     128.0|       4|       0|      6329|    746.0    5000.0      14.0|        93.8|       93.8*|    -1     -1|          0.0|          0.0|     0|
 
-WALL_TIME: 41 sec
+WALL_TIME: 131 sec
 N_NODES: 1
-AVG_INEQ: 5553.2
-AVG_CP_ITER: 5.0
+AVG_INEQ: 5760.0
+AVG_CP_ITER: 4.0
 ROOT_GAP: 0.0
 GAP: 0.0
-ROOT_LB: 152145.4
-BEST_UB: 152595.9
-BEST_LB: 152145.4
+ROOT_LB: 93.8
+BEST_UB: 93.8
+BEST_LB: 93.8
 
-|  165|       -1|       0|        -inf|    135270.6|     0|      42.0|       6|      -3|      6082|    837.8    5000.0      15.0|    138103.3|   138103.3*|    -1     -1|          0.0|          0.0|     0|
+|  167|       -1|       0|        -inf|        92.3|     0|     276.0|       8|       3|      2775|    303.4    4508.0       2.1|        92.5|       92.5*|    -1     -1|          0.0|          0.0|     0|
 
-WALL_TIME: 44 sec
+WALL_TIME: 278 sec
 N_NODES: 1
-AVG_INEQ: 5852.8
-AVG_CP_ITER: 6.0
+AVG_INEQ: 4813.5
+AVG_CP_ITER: 8.0
 ROOT_GAP: 0.0
 GAP: 0.0
-ROOT_LB: 135270.6
-BEST_UB: 138103.3
-BEST_LB: 135270.6
+ROOT_LB: 92.3
+BEST_UB: 92.5
+BEST_LB: 92.3
 
-|  167|       -1|       0|        -inf|    145453.5|     0|      27.0|       5|      -3|      7387|    640.8    5000.0       0.0|    146048.1|   146048.1*|    -1     -1|          0.0|          0.0|     0|
+|  167|       -1|       0|        -inf|        95.7|     0|     307.0|       8|      -3|      7633|    333.4    5000.0       8.7|        95.7|       95.7*|    -1     -1|          0.0|          0.0|     0|
 
-WALL_TIME: 30 sec
+WALL_TIME: 309 sec
 N_NODES: 1
-AVG_INEQ: 5640.8
-AVG_CP_ITER: 5.0
+AVG_INEQ: 5342.1
+AVG_CP_ITER: 8.0
 ROOT_GAP: 0.0
 GAP: 0.0
-ROOT_LB: 145453.5
-BEST_UB: 146048.1
-BEST_LB: 145453.5
+ROOT_LB: 95.7
+BEST_UB: 95.7
+BEST_LB: 95.7
 
 
 
-Merge LB MSS: 602648.6
+Merge LB MSS: 357.6
+
+
+
+
+Merge UB MSS: 357.8
 
 

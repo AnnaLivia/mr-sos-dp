@@ -104,7 +104,8 @@ void ThreadPoolPartition::doWork(int id) {
         }
         else
         */
-        double lb_mssc = sdp_branch_and_bound(k, job->part_data, constraints, sol);
+        double ub_mssc = 0;
+        double lb_mssc = sdp_branch_and_bound(k, job->part_data, ub_mssc, constraints, sol);
 
         std::vector<int> cls(np);
         for (int i = 0; i < np; i++)
@@ -117,6 +118,7 @@ void ThreadPoolPartition::doWork(int id) {
         {
             std::lock_guard<std::mutex> l(shared_data->queueMutex);
             shared_data->lb_part.push_back(lb_mssc);
+            shared_data->ub_part.push_back(ub_mssc);
             shared_data->sol_part.push_back(cls);
             shared_data->threadStates[id] = false;
         }

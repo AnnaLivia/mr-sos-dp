@@ -496,10 +496,14 @@ HResult heuristic(arma::mat &data) {
 
     // collect all the results
     results.lb_mss = 0;
-    for (auto &bound : shared_data_part->lb_part)
-        results.lb_mss += bound;
+    for (auto &lb_bound : shared_data_part->lb_part)
+        results.lb_mss += lb_bound;
+    results.ub_mss = 0;
+    for (auto &ub_bound : shared_data_part->ub_part)
+        results.ub_mss += ub_bound;
 
     log_file << "\n\nMerge LB MSS: " << results.lb_mss << "\n\n\n";
+    log_file << "\n\nMerge UB MSS: " << results.ub_mss << "\n\n\n";
 
 	/*
 	// compute lb sol by merging partitions sol

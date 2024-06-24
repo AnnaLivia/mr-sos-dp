@@ -758,7 +758,7 @@ bool is_thread_pool_working(std::vector<bool> &thread_state) {
 }
 
 
-double sdp_branch_and_bound(int k, arma::mat &Ws, UserConstraints &constraints, arma::mat &sol) {
+double sdp_branch_and_bound(int k, arma::mat &Ws, double &ub, UserConstraints &constraints, arma::mat &sol) {
 
     if (Ws.n_rows == k) {
         sol = arma::mat(k, k, arma::fill::eye);
@@ -864,7 +864,7 @@ double sdp_branch_and_bound(int k, arma::mat &Ws, UserConstraints &constraints, 
 
     sol = shared_data->global_X;
 
-    //double lb = shared_data->global_ub;
+    ub = shared_data->global_ub;
     double lb = shared_data->best_lb;
 
     // free memory

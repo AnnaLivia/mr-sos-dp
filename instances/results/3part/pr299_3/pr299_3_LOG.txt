@@ -1,4 +1,4 @@
-DATA_FILE, SOL_FILE, n, d, k: ../instances/data/pr299.txt ../instances/anticlust/pr299_3.txt 299 2 3
+DATA_FILE, n, d, k: ../instances/data/pr299.txt 299 2 3
 ANTICLUSTERING_REP: 100
 
 ANTICLUSTERING_THREADS: 3
@@ -12,7 +12,7 @@ BRANCH_AND_BOUND_VISITING_STRATEGY: 0
 SDP_SOLVER_SESSION_THREADS_ROOT: 2
 SDP_SOLVER_SESSION_THREADS: 1
 SDP_SOLVER_FOLDER: /home/aelle/mr-sos-dp/SDPNAL
-SDP_SOLVER_TOL: 0.0001
+SDP_SOLVER_TOL: 1e-05
 SDP_SOLVER_VERBOSE: 0
 SDP_SOLVER_MAX_CP_ITER_ROOT: 80
 SDP_SOLVER_MAX_CP_ITER: 40
@@ -27,56 +27,60 @@ SDP_SOLVER_MAX_TRIANGLE_INEQ: 100000
 SDP_SOLVER_TRIANGLE_PERC: 0.05
 
 Optimal MSS: 0.0
-Heuristic MSS: 277436845.5
+Heuristic MSS: 206.9
 
 Partition 1
 Partition 2
+
+|    N| NODE_PAR|    NODE|      LB_PAR|          LB|  FLAG|  TIME (s)| CP_ITER| CP_FLAG|   CP_INEQ|     PAIR  TRIANGLE    CLIQUE|          UB|         GUB|     I      J|     NODE_GAP|          GAP|  OPEN|
 Partition 3
 
 |    N| NODE_PAR|    NODE|      LB_PAR|          LB|  FLAG|  TIME (s)| CP_ITER| CP_FLAG|   CP_INEQ|     PAIR  TRIANGLE    CLIQUE|          UB|         GUB|     I      J|     NODE_GAP|          GAP|  OPEN|
 
 |    N| NODE_PAR|    NODE|      LB_PAR|          LB|  FLAG|  TIME (s)| CP_ITER| CP_FLAG|   CP_INEQ|     PAIR  TRIANGLE    CLIQUE|          UB|         GUB|     I      J|     NODE_GAP|          GAP|  OPEN|
+|   99|       -1|       0|        -inf|        64.5|     0|      29.0|       2|       0|      6385|    423.5    5000.0       5.5|        64.5|       64.5*|    -1     -1|          0.0|          0.0|     0|
 
-|    N| NODE_PAR|    NODE|      LB_PAR|          LB|  FLAG|  TIME (s)| CP_ITER| CP_FLAG|   CP_INEQ|     PAIR  TRIANGLE    CLIQUE|          UB|         GUB|     I      J|     NODE_GAP|          GAP|  OPEN|
-|  100|       -1|       0|        -inf|  84212263.3|     0|      11.0|       2|       0|      5508|    345.5    5000.0      29.0|  84249465.2| 84249465.2*|    -1     -1|          0.0|          0.0|     0|
-PRUNING BY OPTIMALITY 0
-
-WALL_TIME: 13 sec
+WALL_TIME: 31 sec
 N_NODES: 1
-AVG_INEQ: 5374.5
+AVG_INEQ: 5429.0
 AVG_CP_ITER: 2.0
 ROOT_GAP: 0.0
 GAP: 0.0
-ROOT_LB: 84212263.3
-BEST_UB: 84249465.2
-BEST_LB: 84212263.3
+ROOT_LB: 64.5
+BEST_UB: 64.5
+BEST_LB: 64.5
 
-|   99|       -1|       0|        -inf|  95992158.0|     0|      12.0|       3|      -3|      6749|    267.7    3793.0       0.0|  96035147.7| 96035147.7*|    -1     -1|          0.0|          0.0|     0|
+|  100|       -1|       0|        -inf|        72.4|     0|      66.0|       4|       0|      5827|    295.2    5000.0      11.5|        72.4|       72.4*|    -1     -1|          0.0|          0.0|     0|
 
-WALL_TIME: 14 sec
+WALL_TIME: 68 sec
 N_NODES: 1
-AVG_INEQ: 4060.7
-AVG_CP_ITER: 3.0
+AVG_INEQ: 5306.7
+AVG_CP_ITER: 4.0
 ROOT_GAP: 0.0
 GAP: 0.0
-ROOT_LB: 95992158.0
-BEST_UB: 96035147.7
-BEST_LB: 95992158.0
+ROOT_LB: 72.4
+BEST_UB: 72.4
+BEST_LB: 72.4
 
-|  100|       -1|       0|        -inf|  94129136.0|     0|      15.0|       3|       0|      5358|    301.7    5000.0       0.0|  94146904.8| 94146904.8*|    -1     -1|          0.0|          0.0|     0|
+|  100|       -1|       0|        -inf|        69.3|     0|      80.0|       4|      -3|      5671|    297.7    4071.0      14.2|        69.3|       69.3*|    -1     -1|          0.0|          0.0|     0|
 
-WALL_TIME: 17 sec
+WALL_TIME: 82 sec
 N_NODES: 1
-AVG_INEQ: 5301.7
-AVG_CP_ITER: 3.0
+AVG_INEQ: 4383.0
+AVG_CP_ITER: 4.0
 ROOT_GAP: 0.0
 GAP: 0.0
-ROOT_LB: 94129136.0
-BEST_UB: 94146904.8
-BEST_LB: 94129136.0
+ROOT_LB: 69.3
+BEST_UB: 69.3
+BEST_LB: 69.3
 
 
 
-Merge LB MSS: 274431517.7
+Merge LB MSS: 206.2
+
+
+
+
+Merge UB MSS: 206.2
 
 

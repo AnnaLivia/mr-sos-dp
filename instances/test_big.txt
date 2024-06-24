@@ -1,39 +1,39 @@
-./bb	../instances/data/ruspini.txt	../instances/opt/ruspini.txt	../instances/anticlust/ruspini_2.txt	4	2	1
-./bb	../instances/data/ruspini.txt	../instances/opt/ruspini.txt	../instances/anticlust/ruspini_3.txt	4	3	1
-./bb	../instances/data/ruspini.txt	../instances/opt/ruspini.txt	../instances/anticlust/ruspini_4.txt	4	4	1
-./bb	../instances/data/ch150.txt	../instances/opt/ch150_2.txt	../instances/anticlust/ch150_2.txt	2	2	1
-./bb	../instances/data/ch150.txt	../instances/opt/ch150_2.txt	../instances/anticlust/ch150_3.txt	2	3	1
-./bb	../instances/data/ch150.txt	../instances/opt/ch150_3.txt	../instances/anticlust/ch150_3.txt	3	3	1
-./bb	../instances/data/ch150.txt	../instances/opt/ch150_4.txt	../instances/anticlust/ch150_2.txt	4	2	1
-./bb	../instances/data/ch150.txt	../instances/opt/ch150_4.txt	../instances/anticlust/ch150_4.txt	4	4	1
-./bb	../instances/data/gr202.txt	../instances/opt/gr202_2.txt	../instances/anticlust/gr202_2.txt	2	2	1
-./bb	../instances/data/gr202.txt	../instances/opt/gr202_3.txt	../instances/anticlust/gr202_3.txt	3	3	1
-./bb	../instances/data/gr202.txt	../instances/opt/gr202_4.txt	../instances/anticlust/gr202_4.txt	4	4	1
-./bb	../instances/data/pr299.txt	../instances/opt/pr299_2.txt	../instances/anticlust/pr299_2.txt	2	2	1
-./bb	../instances/data/pr299.txt	../instances/opt/pr299_3.txt	../instances/anticlust/pr299_3.txt	3	3	1
-./bb	../instances/data/pr299.txt	../instances/opt/pr299_4.txt	../instances/anticlust/pr299_4.txt	4	4	1
-./bb	../instances/data/ali535.txt	../instances/opt/ali535_2.txt	../instances/anticlust/ali535_2.txt	2	2	1
-./bb	../instances/data/ali535.txt	../instances/opt/ali535_3.txt	../instances/anticlust/ali535_3.txt	3	3	1
-./bb	../instances/data/ali535.txt	../instances/opt/ali535_4.txt	../instances/anticlust/ali535_4.txt	4	4	1
-./bb	../instances/data/gr666.txt	../instances/data/gr666.txt	../instances/data/gr666.txt	4	4	1
-./bb	../instances/data/fl417.txt	../instances/data/fl417.txt	../instances/data/fl417.txt	4	4	1
-./bb	../instances/data/ra783.txt	../instances/data/ra783.txt	../instances/data/ra783.txt	4	4	1
-./bb	../instances/data/fl1400.txt	../instances/data/fl1400.txt	../instances/data/fl1400.txt	4	4	1
-./bb	../instances/data/pr1002.txt	../instances/data/pr1002.txt	../instances/data/pr1002.txt	4	4	1
-./bb	../instances/data/u1060.txt	../instances/data/u1060.txt	../instances/data/u1060.txt	4	4	1
-./bb	../instances/data/u1060.txt	../instances/data/u1060.txt	../instances/data/u1060.txt	4	6	1
-./bb	../instances/data/u1060.txt	../instances/data/u1060.txt	../instances/data/u1060.txt	4	8	1
-./bb	../instances/data/d2013.txt	../instances/data/d2013.txt	../instances/data/d2013.txt	4	4	1
-./bb	../instances/data/d2013.txt	../instances/data/d2013.txt	../instances/data/d2013.txt	4	8	1
-./bb	../instances/data/d2013.txt	../instances/data/d2013.txt	../instances/data/d2013.txt	4	6	1
-./bb	../instances/data/fl3795.txt	../instances/data/fl3795.txt	../instances/data/fl3795.txt	4	4	1
-./bb	../instances/data/fl3795.txt	../instances/data/fl3795.txt	../instances/data/fl3795.txt	4	5	1
-./bb	../instances/data/fl3795.txt	../instances/data/fl3795.txt	../instances/data/fl3795.txt	4	6	1
-./bb	../instances/data/fl3795.txt	../instances/data/fl3795.txt	../instances/data/fl3795.txt	4	8	1
-./bb	../instances/data/pcb3038.txt	../instances/data/pcb3038.txt	../instances/data/pcb3038.txt	4	4	1
-./bb	../instances/data/pcb3038.txt	../instances/data/pcb3038.txt	../instances/data/pcb3038.txt	4	5	1
-./bb	../instances/data/pcb3038.txt	../instances/data/pcb3038.txt	../instances/data/pcb3038.txt	4	6	1
-./bb	../instances/data/voice.txt	../instances/data/voice.txt	../instances/data/voice.txt	4	4	1
-./bb	../instances/data/voice.txt	../instances/data/voice.txt	../instances/data/voice.txt	4	8	1
-./bb	../instances/data/wifi_localization.txt	../instances/data/wifi_localization.txt	../instances/data/wifi_localization.txt	4	4	1
-./bb	../instances/data/wifi_localization.txt	../instances/data/wifi_localization.txt	../instances/data/wifi_localization.txt	4	8	1
+./bb	../instances/data/ruspini.txt	../instances/opt/ruspini.txt	4	2	1
+./bb	../instances/data/ruspini.txt	../instances/opt/ruspini.txt	4	3	1
+./bb	../instances/data/ruspini.txt	../instances/opt/ruspini.txt	4	4	1
+./bb	../instances/data/ch150.txt	../instances/opt/ch150_2.txt	2	2	1
+./bb	../instances/data/ch150.txt	../instances/opt/ch150_2.txt	2	3	1
+./bb	../instances/data/ch150.txt	../instances/opt/ch150_3.txt	3	3	1
+./bb	../instances/data/ch150.txt	../instances/opt/ch150_4.txt	4	2	1
+./bb	../instances/data/ch150.txt	../instances/opt/ch150_4.txt	4	4	1
+./bb	../instances/data/gr202.txt	../instances/opt/gr202_2.txt	2	2	1
+./bb	../instances/data/gr202.txt	../instances/opt/gr202_3.txt	3	3	1
+./bb	../instances/data/gr202.txt	../instances/opt/gr202_4.txt	4	4	1
+./bb	../instances/data/pr299.txt	../instances/opt/pr299_2.txt	2	2	1
+./bb	../instances/data/pr299.txt	../instances/opt/pr299_3.txt	3	3	1
+./bb	../instances/data/pr299.txt	../instances/opt/pr299_4.txt	4	4	1
+./bb	../instances/data/ali535.txt	../instances/opt/ali535_2.txt	2	2	1
+./bb	../instances/data/ali535.txt	../instances/opt/ali535_3.txt	3	3	1
+./bb	../instances/data/ali535.txt	../instances/opt/ali535_4.txt	4	4	1
+./bb	../instances/data/gr666.txt	../instances/data/gr666.txt	4	4	1
+./bb	../instances/data/fl417.txt	../instances/data/fl417.txt	4	4	1
+./bb	../instances/data/ra783.txt	../instances/data/ra783.txt	4	4	1
+./bb	../instances/data/fl1400.txt	../instances/data/fl1400.txt	4	4	1
+./bb	../instances/data/pr1002.txt	../instances/data/pr1002.txt	4	4	1
+./bb	../instances/data/u1060.txt	../instances/data/u1060.txt	4	4	1
+./bb	../instances/data/u1060.txt	../instances/data/u1060.txt	4	6	1
+./bb	../instances/data/u1060.txt	../instances/data/u1060.txt	4	8	1
+./bb	../instances/data/d2013.txt	../instances/data/d2013.txt	4	4	1
+./bb	../instances/data/d2013.txt	../instances/data/d2013.txt	4	8	1
+./bb	../instances/data/d2013.txt	../instances/data/d2013.txt	4	6	1
+./bb	../instances/data/fl3795.txt	../instances/data/fl3795.txt	4	4	1
+./bb	../instances/data/fl3795.txt	../instances/data/fl3795.txt	4	5	1
+./bb	../instances/data/fl3795.txt	../instances/data/fl3795.txt	4	6	1
+./bb	../instances/data/fl3795.txt	../instances/data/fl3795.txt	4	8	1
+./bb	../instances/data/pcb3038.txt	../instances/data/pcb3038.txt	4	4	1
+./bb	../instances/data/pcb3038.txt	../instances/data/pcb3038.txt	4	5	1
+./bb	../instances/data/pcb3038.txt	../instances/data/pcb3038.txt	4	6	1
+./bb	../instances/data/voice.txt	../instances/data/voice.txt	4	4	1
+./bb	../instances/data/voice.txt	../instances/data/voice.txt	4	8	1
+./bb	../instances/data/wifi_localization.txt	../instances/data/wifi_localization.txt	4	4	1
+./bb	../instances/data/wifi_localization.txt	../instances/data/wifi_localization.txt	4	8	1

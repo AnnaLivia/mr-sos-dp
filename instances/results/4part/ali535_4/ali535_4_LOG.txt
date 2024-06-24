@@ -1,4 +1,4 @@
-DATA_FILE, SOL_FILE, n, d, k: ../instances/data/ali535.txt ../instances/anticlust/ali535_4.txt 535 2 4
+DATA_FILE, n, d, k: ../instances/data/ali535.txt 535 2 4
 ANTICLUSTERING_REP: 100
 
 ANTICLUSTERING_THREADS: 3
@@ -12,7 +12,7 @@ BRANCH_AND_BOUND_VISITING_STRATEGY: 0
 SDP_SOLVER_SESSION_THREADS_ROOT: 2
 SDP_SOLVER_SESSION_THREADS: 1
 SDP_SOLVER_FOLDER: /home/aelle/mr-sos-dp/SDPNAL
-SDP_SOLVER_TOL: 0.0001
+SDP_SOLVER_TOL: 1e-05
 SDP_SOLVER_VERBOSE: 0
 SDP_SOLVER_MAX_CP_ITER_ROOT: 80
 SDP_SOLVER_MAX_CP_ITER: 40
@@ -27,70 +27,75 @@ SDP_SOLVER_MAX_TRIANGLE_INEQ: 100000
 SDP_SOLVER_TRIANGLE_PERC: 0.05
 
 Optimal MSS: 0.0
-Heuristic MSS: 320279.2
+Heuristic MSS: 255.6
 
-Partition 2
 Partition 1
+Partition 2
+
+|    N| NODE_PAR|    NODE|      LB_PAR|          LB|  FLAG|  TIME (s)| CP_ITER| CP_FLAG|   CP_INEQ|     PAIR  TRIANGLE    CLIQUE|          UB|         GUB|     I      J|     NODE_GAP|          GAP|  OPEN|
 Partition 3
 
 |    N| NODE_PAR|    NODE|      LB_PAR|          LB|  FLAG|  TIME (s)| CP_ITER| CP_FLAG|   CP_INEQ|     PAIR  TRIANGLE    CLIQUE|          UB|         GUB|     I      J|     NODE_GAP|          GAP|  OPEN|
 
 |    N| NODE_PAR|    NODE|      LB_PAR|          LB|  FLAG|  TIME (s)| CP_ITER| CP_FLAG|   CP_INEQ|     PAIR  TRIANGLE    CLIQUE|          UB|         GUB|     I      J|     NODE_GAP|          GAP|  OPEN|
+|  134|       -1|       0|        -inf|        62.2|     0|      19.0|       2|       0|      3351|    207.0    2681.0       0.0|        62.2|       62.2*|    -1     -1|          0.0|          0.0|     0|
 
-|    N| NODE_PAR|    NODE|      LB_PAR|          LB|  FLAG|  TIME (s)| CP_ITER| CP_FLAG|   CP_INEQ|     PAIR  TRIANGLE    CLIQUE|          UB|         GUB|     I      J|     NODE_GAP|          GAP|  OPEN|
-|  134|       -1|       0|        -inf|     78920.4|     0|      15.0|       2|      -3|      5928|    583.0    5000.0       0.0|     79624.5|    79624.5*|    -1     -1|          0.0|          0.0|     0|
-
-WALL_TIME: 17 sec
+WALL_TIME: 20 sec
 N_NODES: 1
-AVG_INEQ: 5583.0
+AVG_INEQ: 2888.0
 AVG_CP_ITER: 2.0
 ROOT_GAP: 0.0
 GAP: 0.0
-ROOT_LB: 78920.4
-BEST_UB: 79624.5
-BEST_LB: 78920.4
+ROOT_LB: 62.2
+BEST_UB: 62.2
+BEST_LB: 62.2
 
 Partition 4
 
 |    N| NODE_PAR|    NODE|      LB_PAR|          LB|  FLAG|  TIME (s)| CP_ITER| CP_FLAG|   CP_INEQ|     PAIR  TRIANGLE    CLIQUE|          UB|         GUB|     I      J|     NODE_GAP|          GAP|  OPEN|
-|  135|       -1|       0|        -inf|    110759.5|     0|      22.0|       3|      -3|      6876|    747.3    5000.0       2.3|    113385.8|   113385.8*|    -1     -1|          0.0|          0.0|     0|
+|  133|       -1|       0|        -inf|        46.5|     0|      16.0|       2|       0|      7683|    209.0    5000.0      10.0|        46.5|       46.5*|    -1     -1|          0.0|          0.0|     0|
 
-WALL_TIME: 25 sec
+WALL_TIME: 19 sec
 N_NODES: 1
-AVG_INEQ: 5749.7
-AVG_CP_ITER: 3.0
+AVG_INEQ: 5219.0
+AVG_CP_ITER: 2.0
 ROOT_GAP: 0.0
 GAP: 0.0
-ROOT_LB: 110759.5
-BEST_UB: 113385.8
-BEST_LB: 110759.5
+ROOT_LB: 46.5
+BEST_UB: 46.5
+BEST_LB: 46.5
 
-|  133|       -1|       0|        -inf|     57022.6|     0|      30.0|       5|      -3|      6390|    137.8    4030.0       0.0|     57049.6|    57049.6*|    -1     -1|          0.0|          0.0|     0|
+|  134|       -1|       0|        -inf|        68.3|     0|      76.0|       5|       0|      4551|    369.8    4194.0       7.8|        68.3|       68.3*|    -1     -1|          0.0|          0.0|     0|
 
-WALL_TIME: 32 sec
+WALL_TIME: 78 sec
 N_NODES: 1
-AVG_INEQ: 4167.8
+AVG_INEQ: 4571.6
 AVG_CP_ITER: 5.0
 ROOT_GAP: 0.0
 GAP: 0.0
-ROOT_LB: 57022.6
-BEST_UB: 57049.6
-BEST_LB: 57022.6
+ROOT_LB: 68.3
+BEST_UB: 68.3
+BEST_LB: 68.3
 
-|  133|       -1|       0|        -inf|     69869.8|     0|      15.0|       3|       0|      8230|    230.0    5000.0      31.3|     69876.0|    69876.0*|    -1     -1|          0.0|          0.0|     0|
+|  134|       -1|       0|        -inf|        69.6|     0|      97.0|       5|       0|      8801|    437.8    5000.0       6.2|        69.6|       69.6*|    -1     -1|          0.0|          0.0|     0|
 
-WALL_TIME: 18 sec
+WALL_TIME: 99 sec
 N_NODES: 1
-AVG_INEQ: 5261.3
-AVG_CP_ITER: 3.0
+AVG_INEQ: 5444.0
+AVG_CP_ITER: 5.0
 ROOT_GAP: 0.0
 GAP: 0.0
-ROOT_LB: 69869.8
-BEST_UB: 69876.0
-BEST_LB: 69869.8
+ROOT_LB: 69.6
+BEST_UB: 69.6
+BEST_LB: 69.6
 
 
 
-Merge LB MSS: 319935.9
+Merge LB MSS: 246.6
+
+
+
+
+Merge UB MSS: 246.6
 
 

@@ -1,4 +1,4 @@
-DATA_FILE, n, d, k: ../instances/data/ali535.txt 535 2 3
+DATA_FILE, n, d, k: ../instances/data/voice.txt 126 310 4
 ANTICLUSTERING_REP: 100
 
 ANTICLUSTERING_THREADS: 3
@@ -16,7 +16,7 @@ SDP_SOLVER_TOL: 1e-05
 SDP_SOLVER_VERBOSE: 0
 SDP_SOLVER_MAX_CP_ITER_ROOT: 80
 SDP_SOLVER_MAX_CP_ITER: 40
-SDP_SOLVER_CP_TOL: 1e-05
+SDP_SOLVER_CP_TOL: 0.0001
 SDP_SOLVER_MAX_INEQ: 100000
 SDP_SOLVER_INHERIT_PERC: 1
 SDP_SOLVER_EPS_INEQ: 0.0001
@@ -27,60 +27,60 @@ SDP_SOLVER_MAX_TRIANGLE_INEQ: 100000
 SDP_SOLVER_TRIANGLE_PERC: 0.05
 
 Optimal MSS: 0.0
-Heuristic MSS: 376.2
+Heuristic MSS: 20466.5
 
-Partition 1
-Partition 3
 Partition 2
 
 |    N| NODE_PAR|    NODE|      LB_PAR|          LB|  FLAG|  TIME (s)| CP_ITER| CP_FLAG|   CP_INEQ|     PAIR  TRIANGLE    CLIQUE|          UB|         GUB|     I      J|     NODE_GAP|          GAP|  OPEN|
+Partition 3
+Partition 1
 
 |    N| NODE_PAR|    NODE|      LB_PAR|          LB|  FLAG|  TIME (s)| CP_ITER| CP_FLAG|   CP_INEQ|     PAIR  TRIANGLE    CLIQUE|          UB|         GUB|     I      J|     NODE_GAP|          GAP|  OPEN|
 
 |    N| NODE_PAR|    NODE|      LB_PAR|          LB|  FLAG|  TIME (s)| CP_ITER| CP_FLAG|   CP_INEQ|     PAIR  TRIANGLE    CLIQUE|          UB|         GUB|     I      J|     NODE_GAP|          GAP|  OPEN|
-|  179|       -1|       0|        -inf|       154.4|     0|     111.0|       4|       0|      6355|    769.2    5000.0      24.2|       154.4|      154.4*|    -1     -1|          0.0|          0.0|     0|
+|   42|       -1|       0|        -inf|      5855.7|     0|       2.0|       1|       0|      5169|    155.0    5000.0      14.0|      5855.8|     5855.8*|    -1     -1|          0.0|          0.0|     0|
 
-WALL_TIME: 113 sec
+WALL_TIME: 3 sec
 N_NODES: 1
-AVG_INEQ: 5793.5
-AVG_CP_ITER: 4.0
+AVG_INEQ: 5169.0
+AVG_CP_ITER: 1.0
 ROOT_GAP: 0.0
 GAP: 0.0
-ROOT_LB: 154.4
-BEST_UB: 154.4
-BEST_LB: 154.4
+ROOT_LB: 5855.7
+BEST_UB: 5855.8
+BEST_LB: 5855.7
 
-|  177|       -1|       0|        -inf|        85.2|     0|     194.0|       7|       3|      3974|    167.0    4469.0       0.0|        85.3|       85.3*|    -1     -1|          0.0|          0.0|     0|
+|   42|       -1|       0|        -inf|      4930.7|     0|       2.0|       1|       0|      5233|    209.0    5000.0      24.0|      4930.8|     4930.8*|    -1     -1|          0.0|          0.0|     0|
 
-WALL_TIME: 196 sec
+WALL_TIME: 4 sec
 N_NODES: 1
-AVG_INEQ: 4636.0
-AVG_CP_ITER: 7.0
+AVG_INEQ: 5233.0
+AVG_CP_ITER: 1.0
 ROOT_GAP: 0.0
 GAP: 0.0
-ROOT_LB: 85.2
-BEST_UB: 85.3
-BEST_LB: 85.2
+ROOT_LB: 4930.7
+BEST_UB: 4930.8
+BEST_LB: 4930.7
 
-|  179|       -1|       0|        -inf|       127.4|     0|     230.0|      10|       3|      4329|    310.5    4119.0      12.2|       127.7|      127.7*|    -1     -1|          0.0|          0.0|     0|
+|   42|       -1|       0|        -inf|      5249.4|     0|       5.0|       2|      -3|      5212|    101.0    2629.0      14.5|      5249.4|     5249.4*|    -1     -1|          0.0|          0.0|     0|
 
-WALL_TIME: 231 sec
+WALL_TIME: 7 sec
 N_NODES: 1
-AVG_INEQ: 4441.7
-AVG_CP_ITER: 10.0
+AVG_INEQ: 2744.5
+AVG_CP_ITER: 2.0
 ROOT_GAP: 0.0
 GAP: 0.0
-ROOT_LB: 127.4
-BEST_UB: 127.7
-BEST_LB: 127.4
+ROOT_LB: 5249.4
+BEST_UB: 5249.4
+BEST_LB: 5249.4
 
 
 
-Merge LB MSS: 367.0
+Merge LB MSS: 16035.9
 
 
 
 
-Merge UB MSS: 367.3
+Merge UB MSS: 16036.0
 
 

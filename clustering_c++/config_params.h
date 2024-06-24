@@ -26,7 +26,6 @@
 
 // data full path
 extern const char *data_path;
-extern const char *sol_path;
 extern const char *constraints_path;
 
 // log and result path

@@ -12,7 +12,7 @@ BRANCH_AND_BOUND_VISITING_STRATEGY: 0
 SDP_SOLVER_SESSION_THREADS_ROOT: 2
 SDP_SOLVER_SESSION_THREADS: 1
 SDP_SOLVER_FOLDER: /home/aelle/mr-sos-dp/SDPNAL
-SDP_SOLVER_TOL: 1e-05
+SDP_SOLVER_TOL: 0.0001
 SDP_SOLVER_VERBOSE: 0
 SDP_SOLVER_MAX_CP_ITER_ROOT: 80
 SDP_SOLVER_MAX_CP_ITER: 40
@@ -27,7 +27,7 @@ SDP_SOLVER_MAX_TRIANGLE_INEQ: 100000
 SDP_SOLVER_TRIANGLE_PERC: 0.05
 
 Optimal MSS: 0.0
-Heuristic MSS: 11327662378300808888320.0
+Heuristic MSS: 113.3
 
 Partition 1
 Partition 2
@@ -38,59 +38,59 @@ Partition 3
 |    N| NODE_PAR|    NODE|      LB_PAR|          LB|  FLAG|  TIME (s)| CP_ITER| CP_FLAG|   CP_INEQ|     PAIR  TRIANGLE    CLIQUE|          UB|         GUB|     I      J|     NODE_GAP|          GAP|  OPEN|
 
 |    N| NODE_PAR|    NODE|      LB_PAR|          LB|  FLAG|  TIME (s)| CP_ITER| CP_FLAG|   CP_INEQ|     PAIR  TRIANGLE    CLIQUE|          UB|         GUB|     I      J|     NODE_GAP|          GAP|  OPEN|
-|   32|       -1|       0|        -inf|      5448.7|     0|       0.0|       0|       0|         0|      0.0       0.0       0.0|      5448.7|     5448.7*|    -1     -1|          0.0|          0.0|     0|
+|   32|       -1|       0|        -inf|        36.0|     0|       1.0|       1|       0|      2658|    121.0    2532.0       5.0|        36.0|       36.0*|    -1     -1|          0.0|          0.0|     0|
 
-WALL_TIME: 2 sec
+WALL_TIME: 5 sec
 N_NODES: 1
-AVG_INEQ: 0.0
-AVG_CP_ITER: 0.0
+AVG_INEQ: 2658.0
+AVG_CP_ITER: 1.0
 ROOT_GAP: 0.0
 GAP: 0.0
-ROOT_LB: 5448.7
-BEST_UB: 5448.7
-BEST_LB: 5448.7
+ROOT_LB: 36.0
+BEST_UB: 36.0
+BEST_LB: 36.0
 
 Partition 4
 
 |    N| NODE_PAR|    NODE|      LB_PAR|          LB|  FLAG|  TIME (s)| CP_ITER| CP_FLAG|   CP_INEQ|     PAIR  TRIANGLE    CLIQUE|          UB|         GUB|     I      J|     NODE_GAP|          GAP|  OPEN|
-|   31|       -1|       0|        -inf|      6000.2|     0|       1.0|       1|       0|      4197|    181.0    3988.0      28.0|      6000.2|     6000.2*|    -1     -1|          0.0|          0.0|     0|
+|   31|       -1|       0|        -inf|        16.2|     0|       1.0|       1|       0|      3211|    113.0    3098.0       0.0|        16.2|       16.2*|    -1     -1|          0.0|          0.0|     0|
 
-WALL_TIME: 3 sec
+WALL_TIME: 5 sec
 N_NODES: 1
-AVG_INEQ: 4197.0
+AVG_INEQ: 3211.0
 AVG_CP_ITER: 1.0
 ROOT_GAP: 0.0
 GAP: 0.0
-ROOT_LB: 6000.2
-BEST_UB: 6000.2
-BEST_LB: 6000.2
+ROOT_LB: 16.2
+BEST_UB: 16.2
+BEST_LB: 16.2
 
-|   32|       -1|       0|        -inf|      6892.7|     0|       1.0|       1|       0|      4302|    164.0    4112.0      26.0|      6892.7|     6892.7*|    -1     -1|          0.0|          0.0|     0|
+|   32|       -1|       0|        -inf|        39.3|     0|       1.0|       1|       0|      3537|    186.0    3334.0      17.0|        39.3|       39.3*|    -1     -1|          0.0|          0.0|     0|
 
-WALL_TIME: 3 sec
+WALL_TIME: 5 sec
 N_NODES: 1
-AVG_INEQ: 4302.0
+AVG_INEQ: 3537.0
 AVG_CP_ITER: 1.0
 ROOT_GAP: 0.0
 GAP: 0.0
-ROOT_LB: 6892.7
-BEST_UB: 6892.7
-BEST_LB: 6892.7
+ROOT_LB: 39.3
+BEST_UB: 39.3
+BEST_LB: 39.3
 
-|   31|       -1|       0|        -inf|      7444.5|     0|       1.0|       1|       0|      3624|    147.0    3462.0      15.0|      7444.5|     7444.5*|    -1     -1|          0.0|          0.0|     0|
+|   31|       -1|       0|        -inf|         9.3|     0|       0.0|       1|       0|       107|      3.0     104.0       0.0|         9.3|        9.3*|    -1     -1|          0.0|          0.0|     0|
 
 WALL_TIME: 2 sec
 N_NODES: 1
-AVG_INEQ: 3624.0
+AVG_INEQ: 107.0
 AVG_CP_ITER: 1.0
 ROOT_GAP: 0.0
 GAP: 0.0
-ROOT_LB: 7444.5
-BEST_UB: 7444.5
-BEST_LB: 7444.5
+ROOT_LB: 9.3
+BEST_UB: 9.3
+BEST_LB: 9.3
 
 
 
-Merge LB MSS: 25480413637100162777088.0
+Merge LB MSS: 100.9
 
 

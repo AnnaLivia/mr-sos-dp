@@ -330,6 +330,8 @@ void run(int argc, char **argv) {
     << init_mss << "\t"
     << results.lb_mss << "\t"
     << (init_mss - results.lb_mss) / init_mss * 100 << "%\t"
+    << results.ub_mss << "\t"
+    << (init_mss - results.ub_mss) / init_mss * 100 << "%\t"
     << results.h_time << "\t"
     << results.lb_time << "\t"
     << results.h_time/60 + results.lb_time/60 << "\n";
@@ -340,6 +342,8 @@ void run(int argc, char **argv) {
     std::cout << "LB MSS: " << results.lb_mss << std::endl;
     std::cout << std::endl << "HEU - LB " << init_mss - results.lb_mss << std::endl;
     std::cout << "GAP HEU-LB " <<  (init_mss - results.lb_mss) / init_mss * 100 << "%" << std::endl;
+    std::cout << std::endl << "HEU - UB " << init_mss - results.ub_mss << std::endl;
+    std::cout << "GAP HEU-UB " <<  (init_mss - results.ub_mss) / init_mss * 100 << "%" << std::endl;
     std::cout << "---------------------------------------------------------------------" << std::endl;
 
     log_file.close();

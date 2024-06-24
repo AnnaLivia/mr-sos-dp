@@ -27,6 +27,7 @@ typedef struct SharedDataPartition {
     std::mutex queueMutex;
 
     std::vector<double> lb_part; // used to store the lower bound extracted from each sub-problem
+    std::vector<double> ub_part; // used to store the upper bound extracted from each sub-problem
     std::vector<std::vector<int>> sol_part; // used to store the partial solutions
 
 } SharedDataPartition;
