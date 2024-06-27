@@ -1,5 +1,6 @@
 # Set paths for MATLAB and Gurobi
-matlab_path = /Applications/MATLAB_R2024a.app
+matlab_path = /Applications/MATLAB_R2022b.app
+matlab_path2 = /Applications/MATLAB_R2024a.app
 gurobi_path = /Library/gurobi1102/macos_universal2
 
 # Sources and objects
@@ -8,15 +9,27 @@ objects = $(sources:.cpp=.o)
 
 # Compiler and flags
 CXX = clang++
-CXXFLAGS = -O2 -pthread
-LDFLAGS = -L $(matlab_path)/bin/maci64/ -L $(gurobi_path)/lib/ -larmadillo -llapack -lopenblas -lMatlabDataArray -lMatlabEngine -lgurobi_c++ -lgurobi110 -framework Accelerate
-INCLUDES = -I $(matlab_path)/extern/include/ -I $(gurobi_path)/include
+CXXFLAGS = -O2 -pthread -std=c++17 -arch x86_64
+
+INCLUDES = -I /usr/local/Cellar/armadillo/14.0.0/include/ \
+	-I /usr/local/opt/openblas/include/ \
+	-I $(matlab_path)/extern/include/ \
+	-I $(gurobi_path)/include/
+
+LDFLAGS = -L /usr/local/Cellar/armadillo/14.0.0/lib/ \
+	-L /usr/local/opt/openblas/lib/ \
+	-L $(matlab_path)/bin/maci64/ \
+        -L $(matlab_path)/extern/bin/maci64/ \
+	-lMatlabEngine -lMatlabDataArray \
+	-L$(gurobi_path)/lib/ \
+	-larmadillo -llapack -lopenblas \
+	-lgurobi_c++ -lgurobi110
 
 # Build target
 all: bb
 
 bb: $(objects)
-	$(CXX) $(CXXFLAGS) -o $@ $^ $(LDFLAGS) -Wl,-rpath,$(matlab_path)/bin/maci64/ -Wl,-rpath,$(gurobi_path)/lib
+	$(CXX) $(CXXFLAGS) -o $@ $^ $(LDFLAGS) -Wl,-rpath,$(matlab_path)/extern/bin/maci64/ -Wl,-rpath,$(gurobi_path)/lib/ 
 
 %.o: %.cpp
 	$(CXX) $(CXXFLAGS) -o $@ -c $< $(INCLUDES)
@@ -24,4 +37,4 @@ bb: $(objects)
 .PHONY: clean
 
 clean:
-	rm -f bb *.o
+	rm -f bb $(objects)

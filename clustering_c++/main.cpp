@@ -239,12 +239,14 @@ void run(int argc, char **argv) {
     kmeans_permut = 1;
     
     if (argc != 6) {
-        std::cerr << "Input: <DATA_FILE> <OPT_SOL_FILE> <K> <P> <STD>" << std::endl;
+        std::cerr << "Input: <DATA_FILE> <OPT_FILE> <K> <P> <STD>" << std::endl;
+        //std::cerr << "Input: <DATA_FILE> <OPT_VALUE> <K> <P> <STD>" << std::endl;
         exit(EXIT_FAILURE);
     }
     
     data_path = argv[1];
     opt_path = argv[2];
+    //double opt_mss = argv[2];
 
     k = std::stoi(argv[3]);
     p = std::stoi(argv[4]);
@@ -255,7 +257,7 @@ void run(int argc, char **argv) {
     inst_name = inst_name.substr(0, inst_name.find("."));
     std::ofstream test_SUMMARY(result_folder.substr(0, result_folder.find_last_of("/\\")) + "/test_SUMMARY.txt", std::ios::app);
 
-    result_path = result_folder + "/" + std::to_string(p) + "part/" + inst_name + "_" + std::to_string(k);
+    result_path = result_folder + "/" + std::to_string(p) + "part/" + inst_name;
     if (!std::filesystem::exists(result_path))
         std::filesystem::create_directories(result_path);
     result_path += "/" + inst_name + "_" + std::to_string(k);
@@ -284,12 +286,13 @@ void run(int argc, char **argv) {
     std::cout << "Num Features " << d << std::endl;
     std::cout << "Num Partitions " << p << std::endl;
     std::cout << "Num Clusters " << k << std::endl << std::endl;
-    std::cout << "Optimal MSS:" << std::fixed << std::setprecision(1) << opt_mss << std::endl;
+    std::cout << std::fixed << std::setprecision(2);
+    std::cout << "Optimal MSS:" << opt_mss << std::endl;
     std::cout << "Heuristic MSS: " << init_mss << "  (num_starts " << kmeans_start << ")" << std::endl;
     std::cout << "---------------------------------------------------------------------" << std::endl << std::endl;
 
-    log_file << "DATA_FILE, n, d, k: ";
-    log_file << data_path << " " << n << " " << d << " " << k << "\n";
+    log_file << "DATA_FILE, n, d, k, p:\n";
+    log_file << data_path << " " << n << " " << d << " " << k << " " << p << "\n";
 
     log_file << "ANTICLUSTERING_REP: " << num_rep << "\n\n";
     log_file << "ANTICLUSTERING_THREADS: " << n_threads_anti << "\n\n";
@@ -316,25 +319,34 @@ void run(int argc, char **argv) {
     log_file << "SDP_SOLVER_PAIR_PERC: " << sdp_solver_pair_perc << "\n";
     log_file << "SDP_SOLVER_MAX_TRIANGLE_INEQ: " << sdp_solver_max_triangle_ineq << "\n";
     log_file << "SDP_SOLVER_TRIANGLE_PERC: " << sdp_solver_triangle_perc << "\n\n";
-    log_file << std::fixed <<  std::setprecision(1);
+    log_file << std::fixed <<  std::setprecision(2);
     log_file << "Optimal MSS: " << opt_mss << "\n";
-    log_file << "Heuristic MSS: " << init_mss << "\n\n";
+    log_file << "Heuristic MSS: " << init_mss << "\n";
 
     HResult results = heuristic(Ws);
-    test_SUMMARY << std::fixed <<  std::setprecision(1)
+    double gap_h = 0.00;
+    if (opt_mss > 0)
+    	gap_h = (init_mss - opt_mss) / opt_mss * 100;
+
+    // printing results
+    test_SUMMARY << std::fixed <<  std::setprecision(2)
     << inst_name << "\t"
+    << n << "\t"
+    << d << "\t"
     << k << "\t"
     << p << "\t"
-    << results.h_obj << "\t"
     << opt_mss << "\t"
     << init_mss << "\t"
+    << gap_h << "%\t"
+    << results.anti_obj << "\t"
     << results.lb_mss << "\t"
     << (init_mss - results.lb_mss) / init_mss * 100 << "%\t"
     << results.ub_mss << "\t"
     << (init_mss - results.ub_mss) / init_mss * 100 << "%\t"
     << results.h_time << "\t"
+    << results.m_time << "\t"
     << results.lb_time << "\t"
-    << results.h_time/60 + results.lb_time/60 << "\n";
+    << (results.h_time + results.m_time + results.lb_time)/60 << "\n";
 
     std::cout << std::endl << "---------------------------------------------------------------------";
     std::cout << std::endl << "OPT: " << opt_mss << std::endl;

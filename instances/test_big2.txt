@@ -1,0 +1,10 @@
+./bb	../instances/data/fl3795.txt	../instances/data/fl3795.txt	4	5	1
+./bb	../instances/data/fl3795.txt	../instances/data/fl3795.txt	4	6	1
+./bb	../instances/data/fl3795.txt	../instances/data/fl3795.txt	4	8	1
+./bb	../instances/data/pcb3038.txt	../instances/data/pcb3038.txt	4	4	1
+./bb	../instances/data/pcb3038.txt	../instances/data/pcb3038.txt	4	5	1
+./bb	../instances/data/pcb3038.txt	../instances/data/pcb3038.txt	4	6	1
+./bb	../instances/data/voice.txt	../instances/data/voice.txt	4	4	1
+./bb	../instances/data/voice.txt	../instances/data/voice.txt	4	8	1
+./bb	../instances/data/wifi_localization.txt	../instances/data/wifi_localization.txt	4	4	1
+./bb	../instances/data/wifi_localization.txt	../instances/data/wifi_localization.txt	4	8	1

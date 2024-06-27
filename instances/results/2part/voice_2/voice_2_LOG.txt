@@ -35,37 +35,3 @@ Partition 2
 |    N| NODE_PAR|    NODE|      LB_PAR|          LB|  FLAG|  TIME (s)| CP_ITER| CP_FLAG|   CP_INEQ|     PAIR  TRIANGLE    CLIQUE|          UB|         GUB|     I      J|     NODE_GAP|          GAP|  OPEN|
 
 |    N| NODE_PAR|    NODE|      LB_PAR|          LB|  FLAG|  TIME (s)| CP_ITER| CP_FLAG|   CP_INEQ|     PAIR  TRIANGLE    CLIQUE|          UB|         GUB|     I      J|     NODE_GAP|          GAP|  OPEN|
-|   64|       -1|       0|        -inf|     16823.5|     0|       2.0|       1|       0|      5741|    680.0    5000.0      61.0|     16823.6|    16823.6*|    -1     -1|          0.0|          0.0|     0|
-
-WALL_TIME: 3 sec
-N_NODES: 1
-AVG_INEQ: 5741.0
-AVG_CP_ITER: 1.0
-ROOT_GAP: 0.0
-GAP: 0.0
-ROOT_LB: 16823.5
-BEST_UB: 16823.6
-BEST_LB: 16823.5
-
-|   62|       -1|       0|        -inf|     10753.6|     0|      39.0|       4|       3|      3579|    168.7    3157.0      11.0|     10753.6|    10753.6*|    -1     -1|          0.0|          0.0|     0|
-
-WALL_TIME: 41 sec
-N_NODES: 1
-AVG_INEQ: 3336.7
-AVG_CP_ITER: 4.0
-ROOT_GAP: 0.0
-GAP: 0.0
-ROOT_LB: 10753.6
-BEST_UB: 10753.6
-BEST_LB: 10753.6
-
-
-
-Merge LB MSS: 27577.0
-
-
-
-
-Merge UB MSS: 27577.1
-
-

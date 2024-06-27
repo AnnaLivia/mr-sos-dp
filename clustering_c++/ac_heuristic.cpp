@@ -416,18 +416,24 @@ HResult heuristic(arma::mat &data) {
     }
 
     // collect all the results
-    results.h_obj = 0;
+    results.anti_obj = 0;
     for (auto &obj : shared_data_anti->dist_cls)
-        results.h_obj += obj;
+        results.anti_obj += obj;
 
     sol_cls = shared_data_anti->sol_cls;
 
-    std::cout << std::endl << std::endl << "Heuristic total dist " << std::fixed << results.h_obj << std::endl;
+    std::cout << std::endl << std::endl << "Heuristic total dist " << std::fixed << results.anti_obj << std::endl;
     std::cout << "---------------------------------------------------------------------" << std::endl << std::endl;
     a_pool.quitPool();
 
     // free memory
-    delete (shared_data_anti);
+	delete (shared_data_anti);
+
+	// save heuristic time
+	auto end_time_h = std::chrono::high_resolution_clock::now();
+	results.h_time = std::chrono::duration_cast<std::chrono::seconds>(end_time_h - start_time_h).count();
+
+	auto start_time_m = std::chrono::high_resolution_clock::now();
 
     // mount cluster partitions
     std::vector<std::vector<int>> sol(p);
@@ -452,10 +458,9 @@ HResult heuristic(arma::mat &data) {
     	std::cout << e.getMessage() << std::endl;
     }
 
-	// save heuristic time
-	auto end_time_h = std::chrono::high_resolution_clock::now();
-	results.h_time = std::chrono::duration_cast<std::chrono::seconds>(end_time_h - start_time_h).count();
-
+	// save mount time
+	auto end_time_m = std::chrono::high_resolution_clock::now();
+	results.m_time = std::chrono::duration_cast<std::chrono::seconds>(end_time_m - start_time_m).count();
 
 	// create lower bound
 	auto start_time_lb = std::chrono::high_resolution_clock::now();

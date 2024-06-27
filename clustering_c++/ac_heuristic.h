@@ -8,10 +8,11 @@
 
 typedef struct HResult {
 
-	double h_obj;
+	double anti_obj;
 	double lb_mss;
 	double ub_mss;
 	double h_time;
+	double m_time;
 	double lb_time;
 
 } HResult;
