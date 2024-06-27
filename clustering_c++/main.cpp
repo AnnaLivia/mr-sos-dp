@@ -252,6 +252,11 @@ void run(int argc, char **argv) {
     p = std::stoi(argv[4]);
     stddata = std::stoi(argv[5]);
 
+    if (k < n_threads_anti)
+        n_threads_anti = k;
+    if (p < n_threads_part)
+        n_threads_part = p;
+
     std::string str_path = data_path;
     std::string inst_name = str_path.substr(str_path.find_last_of("/\\")+1);
     inst_name = inst_name.substr(0, inst_name.find("."));
