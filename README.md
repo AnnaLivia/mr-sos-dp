@@ -6,7 +6,7 @@ A Heuristic Solver for Semi-supervised Minimum Sum-of-Squares Clustering Using A
 </p>
 
  
-| :memo:        | Take a look at our [POSTER](https://uniroma1it-my.sharepoint.com/:b:/g/personal/croella_1544694_studenti_uniroma1_it/EScY_IIbJqtIt2BU7NrFvUIBZXxXX-1DVnxqn75ATRx3uw?e=LmZMhS) from the General Conference FAIR 23-24/09/2024      |
+| :memo:        | Take a look at our [POSTER](https://uniroma1it-my.sharepoint.com/:b:/g/personal/croella_1544694_studenti_uniroma1_it/EScY_IIbJqtIt2BU7NrFvUIBZXxXX-1DVnxqn75ATRx3uw?e=LmZMhS) from the General Conference FAIR, Naples 23-24/09/2024      |
 |---------------|:---------------------------------------------|
 
 
