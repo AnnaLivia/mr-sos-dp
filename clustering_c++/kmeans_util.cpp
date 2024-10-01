@@ -12,6 +12,11 @@ bool sort_by_value(const std::pair<int, double> &a, const std::pair<int, double>
     return (a.second < b.second);
 }
 
+// sort in reverse the vector elements by second element of pairs
+bool sort_by_value_rev(const std::pair<int, double> &a, const std::pair<int, double> &b) {
+	return (a.second > b.second);
+}
+
 // compute the l2-norm
 double squared_distance(const arma::vec &a, const arma::vec &b) {
     double norm = arma::norm(a - b, 2);

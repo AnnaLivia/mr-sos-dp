@@ -107,7 +107,7 @@ double ilp_heuristic(arma::mat &Z, arma::mat &Ws, int k, int original_n,
 			node_centroids = current_centroids;
 		}
 
-		delete model;
+//		delete model;
 		delete env;
     } catch (GRBException &e) {
         std::cout << "Error code = " << e.getErrorCode() << std::endl;

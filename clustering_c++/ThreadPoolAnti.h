@@ -3,12 +3,14 @@
 
 #include "sdp_branch_and_bound.h"
 #include "util.h"
+#include "comb_model.h"
 #include "matlab_util.h"
 
 typedef struct AntiJob {
 
     int cls_id;
     std::vector<int> cls_points;
+    std::vector<double> center;
 
 } AntiJob;
 
@@ -26,7 +28,7 @@ typedef struct SharedDataAnti {
     // Mutex to protect queue
     std::mutex queueMutex;
 
-    std::vector<std::vector<double>> all_dist; // matrix of distances
+    std::vector<std::vector<double>> all_data; // matrix of data + cluster centroids
     std::vector<double> dist_cls; // used to store the objective function of each sub-problem
     std::vector<std::vector<std::vector<int>>> sol_cls; // used to store the partitions for each cluser
 

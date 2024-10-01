@@ -57,7 +57,7 @@ private:
 
 	GRBMatrix<GRBVar> create_X_variables(GRBModel &model);
 	GRBMatrix<GRBVar> create_Y_variables(GRBModel &model, arma::mat dist);
-	GRBMatrix<GRBVar> create_Z_variables(GRBModel &model);
+	GRBMatrix<GRBVar> create_Z_variable(GRBModel &model);
 
 
 public:

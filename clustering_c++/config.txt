@@ -3,21 +3,25 @@ LOG_FOLDER = ../datasets/log
 # result path
 RESULT_FOLDER = ../datasets/results
 
+# algorithm maximum iteration stop criterion
+ALGORITHM_MAX_ITERATIONS_CRITERION = 5
+# algorithm minimum gap lb-ub stop criterion (%)
+ALGORITHM_MIN_GAP_CRITERION = 0.05
 # weight of diversity objective in anticlustering heuristic
 ANTICLUSTERING_DIVERSITY = 1
 # weight of dispersion objective in anticlustering heuristic
 ANTICLUSTERING_DISPERSION = 0
 # number of anticlustering repetitions
-ANTICLUSTERING_REP = 100
+ANTICLUSTERING_REP = 50
 # number of threads for anticlustering
-ANTICLUSTERING_THREADS = 6
+ANTICLUSTERING_THREADS = 3
 # number of threads for computing the partitions
-PARTITION_THREADS = 6
+PARTITION_THREADS = 3
 
 # number of starts of kmeans
 KMEANS_NUM_START = 100
 # number of max iterations of kmeans
-KMEANS_MAX_ITERATION = 1
+KMEANS_MAX_ITERATION = 100
 # do not display kmeans log (0), display log (1)
 KMEANS_VERBOSE = 0
 

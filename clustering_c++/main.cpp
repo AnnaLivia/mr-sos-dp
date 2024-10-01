@@ -15,6 +15,7 @@ const char *opt_path;
 std::string result_folder;
 std::string result_path;
 std::ofstream log_file;
+std::mutex file_mutex;
 std::ofstream lb_file;
 std::ofstream ub_file;
 
@@ -26,18 +27,19 @@ int k;
 bool stddata;
 
 // partition and anticlustering
+int max_it;
+double min_gap;
 double w_diversity;
 double w_dispersion;
 int num_rep;
 int n_threads_anti;
 int n_threads_part;
 
-// heuristic
+// k-means
 int kmeans_max_it;
 int kmeans_start;
 int kmeans_permut;
 bool kmeans_verbose;
-arma::mat init_sol;
 
 // branch and bound
 double branch_and_bound_tol;
@@ -66,10 +68,9 @@ double sdp_solver_pair_perc;
 int sdp_solver_max_triangle_ineq;
 double sdp_solver_triangle_perc;
 
-
 // read parameters in config file
 std::map<std::string, std::string> read_params(std::string &config_file) {
-    
+
     std::map<std::string, std::string> config_map = {};
 
     std::ifstream cFile (config_file);
@@ -93,6 +94,43 @@ std::map<std::string, std::string> read_params(std::string &config_file) {
     return config_map;
 }
 
+// write log preamble for instance
+void write_log_preamble(double opt_mss, double init_mss) {
+
+	log_file << "DATA_FILE, n, d, k, p:\n";
+    log_file << data_path << " " << n << " " << d << " " << k << " " << p << "\n";
+
+    log_file << "ANTICLUSTERING_REP: " << num_rep << "\n\n";
+    log_file << "ANTICLUSTERING_THREADS: " << n_threads_anti << "\n\n";
+    log_file << "PARTITION_THREADS: " << n_threads_part << "\n";
+
+    log_file << "BRANCH_AND_BOUND_TOL: " << branch_and_bound_tol << "\n";
+    log_file << "BRANCH_AND_BOUND_PARALLEL: " << branch_and_bound_parallel << "\n";
+    log_file << "BRANCH_AND_BOUND_MAX_NODES: " << branch_and_bound_max_nodes << "\n";
+    log_file << "BRANCH_AND_BOUND_VISITING_STRATEGY: " << branch_and_bound_visiting_strategy << "\n\n";
+
+    log_file << "SDP_SOLVER_SESSION_THREADS_ROOT: " << sdp_solver_session_threads_root << "\n";
+    log_file << "SDP_SOLVER_SESSION_THREADS: " << sdp_solver_session_threads << "\n";
+    log_file << "SDP_SOLVER_FOLDER: " << sdp_solver_folder << "\n";
+    log_file << "SDP_SOLVER_TOL: " << sdp_solver_tol << "\n";
+    log_file << "SDP_SOLVER_VERBOSE: " << sdp_solver_verbose << "\n";
+    log_file << "SDP_SOLVER_MAX_CP_ITER_ROOT: " << sdp_solver_max_cp_iter_root << "\n";
+    log_file << "SDP_SOLVER_MAX_CP_ITER: " << sdp_solver_max_cp_iter << "\n";
+    log_file << "SDP_SOLVER_CP_TOL: " << sdp_solver_cp_tol << "\n";
+    log_file << "SDP_SOLVER_MAX_INEQ: " << sdp_solver_max_ineq << "\n";
+    log_file << "SDP_SOLVER_INHERIT_PERC: " << sdp_solver_inherit_perc << "\n";
+    log_file << "SDP_SOLVER_EPS_INEQ: " << sdp_solver_eps_ineq << "\n";
+    log_file << "SDP_SOLVER_EPS_ACTIVE: " << sdp_solver_eps_active << "\n";
+    log_file << "SDP_SOLVER_MAX_PAIR_INEQ: " << sdp_solver_max_pair_ineq << "\n";
+    log_file << "SDP_SOLVER_PAIR_PERC: " << sdp_solver_pair_perc << "\n";
+    log_file << "SDP_SOLVER_MAX_TRIANGLE_INEQ: " << sdp_solver_max_triangle_ineq << "\n";
+    log_file << "SDP_SOLVER_TRIANGLE_PERC: " << sdp_solver_triangle_perc << "\n\n";
+    log_file << std::fixed <<  std::setprecision(2);
+    log_file << "Optimal MSS: " << opt_mss << "\n";
+    log_file << "Initial Heuristic MSS: " << init_mss << "\n";
+
+}
+
 // read data Ws
 arma::mat read_data(const char *filename) {
 
@@ -111,18 +149,7 @@ arma::mat read_data(const char *filename) {
         }
     }
 
-    if (!stddata) {
-        arma::mat dist = compute_distances(data);
-        double max_d = arma::max(arma::max(dist));
-        if (max_d != 0) {
-            int order = std::floor(std::log10(max_d))/2;
-            std::cout << "Scaling order > 3 " << "\n\n\n";
-            if (order >= 2)
-                for (int j = 0; j < d; j++)
-                    data.col(j) *= std::pow(10, - order);
-        }
-    }
-    else {
+    if (stddata) {
     	// normalized data between 0 and 1
         std::cout << "Scaling in 0-1 each feature" << "\n\n\n";
         for (int j = 0; j < d; j++) {
@@ -192,13 +219,15 @@ std::vector<int> read_assignment(const char *filename) {
 */
 
 void run(int argc, char **argv) {
-    
+
     std::string config_file = "config.txt";
     std::map <std::string, std::string> config_map = read_params(config_file);
 
     result_folder = config_map["RESULT_FOLDER"];
 
     // number of thread for computing the partition bound
+    max_it = std::stoi(config_map["ALGORITHM_MAX_ITERATIONS_CRITERION"]);
+    min_gap = std::stoi(config_map["ALGORITHM_MIN_GAP_CRITERION"]);
     w_diversity = std::stoi(config_map["ANTICLUSTERING_DIVERSITY"]);
     w_dispersion = std::stoi(config_map["ANTICLUSTERING_DISPERSION"]);
     num_rep = std::stoi(config_map["ANTICLUSTERING_REP"]);
@@ -230,8 +259,8 @@ void run(int argc, char **argv) {
     sdp_solver_triangle_perc = std::stod(config_map["SDP_SOLVER_TRIANGLE_PERC"]);
     sdp_solver_stopoption = 0;
     sdp_solver_maxiter = 50000;
-    sdp_solver_maxtime = 3600;
-    
+    sdp_solver_maxtime = 3*3600;
+
     // kmeans
     kmeans_start = std::stoi(config_map["KMEANS_NUM_START"]);
     kmeans_max_it = std::stoi(config_map["KMEANS_MAX_ITERATION"]);
@@ -240,7 +269,7 @@ void run(int argc, char **argv) {
     
     if (argc != 6) {
         std::cerr << "Input: <DATA_FILE> <OPT_FILE> <K> <P> <STD>" << std::endl;
-        //std::cerr << "Input: <DATA_FILE> <OPT_VALUE> <K> <P> <STD>" << std::endl;
+        //std::cerr << "Input: <DATA_FILE> <OPT_FILE> <K> <P> <STD>" << std::endl;
         exit(EXIT_FAILURE);
     }
     
@@ -267,23 +296,27 @@ void run(int argc, char **argv) {
         std::filesystem::create_directories(result_path);
     result_path += "/" + inst_name + "_" + std::to_string(k);
 
-    log_file.open(result_path + "_LOG.txt");
-
     arma::mat Ws = read_data(data_path);
-    //arma::mat opt_sol = read_sol(opt_path);
-    //double opt_mss = compute_mss(Ws, opt_sol);
-    arma::mat opt_sol = arma::mat(n, k);
-    double opt_mss;
+    arma::mat opt_sol = read_sol(opt_path);
+    double opt_mss = compute_mss(Ws, opt_sol);
+    arma::mat sol_f = std::move(arma::join_horiz(Ws, opt_sol));
+    //save_to_file(sol_f, "OPT");
+    //arma::mat opt_sol = arma::mat(n, k);
+    //double opt_mss;
 
     std::map<int, std::set<int>> ml_map = {};
     std::vector <std::pair<int, int>> local_cl = {};
     std::vector <std::pair<int, int>> global_ml = {};
     std::vector <std::pair<int, int>> global_cl = {};
+    arma::mat init_sol(n,k);
     Kmeans kmeans(Ws, k, ml_map, local_cl, global_ml, global_cl, kmeans_verbose);
     kmeans.start(kmeans_max_it, kmeans_start, kmeans_permut);
-    init_sol = kmeans.getAssignments();
-    double init_mss = compute_mss(Ws, init_sol);
+    init_sol= kmeans.getAssignments();
 
+    // init_sol = read_sol("../instances/h_sol/ruspini.txt");
+    // sol_f = std::move(arma::join_horiz(Ws, init_sol));
+    save_to_file(init_sol, "KM");
+    double init_mss = compute_mss(Ws, init_sol);
 
     std::cout << std::endl << "---------------------------------------------------------------------" << std::endl;
     std::cout << "Instance " << inst_name << std::endl;
@@ -293,75 +326,93 @@ void run(int argc, char **argv) {
     std::cout << "Num Clusters " << k << std::endl << std::endl;
     std::cout << std::fixed << std::setprecision(2);
     std::cout << "Optimal MSS:" << opt_mss << std::endl;
-    std::cout << "Heuristic MSS: " << init_mss << "  (num_starts " << kmeans_start << ")" << std::endl;
+    std::cout << "Initial Heuristic MSS: " << init_mss << "  (num_starts " << kmeans_start << ")" << std::endl;
     std::cout << "---------------------------------------------------------------------" << std::endl << std::endl;
 
-    log_file << "DATA_FILE, n, d, k, p:\n";
-    log_file << data_path << " " << n << " " << d << " " << k << " " << p << "\n";
+    log_file.open(result_path + "_LOG.txt");
+    write_log_preamble(opt_mss, init_mss);
 
-    log_file << "ANTICLUSTERING_REP: " << num_rep << "\n\n";
-    log_file << "ANTICLUSTERING_THREADS: " << n_threads_anti << "\n\n";
-    log_file << "PARTITION_THREADS: " << n_threads_part << "\n";
+    double new_gap = 100.00;
+    double best_lb = 0;
+    double best_ub = init_mss;
 
-    log_file << "BRANCH_AND_BOUND_TOL: " << branch_and_bound_tol << "\n";
-    log_file << "BRANCH_AND_BOUND_PARALLEL: " << branch_and_bound_parallel << "\n";
-    log_file << "BRANCH_AND_BOUND_MAX_NODES: " << branch_and_bound_max_nodes << "\n";
-    log_file << "BRANCH_AND_BOUND_VISITING_STRATEGY: " << branch_and_bound_visiting_strategy << "\n\n";
-
-    log_file << "SDP_SOLVER_SESSION_THREADS_ROOT: " << sdp_solver_session_threads_root << "\n";
-    log_file << "SDP_SOLVER_SESSION_THREADS: " << sdp_solver_session_threads << "\n";
-    log_file << "SDP_SOLVER_FOLDER: " << sdp_solver_folder << "\n";
-    log_file << "SDP_SOLVER_TOL: " << sdp_solver_tol << "\n";
-    log_file << "SDP_SOLVER_VERBOSE: " << sdp_solver_verbose << "\n";
-    log_file << "SDP_SOLVER_MAX_CP_ITER_ROOT: " << sdp_solver_max_cp_iter_root << "\n";
-    log_file << "SDP_SOLVER_MAX_CP_ITER: " << sdp_solver_max_cp_iter << "\n";
-    log_file << "SDP_SOLVER_CP_TOL: " << sdp_solver_cp_tol << "\n";
-    log_file << "SDP_SOLVER_MAX_INEQ: " << sdp_solver_max_ineq << "\n";
-    log_file << "SDP_SOLVER_INHERIT_PERC: " << sdp_solver_inherit_perc << "\n";
-    log_file << "SDP_SOLVER_EPS_INEQ: " << sdp_solver_eps_ineq << "\n";
-    log_file << "SDP_SOLVER_EPS_ACTIVE: " << sdp_solver_eps_active << "\n";
-    log_file << "SDP_SOLVER_MAX_PAIR_INEQ: " << sdp_solver_max_pair_ineq << "\n";
-    log_file << "SDP_SOLVER_PAIR_PERC: " << sdp_solver_pair_perc << "\n";
-    log_file << "SDP_SOLVER_MAX_TRIANGLE_INEQ: " << sdp_solver_max_triangle_ineq << "\n";
-    log_file << "SDP_SOLVER_TRIANGLE_PERC: " << sdp_solver_triangle_perc << "\n\n";
-    log_file << std::fixed <<  std::setprecision(2);
-    log_file << "Optimal MSS: " << opt_mss << "\n";
-    log_file << "Heuristic MSS: " << init_mss << "\n";
-
-    HResult results = heuristic(Ws);
-    double gap_h = 0.00;
-    if (opt_mss > 0)
-    	gap_h = (init_mss - opt_mss) / opt_mss * 100;
-
-    // printing results
-    test_SUMMARY << std::fixed <<  std::setprecision(2)
+	// printing results
+    test_SUMMARY << std::fixed << std::setprecision(2)
     << inst_name << "\t"
     << n << "\t"
     << d << "\t"
     << k << "\t"
     << p << "\t"
     << opt_mss << "\t"
-    << init_mss << "\t"
-    << gap_h << "%\t"
-    << results.anti_obj << "\t"
-    << results.lb_mss << "\t"
-    << (init_mss - results.lb_mss) / init_mss * 100 << "%\t"
-    << results.ub_mss << "\t"
-    << (init_mss - results.ub_mss) / init_mss * 100 << "%\t"
+    << init_mss << "\t";
+
+    HResult results;
+    results.heu_sol = init_sol;
+    results.heu_mss = init_mss;
+    results.lb_time = 0;
+    results.h_time = 0;
+    results.m_time = 0;
+	
+	int it = 0;
+	
+    for (it = 1; it < max_it; it++) {
+
+    	log_file << "\n---------------------------------------------------------------------\n";
+    	log_file << "Iteration " << it;
+    	log_file << "\n---------------------------------------------------------------------\n";
+
+    	//heuristic(Ws, results);
+    	//heuristic_no_sol(Ws, results);
+    	heuristic_kmeans(Ws, results);
+
+    	std::cout << std::endl << "---------------------------------------------------------------------";
+    	std::cout << std::endl << "Iteration " << it;
+    	std::cout << std::endl << "---------------------------------------------------------------------";
+    	std::cout << std::endl << "OPT: " << opt_mss << std::endl;
+    	std::cout << "INIT: " << init_mss << std::endl;
+    	std::cout << "NEW UB: " << results.heu_mss << std::endl;
+    	std::cout << "LB: " << results.lb_mss << std::endl;
+    	std::cout << std::endl << "UB - LB " << results.heu_mss - results.lb_mss << std::endl;
+    	std::cout << "GAP UB-LB " <<  (results.heu_mss - results.lb_mss) / results.heu_mss * 100 << "%" << std::endl;
+    	std::cout << "---------------------------------------------------------------------" << std::endl;
+    	std::cout << "GAP UB-LB+ " <<  (results.heu_mss - results.ub_mss) / results.heu_mss * 100 << "%" << std::endl;
+    	std::cout << "---------------------------------------------------------------------" << std::endl;
+
+		if ((results.heu_mss - best_ub) / best_ub < - 0.001)
+			best_ub = results.heu_mss;
+		else {
+			std::cout << "\n\n- NON DECREASING UB - CLOSE -\n";
+			break;
+		}
+
+		if (it == 1)
+			best_lb = results.lb_mss;
+		else if ((results.lb_mss - best_lb) / best_lb > 0.001)
+			best_lb = results.lb_mss;
+		else {
+			std::cout << "\n\n- NON INCREASING LB - CLOSE -\n";
+			break;
+		}
+
+		if ((results.heu_mss - results.lb_mss) / results.heu_mss * 100 < min_gap) {
+			std::cout << "\n\n- TOLERANCE GAP REACHED - CLOSE -\n";
+			break;
+		}
+
+	}
+
+	test_SUMMARY << best_ub << "\t"
+	<< best_lb << "\t"
+    << (best_ub - best_lb) / best_ub * 100 << "%\t"
+	//<< results.ub_mss << "\t"
+    //<< (results.heu_mss - results.ub_mss) / results.heu_mss * 100 << "%\t"
+    //<< results.heu_mss << "\t"
+    << (init_mss - best_lb) / init_mss * 100 << "%\t"
     << results.h_time << "\t"
     << results.m_time << "\t"
     << results.lb_time << "\t"
-    << (results.h_time + results.m_time + results.lb_time)/60 << "\n";
-
-    std::cout << std::endl << "---------------------------------------------------------------------";
-    std::cout << std::endl << "OPT: " << opt_mss << std::endl;
-    std::cout << "HEU: " << init_mss << std::endl;
-    std::cout << "LB MSS: " << results.lb_mss << std::endl;
-    std::cout << std::endl << "HEU - LB " << init_mss - results.lb_mss << std::endl;
-    std::cout << "GAP HEU-LB " <<  (init_mss - results.lb_mss) / init_mss * 100 << "%" << std::endl;
-    std::cout << std::endl << "HEU - UB " << init_mss - results.ub_mss << std::endl;
-    std::cout << "GAP HEU-UB " <<  (init_mss - results.ub_mss) / init_mss * 100 << "%" << std::endl;
-    std::cout << "---------------------------------------------------------------------" << std::endl;
+    << (results.h_time + results.m_time + results.lb_time)/60 << "\t"
+    << it << "\n";
 
     log_file.close();
 	test_SUMMARY.close();

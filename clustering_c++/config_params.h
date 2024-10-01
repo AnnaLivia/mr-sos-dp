@@ -32,6 +32,7 @@ extern const char *constraints_path;
 extern std::string result_folder;
 extern std::string result_path;
 extern std::ofstream log_file;
+extern std::mutex file_mutex;
 extern std::ofstream lb_file;
 extern std::ofstream ub_file;
 
@@ -43,6 +44,9 @@ extern int p;
 extern bool stddata;
 
 // partition and anticlustering
+extern int it;
+extern int max_it;
+extern double min_gap;
 extern double w_diversity;
 extern double w_dispersion;
 extern int num_rep;
@@ -81,6 +85,5 @@ extern int kmeans_max_it;
 extern int kmeans_start;
 extern bool kmeans_verbose;
 extern int kmeans_permut;
-extern arma::mat init_sol;
 
 #endif //CLUSTERING_CONFIG_PARAMS_H

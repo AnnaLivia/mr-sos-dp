@@ -85,7 +85,11 @@ void ThreadPoolPartition::doWork(int id) {
         std::cout << std::endl << "*********************************************************************" << std::endl;
         std::cout << "Partition " << (job->part_id + 1) << " processed by Thread "<< id << "\nPoints " << np;
         std::cout << std::endl << "*********************************************************************" << std::endl;
-        log_file << "Partition " << (job->part_id + 1) << "\n";
+
+        // Lock the mutex to ensure thread-safe access to the shared global file stream
+        std::lock_guard<std::mutex> guard(file_mutex);
+
+        log_file << "\nPARTITION " << (job->part_id + 1);
         arma::mat sol(np, k);
         UserConstraints constraints;
 
@@ -106,24 +110,29 @@ void ThreadPoolPartition::doWork(int id) {
         */
         double ub_mssc = 0;
         double lb_mssc = sdp_branch_and_bound(k, job->part_data, ub_mssc, constraints, sol);
+        arma::mat sol_f = std::move(arma::join_horiz(job->part_data, sol));
+        //save_to_file(sol_f, "LB_" + std::to_string(job->part_id + 1));
 
-        std::vector<int> cls(np);
-        for (int i = 0; i < np; i++)
+        arma::mat cls(np, d+1);
+        for (int i = 0; i < np; i++) {
+            for (int j = 0; j < d; j++)
+                cls(i,j) = job->part_data(i,j);
             for (int c = 0; c < k; c++)
                 if (sol(i,c) == 1)
-                    cls[i] = c + 1;
-
-        delete (job);
+                    cls(i,d) = c;
+        }
 
         {
             std::lock_guard<std::mutex> l(shared_data->queueMutex);
             shared_data->lb_part.push_back(lb_mssc);
             shared_data->ub_part.push_back(ub_mssc);
-            shared_data->sol_part.push_back(cls);
+            shared_data->sol_part[job->part_id] = cls;
             shared_data->threadStates[id] = false;
         }
 
         shared_data->mainConditionVariable.notify_one();
+
+        delete (job);
 
     }
 }

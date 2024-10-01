@@ -3,6 +3,8 @@
 #include <vector>
 #include "ThreadPoolAnti.h"
 #include "config_params.h"
+#include "comb_model.h"
+#include "norm1_model.h"
 #include "ac_heuristic.h"
 
 
@@ -85,14 +87,43 @@ void ThreadPoolAnti::doWork(int id) {
         std::cout << std::endl << "*********************************************************************" << std::endl;
         std::cout << "Cluster " << job->cls_id + 1 << " processed by Thread "<< id << "\nPoints " << job->cls_points.size();
         std::cout << std::endl << "*********************************************************************" << std::endl;
-        std::pair<double, std::vector<std::vector<int>>> sol = compute_anti_cls(job->cls_points, shared_data->all_dist);
+
+        //std::pair<double, std::vector<std::vector<int>>> sol = compute_anti_cls(job->cls_points, shared_data->all_dist);
+		std::pair<double, std::vector<std::vector<int>>> sol;
+
+    	try {
+    		GRBEnv *env = new GRBEnv();
+    		int nc = (int) job->cls_points.size();
+    		//comb_model *model = new comb_gurobi_model(env, nc, p, d, job->cls_points);
+    		norm_model *model = new norm_gurobi_model(env, nc, p, d, job->cls_points);
+
+	    	model->add_point_constraints();
+    		model->add_part_constraints();
+		    model->add_dev_constraints(shared_data->all_data, job->center);
+
+	    	model->optimize();
+
+	        // Lock the mutex to ensure thread-safe access to the shared global file stream
+    	    std::lock_guard<std::mutex> guard(file_mutex);
+
+    		log_file << "Cluster " << job->cls_id + 1 << ": " << model->get_gap() * 100 << "%" << "\n";
+    		std::vector<std::vector<int>> cls_ass = model->get_x_solution();
+    		sol = std::make_pair(model->get_value(), cls_ass);
+
+	//    	delete model;
+    		delete env;
+
+	    } catch (GRBException &e) {
+    		std::cout << "Error code = " << e.getErrorCode() << std::endl;
+    		std::cout << e.getMessage() << std::endl;
+    	}
+
 
         double best_dist = sol.first;
         std::vector<std::vector<int>> best_part_points = sol.second;
 
         {
             std::lock_guard<std::mutex> l(shared_data->queueMutex);
-
             shared_data->dist_cls.push_back(best_dist);
 
             // update final partition

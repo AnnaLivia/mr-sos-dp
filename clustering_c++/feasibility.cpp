@@ -64,7 +64,7 @@ int is_ilp_feasible(int n, int k, std::vector<std::pair<int, int>> &cl_pairs){
 		model->optimize();
 		feasible = !std::isinf(model->get_value());
 
-		delete model;
+//		delete model;
 		delete env;
     } catch (GRBException &e) {
         std::cout << "Error code = " << e.getErrorCode() << std::endl;

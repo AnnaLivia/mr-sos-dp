@@ -14,6 +14,7 @@ typedef struct LinkConstraint {
 } LinkConstraint;
 
 bool sort_by_value(const std::pair<int, double> &a, const std::pair<int, double> &b);
+bool sort_by_value_rev(const std::pair<int, double> &a, const std::pair<int, double> &b);
 double squared_distance(const arma::vec &a, const arma::vec &b);
 arma::mat compute_distances(arma::mat &data);
 LinkConstraint transitive_closure(std::vector<std::pair<int, int>> &ml, std::vector<std::pair<int, int>> &cl, int n);

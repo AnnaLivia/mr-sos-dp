@@ -9,11 +9,13 @@
 typedef struct HResult {
 
 	double anti_obj;
+	double heu_mss;
 	double lb_mss;
 	double ub_mss;
 	double h_time;
 	double m_time;
 	double lb_time;
+	arma::mat heu_sol;
 
 } HResult;
 
@@ -22,12 +24,14 @@ double compute_mss(arma::mat &data, arma::mat &sol);
 
 // compute lb and compute ub, print lb and ub sol
 //double compute_lb(std::map<int, arma::mat> &sol_map);
-//double compute_ub(arma::mat &Ws, arma::mat &sol, std::map<int, arma::mat> &sol_map);
+double compute_ub(arma::mat &Ws, arma::mat &sol, std::map<int, arma::mat> &sol_map);
 int generate_part_constraints(std::map<int, arma::mat> &sol_map, UserConstraints &constraints);
 arma::mat save_lb(std::map<int, arma::mat> &sol_map);
 arma::mat save_ub(arma::mat &data, arma::mat &sol);
 
 std::pair<double,  std::vector<std::vector<int>>> compute_anti_cls(std::vector<int> &cls_points, std::vector<std::vector<double>> &all_dist);
-HResult heuristic(arma::mat &Ws);
+void heuristic(arma::mat &Ws, HResult &results);
+void heuristic_no_sol(arma::mat &Ws, HResult &results);
+void heuristic_kmeans(arma::mat &Ws, HResult &results);
 
 #endif //CLUSTERING_AC_HEURISTICS_H
