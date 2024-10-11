@@ -33,5 +33,6 @@ std::pair<double,  std::vector<std::vector<int>>> compute_anti_cls(std::vector<i
 void heuristic(arma::mat &Ws, HResult &results);
 void heuristic_no_sol(arma::mat &Ws, HResult &results);
 void heuristic_kmeans(arma::mat &Ws, HResult &results);
+void heuristic_new(arma::mat &Ws, HResult &results);
 
 #endif //CLUSTERING_AC_HEURISTICS_H

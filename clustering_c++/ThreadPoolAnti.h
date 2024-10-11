@@ -29,6 +29,7 @@ typedef struct SharedDataAnti {
     std::mutex queueMutex;
 
     std::vector<std::vector<double>> all_data; // matrix of data + cluster centroids
+    std::vector<std::vector<double>> all_dist; // matrix of data + cluster centroids
     std::vector<double> dist_cls; // used to store the objective function of each sub-problem
     std::vector<std::vector<std::vector<int>>> sol_cls; // used to store the partitions for each cluser
 

@@ -9,6 +9,8 @@
 #include "matlab_util.h"
 #include "mount_model.h"
 #include "antic_model.h"
+#include "cluster_model.h"
+#include "glover_model.h"
 #include "sdp_branch_and_bound.h"
 #include "ThreadPoolPartition.h"
 #include "ThreadPoolAnti.h"
@@ -344,14 +346,14 @@ void heuristic(arma::mat &data, HResult &results) {
 		for (int l = 0; l < d; l++)
 			centroid[c][l] /= nc;
 
-		/*
+
     	for (int c = 0; c < k; c++)
 			for (int l = 0; l < d; l++) {
     			centroid[c][l] = 0;
 				for (int i = 0; i < n; ++i)
 					centroid[c][l] += all_data[i][l]/n;
 			}
-		 */
+
 
 
     }
@@ -368,6 +370,7 @@ void heuristic(arma::mat &data, HResult &results) {
     for (int i = 0; i < n_threads_anti; i++)
         shared_data_anti->threadStates.push_back(false);
     shared_data_anti->all_data = all_data;
+    shared_data_anti->all_dist = all_dist;
     shared_data_anti->sol_cls = sol_cls;
 
 	// create pool of job (1 for each cluster)
@@ -765,6 +768,154 @@ void heuristic_kmeans(arma::mat &data, HResult &results) {
     }
 
 	// save mount time
+	auto end_time_m = std::chrono::high_resolution_clock::now();
+	results.m_time += std::chrono::duration_cast<std::chrono::seconds>(end_time_m - start_time_m).count();
+
+	// create lower bound
+	auto start_time_lb = std::chrono::high_resolution_clock::now();
+
+    auto *shared_data_part = new SharedDataPartition();
+
+    shared_data_part->threadStates.reserve(n_threads_part);
+    for (int i = 0; i < n_threads_part; i++)
+        shared_data_part->threadStates.push_back(false);
+
+    for (int h = 0; h < p; ++h) {
+        auto *job = new PartitionJob();
+        job->part_id = h;
+
+        // scale part data if necessary
+        arma::mat data_part(sol[h].size(), d);
+		for (int i = 0; i < sol[h].size(); i++)
+			data_part.row(i) = data.row(sol[h][i]);
+
+        job->part_data = data_part;
+        shared_data_part->queue.push_back(job);
+
+    	save_to_file(data_part, "PART_" + std::to_string(h));
+    }
+
+    ThreadPoolPartition p_pool(shared_data_part, n_threads_part);
+	log_file << "\n";
+
+    while (true) {
+
+        {
+            std::unique_lock<std::mutex> l(shared_data_part->queueMutex);
+            while (is_thread_pool_working(shared_data_part->threadStates)) {
+                shared_data_part->mainConditionVariable.wait(l);
+            }
+
+            if (shared_data_part->queue.empty())
+                break;
+        }
+
+    }
+
+    // collect all the results
+    results.lb_mss = 0;
+    for (auto &lb_bound : shared_data_part->lb_part)
+        results.lb_mss += lb_bound;
+    results.ub_mss = 0;
+    for (auto &ub_bound : shared_data_part->ub_part)
+        results.ub_mss += ub_bound;
+
+	std::map<int, arma::mat> sol_map;
+    for (int h = 0; h < p; h++) {
+    	arma::vec arma_sol = arma::conv_to<arma::vec>::from(sol[h]);
+    	sol_map[h] = std::move(arma::join_horiz(arma_sol, shared_data_part->sol_part[h]));
+    }
+
+    p_pool.quitPool();
+
+    // free memory
+    delete (shared_data_part);
+
+	auto end_time_lb = std::chrono::high_resolution_clock::now();
+	results.lb_time += std::chrono::duration_cast<std::chrono::seconds>(end_time_lb - start_time_lb).count();
+
+    // create upper bound
+    arma::mat sol_ub;
+    double new_ub = compute_ub(data, sol_ub, sol_map);
+    arma::mat sdp_sol = save_ub(data, sol_ub);
+	for (int h = 0; h < p; h++)
+		for (int row : sol_map[h].col(0))
+			sdp_sol(row,0) = h;
+
+
+	std::cout << std::endl << "*********************************************************************" << std::endl;
+	std::cout  << std::endl << "UB MSS: " << new_ub << std::endl;
+
+    log_file << "\nSum of WSS\n";
+    log_file << "LB: " << results.lb_mss;
+    log_file << "\nUB: " << results.ub_mss;
+
+    log_file << "\n\nStart sol: " << results.heu_mss;
+    log_file << "\nNew UB: " << new_ub << "\n\n\n";
+
+	results.heu_mss = new_ub;
+	results.heu_sol = sol_ub;
+	save_to_file(sdp_sol, "UB");
+
+}
+
+void heuristic_new(arma::mat &data, HResult &results) {
+
+	std::cout << std::endl << "Running heuristics anticluster..";
+
+	// create matrix of all distances
+    std::vector<std::vector<double>> all_dist(n, std::vector<double>(n));
+	for (int i = 0; i < n; ++i) {
+		for (int j = i+1; j < n; ++j) {
+			double dist = std::pow(arma::norm(data.row(i).t() - data.row(j).t(), 2),2);
+			all_dist[i][j] = dist;
+			all_dist[j][i] = dist;
+		}
+	}
+
+	int size_y = 0;
+	std::vector<std::vector<int>> cls(k);
+	for (int c = 0; c < k; c++) {
+	 	cls[c].reserve(n);
+    	int nc = 0;
+		for (int i = 0; i < n; ++i) {
+    		if (results.heu_sol(i,c) == 1) {
+    			cls[c].push_back(i);
+    			nc++;
+    		}
+    	}
+    	size_y += nc*(nc -1)/2;
+    }
+
+	auto start_time_h = std::chrono::high_resolution_clock::now();
+
+    std::vector<std::vector<int>> sol(p);
+
+    	try {
+    		GRBEnv *env = new GRBEnv();
+    		glover_model *model = new glover_gurobi_model(env, n, p, k, all_dist, cls);
+
+	    	model->add_point_constraints();
+    		model->add_part_constraints();
+    		model->add_bound_constraints();
+
+	    	model->optimize();
+    		model->get_x_solution(sol);
+
+	//    	delete model;
+    		delete env;
+
+	    } catch (GRBException &e) {
+    		std::cout << "Error code = " << e.getErrorCode() << std::endl;
+    		std::cout << e.getMessage() << std::endl;
+    	}
+
+
+	// save heuristic time
+	auto end_time_h = std::chrono::high_resolution_clock::now();
+	results.h_time += std::chrono::duration_cast<std::chrono::seconds>(end_time_h - start_time_h).count();
+
+	auto start_time_m = std::chrono::high_resolution_clock::now();
 	auto end_time_m = std::chrono::high_resolution_clock::now();
 	results.m_time += std::chrono::duration_cast<std::chrono::seconds>(end_time_m - start_time_m).count();
 

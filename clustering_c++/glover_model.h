@@ -28,25 +28,18 @@ class glover_model {
 	protected:
 	int status;
 	int n, p, k;
-	arma::mat dist;
-	arma::mat lb;
-	arma::mat ub;
+	std::vector<std::vector<double>> dist;
+	std::vector<std::vector<int>> cls_points;
 
-	std::string get_x_variable_name(int i, int h);
-	std::string get_w_variable_name(int i, int h);
-	std::string get_point_constraint_name(int i);
-	std::string get_part_constraint_name(int c, int h);
-	std::string get_lb_constraint_name(int i, int h);
-	std::string get_ub_constraint_name(int i, int h);
-
-	public:
+public:
 	virtual int get_n_constraints() = 0;
 	virtual void add_point_constraints() = 0;
 	virtual void add_part_constraints() = 0;
 	virtual void add_bound_constraints() = 0;
 	virtual void optimize() = 0;
 	virtual double get_value() = 0;
-	virtual arma::mat get_x_solution() = 0;
+	virtual double get_gap() = 0;
+	virtual void get_x_solution(std::vector<std::vector<int>> &sol) = 0;
 };
 
 class glover_gurobi_model : public glover_model {
@@ -56,20 +49,65 @@ private:
 	GRBModel model;
 	GWMatrix<GRBVar> X;
 	GWMatrix<GRBVar> W;
+	GRBVar Z;
 
 	GWMatrix<GRBVar> create_X_variables(GRBModel &model);
 	GWMatrix<GRBVar> create_W_variables(GRBModel &model);
+	GRBVar create_Z_variable(GRBModel &model);
 
 
 public:
-	glover_gurobi_model(GRBEnv *env, int n, int p, int k, arma::mat dist, arma::mat lb, arma::mat ub);
+	glover_gurobi_model(GRBEnv *env, int n, int p, int k, std::vector<std::vector<double>> dist, std::vector<std::vector<int>> cls_points);
 	virtual int get_n_constraints();
 	virtual void add_point_constraints();
 	virtual void add_part_constraints();
 	virtual void add_bound_constraints();
 	virtual void optimize();
 	virtual double get_value();
-	virtual arma::mat get_x_solution();
+	virtual double get_gap();
+	virtual void get_x_solution(std::vector<std::vector<int>> &sol);
+};
+
+class cls_model {
+
+	protected:
+	int status;
+	int n, p, k;
+	std::vector<std::vector<double>> dist;
+	std::vector<int> cls;
+
+public:
+	virtual void add_cls_point_constraints() = 0;
+	virtual void add_cls_part_constraints() = 0;
+	virtual void add_cls_bound_constraints() = 0;
+	virtual void optimize_cls() = 0;
+	virtual double get_cls_value() = 0;
+	virtual double get_cls_gap() = 0;
+	virtual void get_cls_solution(std::vector<std::vector<int>> &sol) = 0;
+};
+
+
+class glover_cls_model : public cls_model {
+
+private:
+	GRBEnv *env;
+	GRBModel model;
+	GWMatrix<GRBVar> X;
+	GWMatrix<GRBVar> W;
+
+	GWMatrix<GRBVar> create_Xcls_variables(GRBModel &model);
+	GWMatrix<GRBVar> create_Wcls_variables(GRBModel &model);
+
+
+public:
+	glover_cls_model(GRBEnv *env, int n, int p, int k, std::vector<std::vector<double>> dist, std::vector<int> cls);
+	virtual void add_cls_point_constraints();
+	virtual void add_cls_part_constraints();
+	virtual void add_cls_bound_constraints();
+	virtual void optimize_cls();
+	virtual double get_cls_value();
+	virtual double get_cls_gap();
+	virtual void get_cls_solution(std::vector<std::vector<int>> &sol);
 };
 
 #endif //CLUSTERING_GLOVER_MODEL_H

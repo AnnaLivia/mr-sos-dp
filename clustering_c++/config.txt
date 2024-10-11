@@ -14,9 +14,9 @@ ANTICLUSTERING_DISPERSION = 0
 # number of anticlustering repetitions
 ANTICLUSTERING_REP = 50
 # number of threads for anticlustering
-ANTICLUSTERING_THREADS = 3
+ANTICLUSTERING_THREADS = 1
 # number of threads for computing the partitions
-PARTITION_THREADS = 3
+PARTITION_THREADS = 1
 
 # number of starts of kmeans
 KMEANS_NUM_START = 100

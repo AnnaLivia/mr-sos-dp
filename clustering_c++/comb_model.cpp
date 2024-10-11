@@ -57,7 +57,6 @@ comb_gurobi_model::comb_gurobi_model(GRBEnv *env, int n, int p, int d, std::vect
 	this->env = env;
 	this->X = create_X_variables(this->model);
 	this->Y = create_Y_variables(this->model);
-	this->Z = create_Z_variable(this->model);
     this->model.set("OutputFlag", "1");
 	this->model.set("Threads", "4");
     this->model.set("TimeLimit", "180");

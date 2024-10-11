@@ -5,6 +5,8 @@
 #include "config_params.h"
 #include "comb_model.h"
 #include "norm1_model.h"
+#include "glover_model.h"
+#include "cluster_model.h"
 #include "ac_heuristic.h"
 
 
@@ -94,21 +96,22 @@ void ThreadPoolAnti::doWork(int id) {
     	try {
     		GRBEnv *env = new GRBEnv();
     		int nc = (int) job->cls_points.size();
-    		//comb_model *model = new comb_gurobi_model(env, nc, p, d, job->cls_points);
-    		norm_model *model = new norm_gurobi_model(env, nc, p, d, job->cls_points);
+    		edge_cls_model *model = new gurobi_model(env, nc, p, d, shared_data->all_dist, job->cls_points);
+    		//norm_model *model = new norm_gurobi_model(env, nc, p, d, job->cls_points);
 
-	    	model->add_point_constraints();
-    		model->add_part_constraints();
-		    model->add_dev_constraints(shared_data->all_data, job->center);
+	    	model->add_cls_point_constraints();
+    		model->add_cls_part_constraints();
+		    model->add_cls_edge_constraints();
 
-	    	model->optimize();
+	    	model->optimize_cls();
 
 	        // Lock the mutex to ensure thread-safe access to the shared global file stream
     	    std::lock_guard<std::mutex> guard(file_mutex);
 
-    		log_file << "Cluster " << job->cls_id + 1 << ": " << model->get_gap() * 100 << "%" << "\n";
-    		std::vector<std::vector<int>> cls_ass = model->get_x_solution();
-    		sol = std::make_pair(model->get_value(), cls_ass);
+    		log_file << "Cluster " << job->cls_id + 1 << ": " << model->get_cls_gap() * 100 << "%" << "\n";
+    		std::vector<std::vector<int>> cls_ass(p);
+    		model->get_cls_solution(cls_ass);
+    		sol = std::make_pair(model->get_cls_value(), cls_ass);
 
 	//    	delete model;
     		delete env;

@@ -71,13 +71,13 @@ void Kmeans_max::initCentroids(arma::mat &distances) {
 
 		for (int i = 0; i < n; i++) {
 			arma::vec dist_i = closest_clusters(centroids_indices, i, distances);
-			int min_i = dist_i.index_max();
+			int min_i = dist_i.index_min();
 			chances(i) = dist_i(min_i);
 		}
 	}
 
 
-		/*
+	/*
     // Calculate centroid
     arma::rowvec center = arma::mean(data, 0);
 
@@ -95,6 +95,7 @@ void Kmeans_max::initCentroids(arma::mat &distances) {
 		centroids.row(h) = data.row(dist[h].second);
 
 	*/
+
 }
 
 // returns false if the constraints are not satisfied
@@ -163,6 +164,7 @@ bool Kmeans_max::violateConstraint(int point_i, int cluster_j) {
             return true;
         }
     }
+
 
 	// count the number of point for the cluster
 	if (cluster_j != -1) {
