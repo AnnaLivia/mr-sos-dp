@@ -76,6 +76,7 @@ class edge_cls_model {
 	int n, p, k,size_y;
 	std::vector<std::vector<double>> dist;
 	std::vector<int> cls;
+	arma::mat cls_data;
 
 	public:
 	virtual void add_cls_point_constraints() = 0;
@@ -99,7 +100,7 @@ private:
 	CLMatrix<GRBVar> create_Ycls_variables(GRBModel &model);
 
 public:
-	gurobi_model(GRBEnv *env, int n, int p, int k, std::vector<std::vector<double>> dist, std::vector<int> cls);
+	gurobi_model(GRBEnv *env, int n, int p, int k, std::vector<std::vector<double>> dist, std::vector<int> cls, arma::mat cls_data);
 	virtual void add_cls_point_constraints();
 	virtual void add_cls_part_constraints();
 	virtual void add_cls_edge_constraints();
@@ -107,6 +108,20 @@ public:
 	virtual double get_cls_value();
 	virtual double get_cls_gap();
 	virtual void get_cls_solution(std::vector<std::vector<int>> &sol);
+};
+
+// Callback class to add violated inequalities at the root node
+class MyCallback : public GRBCallback {
+
+private:
+	int n; int p;
+	CLMatrix<GRBVar> X;
+	CLMatrix<GRBVar> Y;
+public:
+    MyCallback(int n, int p, CLMatrix<GRBVar> X, CLMatrix<GRBVar> Y);
+
+protected:
+    void callback();
 };
 
 #endif //CLUSTERING_CLUSTER_MODEL_H

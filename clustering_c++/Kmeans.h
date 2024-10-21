@@ -31,12 +31,14 @@ public:
 					std::vector<std::pair<int, int>> &global_cl, bool verbose);
 	Kmeans(const arma::mat &data, int k, std::vector<std::pair<int, int>> &global_ml,
 					std::vector<std::pair<int, int>> &global_cl, bool verbose);
+	Kmeans(const arma::mat &data, int k, bool verbose);
     bool start(int max_iter, int n_start, int n_permutations);
     bool start(int max_iter, int n_start, int n_permutations, arma::mat &distances);
     bool start(int max_iter, int n_permutations,  arma::mat &init_centroids);
 	bool findClustering(int n_start, int n_permutations, arma::mat distances);
     arma::sp_mat getAssignments();
     double objectiveFunction();
+    arma::vec objectiveFunctionCls();
     double getLoss();
     arma::mat getCentroids();
 

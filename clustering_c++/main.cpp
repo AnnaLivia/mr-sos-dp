@@ -361,9 +361,9 @@ void run(int argc, char **argv) {
     	log_file << "Iteration " << it;
     	log_file << "\n---------------------------------------------------------------------\n";
 
-    	heuristic(Ws, results);
+    	//heuristic(Ws, results);
     	//heuristic_no_sol(Ws, results);
-    	//heuristic_kmeans(Ws, results);
+    	heuristic_kmeans(Ws, results);
     	//heuristic_new(Ws, results);
 
     	std::cout << std::endl << "---------------------------------------------------------------------";

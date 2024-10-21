@@ -42,46 +42,18 @@ Kmeans::Kmeans(const arma::mat &data, int k,
     }
 }
 
-/*
-// pick centroids as random points of the dataset
-void Kmeans::initCentroids() {
-
-    //arma::uvec idx = arma::randperm(n, k);
-    //centroids = data.rows(idx);
-
-    arma::vec chances = arma::ones(n);
-    centroids = arma::zeros(k, d);
-
-    std::random_device rd;
-    std::mt19937 gen(rd());
-    std::uniform_real_distribution<double> dis(0.0, 1.0);
-
-    for (int j = 0; j < k; j++) {
-
-        chances = chances / arma::sum(chances);
-        double r = dis(gen);
-        double acc = 0.0;
-        int index;
-        for (index = 0; index < n; index++) {
-            double chance = chances(index);
-            if (acc + chance >= r)
-                break;
-            acc += chance;
-        }
-        centroids.row(j) = data.row(index);
-
-
-        for (int i = 0; i < n; i++) {
-            arma::mat sub_centroids = centroids.rows(0, j);
-            arma::vec point = data.row(i).t();
-            arma::vec distances = closest_clusters(sub_centroids, point);
-            int min_i = distances.index_min();
-            chances(i) = distances(min_i);
-
-        }
-    }
+Kmeans::Kmeans(const arma::mat &data, int k, bool verbose){
+	this->k = k;
+	this->n = data.n_rows;
+	this->d = data.n_cols;
+	this->data = data;
+	this->verbose = verbose;
+	this->loss = std::numeric_limits<double>::infinity();
+	std::vector <std::pair<int, int>> global_ml = {};
+	std::vector <std::pair<int, int>> global_cl = {};
+	this->constraint = transitive_closure(global_ml, global_cl, n);
+	this->cl_degrees = std::vector<int>(n, 0);
 }
-*/
 
 // pick centroids as random points of the dataset
 void Kmeans::initCentroids(arma::mat &distances) {
@@ -390,5 +362,17 @@ double Kmeans::objectiveFunction() {
     arma::sp_mat assignments_mat = getAssignments();
     arma::mat m = data - assignments_mat * centroids;
     return arma::dot(m.as_col(), m.as_col());
+}
+
+// mss objective function per cls
+arma::vec Kmeans::objectiveFunctionCls() {
+	arma::sp_mat assignments_mat = getAssignments();
+    arma::mat m = data - assignments_mat * centroids;
+	arma::vec obj_c(k);
+	for (int c = 0; c < k; c++) {
+		arma::vec diff_squared = arma::sum((assignments_mat.col(c).t()) * arma::square(m), 1);
+		obj_c(c) = arma::accu(diff_squared);
+	}
+	return obj_c;
 }
 

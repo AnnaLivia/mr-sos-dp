@@ -96,7 +96,7 @@ void ThreadPoolAnti::doWork(int id) {
     	try {
     		GRBEnv *env = new GRBEnv();
     		int nc = (int) job->cls_points.size();
-    		edge_cls_model *model = new gurobi_model(env, nc, p, d, shared_data->all_dist, job->cls_points);
+    		edge_cls_model *model = new gurobi_model(env, nc, p, d, shared_data->all_dist, job->cls_points, job->data_cls);
     		//norm_model *model = new norm_gurobi_model(env, nc, p, d, job->cls_points);
 
 	    	model->add_cls_point_constraints();

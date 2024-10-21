@@ -2,7 +2,7 @@
 <project version="4">
   <component name="CLionExternalBuildManager">
     <target id="d82e4cc0-0e31-4fc6-ac43-c8de358a3ba6" name="test custom" defaultType="TOOL">
-      <configuration id="c3de12c8-468f-4fb3-9754-e4ba9fe8ce6d" name="test custom" />
+      <configuration id="c3de12c8-468f-4fb3-9754-e4ba9fe8ce6d" name="test custom" toolchainName="Cygwin" />
     </target>
   </component>
 </project>

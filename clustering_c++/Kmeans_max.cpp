@@ -176,7 +176,7 @@ bool Kmeans_max::violateConstraint(int point_i, int cluster_j) {
 		for (int i = 0; i < n; i++)
 			if (assignments(i) == cluster_j)
 				count++;
-		if (count >= points)
+		if (count == points)
 	        return true;
     }
 

@@ -28,6 +28,7 @@ double compute_ub(arma::mat &Ws, arma::mat &sol, std::map<int, arma::mat> &sol_m
 int generate_part_constraints(std::map<int, arma::mat> &sol_map, UserConstraints &constraints);
 arma::mat save_lb(std::map<int, arma::mat> &sol_map);
 arma::mat save_ub(arma::mat &data, arma::mat &sol);
+arma::mat evaluate_antic(arma::mat &data, arma::mat &antic_sol, arma::mat &heu_sol, arma::mat &centroids_heu, arma::mat &ub_sol, bool ub);
 
 std::pair<double,  std::vector<std::vector<int>>> compute_anti_cls(std::vector<int> &cls_points, std::vector<std::vector<double>> &all_dist);
 void heuristic(arma::mat &Ws, HResult &results);

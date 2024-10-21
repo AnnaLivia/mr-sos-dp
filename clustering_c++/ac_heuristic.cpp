@@ -331,8 +331,10 @@ void heuristic(arma::mat &data, HResult &results) {
 
 	std::vector<std::vector<double>> all_data(n, std::vector<double>(d));
 	std::vector<std::vector<double>> centroid(k, std::vector<double>(d));
+	std::vector<arma::mat> cls_data(k);
     for (int c = 0; c < k; c++) {
     	int nc = 0;
+		cls_data[c] = arma::zeros(n,d);
 		for (int i = 0; i < n; ++i) {
     		if (results.heu_sol(i,c) == 1) {
 				for (int l = 0; l < d; l++) {
@@ -340,9 +342,11 @@ void heuristic(arma::mat &data, HResult &results) {
 					centroid[c][l] += data(i,l);
 				}
     			cls[c].push_back(i);
+				cls_data[c].row(nc) = data.row(i);
     			nc++;
     		}
     	}
+    	cls_data[c] = cls_data[c].rows(0, nc-1);
 		for (int l = 0; l < d; l++)
 			centroid[c][l] /= nc;
 
@@ -353,8 +357,6 @@ void heuristic(arma::mat &data, HResult &results) {
 				for (int i = 0; i < n; ++i)
 					centroid[c][l] += all_data[i][l]/n;
 			}
-
-
 
     }
 
@@ -379,6 +381,7 @@ void heuristic(arma::mat &data, HResult &results) {
         job->cls_id = c;
         job->cls_points = cls[c];
         job->center = centroid[c];
+        job->data_cls = cls_data[c];
     	shared_data_anti->queue.push_back(job);
     }
 
@@ -445,6 +448,16 @@ void heuristic(arma::mat &data, HResult &results) {
 	// save mount time
 	auto end_time_m = std::chrono::high_resolution_clock::now();
 	results.m_time += std::chrono::duration_cast<std::chrono::seconds>(end_time_m - start_time_m).count();
+
+	// compute obj
+	double sol_obj = 0;
+    for (int h = 0; h < p; ++h)
+    	for (int i : sol[h])
+    		for (int j : sol[h])
+    			if (i!=j)
+    				sol_obj += (all_dist[i][j] /2) / sol[h].size();
+    std:: cout << "\n\n\n\n Sol obj" << sol_obj;
+
 
 	// create lower bound
 	auto start_time_lb = std::chrono::high_resolution_clock::now();
@@ -683,10 +696,35 @@ void heuristic_no_sol(arma::mat &data, HResult &results) {
 
 void heuristic_kmeans(arma::mat &data, HResult &results) {
 
-	std::cout << std::endl << "Running heuristics anticluster with k-means max..";
+	std::cout << std::endl << "Running heuristics anticluster with k-means esteeme..\n\n";
 
-	// create matrix of all distances
-    std::vector<std::vector<double>> all_dist(n, std::vector<double>(n));
+	// Create an initial partition
+    std::vector<std::vector<std::vector<int>>> sol_cls(k);
+    for (int c = 0; c < k; ++c) {
+        sol_cls[c] = std::vector<std::vector<int>>(p);
+    	std::vector<int> all_points;
+    	all_points.reserve(n);
+        for (int i = 0; i < n; ++i)
+    		if (results.heu_sol(i,c) == 1)
+    			all_points.push_back(i);
+    	int nc = all_points.size();
+
+    	for (int h = 0; h < p && !all_points.empty(); ++h) {
+			int points = floor(nc/p);
+			if (h <  nc % p)
+				points += 1;
+        	for (int t = 0; t < points; ++t) {
+            	int idx = rand() % (all_points.size());
+            	sol_cls[c][h].push_back(all_points[idx]);
+            	all_points.erase(all_points.begin() + idx);
+        	}
+    	}
+
+    }
+
+	auto start_time_m = std::chrono::high_resolution_clock::now();
+
+	std::vector<std::vector<double>> all_dist(n, std::vector<double>(n));
 	for (int i = 0; i < n; ++i) {
 		for (int j = i+1; j < n; ++j) {
 			double dist = std::pow(arma::norm(data.row(i).t() - data.row(j).t(), 2),2);
@@ -695,57 +733,8 @@ void heuristic_kmeans(arma::mat &data, HResult &results) {
 		}
 	}
 
-
-	auto start_time_h = std::chrono::high_resolution_clock::now();
-
-    std::vector<std::vector<std::vector<int>>> sol_cls(k);
-
-	for (int c = 0; c < k; c++) {
-
-	 	arma::mat cls_data = arma::zeros(n,d);
-	 	std::vector<int> cls_points(n);
-    	int nc = 0;
-		for (int i = 0; i < n; ++i) {
-    		if (results.heu_sol(i,c) == 1) {
-				cls_data.row(nc) = data.row(i);
-    			cls_points[nc] = i;
-    			nc++;
-    		}
-    	}
-    	cls_data = cls_data.rows(0, nc-1);
-
-    	std::map<int, std::set<int>> ml_map = {};
-    	std::vector <std::pair<int, int>> local_cl = {};
-    	std::vector <std::pair<int, int>> global_ml = {};
-    	std::vector <std::pair<int, int>> global_cl = {};
-
-		arma::mat cls_sol(nc,p);
-    	Kmeans_max kmeans_max(cls_data, p, ml_map, local_cl, global_ml, global_cl, 1);
-    	kmeans_max.start(kmeans_max_it, kmeans_start, kmeans_permut);
-    	cls_sol = kmeans_max.getAssignments();
-
-        sol_cls[c] = std::vector<std::vector<int>>(p);
-    	for (int h = 0; h < p; h++) {
-			int points = floor(nc/p);
-			if (h < nc % p)
-				points += 1;
-			sol_cls[c][h].reserve(points);
-			for (int i = 0; i < nc; i++) {
-        		if (cls_sol(i,h) == 1)
-        			sol_cls[c][h].push_back(cls_points[i]);
-        	}
-		}
-
-    }
-
-	// save heuristic time
-	auto end_time_h = std::chrono::high_resolution_clock::now();
-	results.h_time += std::chrono::duration_cast<std::chrono::seconds>(end_time_h - start_time_h).count();
-
-	auto start_time_m = std::chrono::high_resolution_clock::now();
-
     // mount cluster partitions
-    std::vector<std::vector<int>> sol(p);
+    std::vector<std::vector<int>> init_sol(p);
 
     try {
     	GRBEnv *env = new GRBEnv();
@@ -757,7 +746,7 @@ void heuristic_kmeans(arma::mat &data, HResult &results) {
 
     	model->optimize();
 
-    	sol = model->get_x_solution(sol_cls);
+    	init_sol = model->get_x_solution(sol_cls);
 
 //    	delete model;
     	delete env;
@@ -771,7 +760,138 @@ void heuristic_kmeans(arma::mat &data, HResult &results) {
 	auto end_time_m = std::chrono::high_resolution_clock::now();
 	results.m_time += std::chrono::duration_cast<std::chrono::seconds>(end_time_m - start_time_m).count();
 
-	// create lower bound
+    auto start_time_h = std::chrono::high_resolution_clock::now();
+
+	// Create first sol anticluter
+    arma::mat antic_sol = arma::zeros(n,p);
+    for (int h = 0; h < p; ++h)
+    	for (int i : init_sol[h])
+			antic_sol(i, h) = 1;
+
+	// Compute centroids heu_sol
+	arma::mat centroids_heu = arma::zeros(k, d);
+	arma::vec count_heu = arma::zeros(k);
+	for (int i = 0; i < n; i++)
+		for (int j = 0; j < k; j++)
+			if (results.heu_sol(i,j) == 1) {
+				centroids_heu.row(j) += data.row(i);
+				++count_heu(j);
+			}
+	for (int c = 0; c < k; c++) {
+		// empty cluster
+		if (count_heu(c) == 0)
+			std::printf("read_data(): cluster %d is empty!\n", c);
+		centroids_heu.row(c) /= count_heu(c);
+	}
+
+	//Create first ub sol
+	arma::mat ub_sol = arma::zeros(n,k);
+    arma::mat W_hc = evaluate_antic(data, antic_sol, results.heu_sol, centroids_heu, ub_sol, 1);
+    arma::mat W_h = arma::sum(W_hc, 1);
+    double best_W = arma::accu(W_hc);
+    double best_GAP = (results.heu_mss - best_W) / results.heu_mss * 100;
+    std::vector<std::vector<std::vector<int>>> points_hc(p);
+    for (int h = 0; h < p; ++h) {
+    	points_hc[h] = std::vector<std::vector<int>>(k);
+		for (int c = 0; c < k; c++) {
+			points_hc[h][c].reserve(n);
+			for (int i = 0; i < n; i++)
+				if (antic_sol(i,h)==1 and ub_sol(i,c)==1)
+					points_hc[h][c].push_back(i);
+		}
+    }
+
+    int l = 0;
+	std::printf("\n\nAnticlustering Heuristic\niter | W | GAP\n");
+	std::printf("%d | %f | %f\n", l, best_W, best_GAP);
+
+
+	//Start swap heuristic
+    //Find points to be swapped
+	std::vector<int> changes;
+	changes.reserve(n);
+	for (int i = 0; i < n; i++)
+		for (int c = 0; c < k; ++c)
+    		if (results.heu_sol(i,c) == 1 and ub_sol(i,c) == 0)
+    			changes.push_back(i);
+    std::cout << "\n\nNum of swaps " << changes.size();
+
+
+	for (int l = 1; l < 100; l++) {
+
+		if (best_GAP < 0.005) {
+			std::cout << "Min GAP reached\n";
+			break;
+		}
+		arma::mat dist = arma::square(data - ub_sol * centroids_heu);
+		double max_d = arma::max(dist.col(0));
+
+		for (int c = 0; c < k; c++) {
+			arma::mat W_c = arma::sum(W_hc, 0);
+			std::vector<int> worst_p =  arma::conv_to<std::vector<int>>::from(arma::sort_index(W_c));
+			for (int idx1 = 0; idx1 < p-1; idx1++) {
+				int h1 = worst_p[idx1];
+				int p1 = 0;
+				int idx_p1 = 0;
+				double dist1 = max_d;
+				for (int i1 = 0; i1 < points_hc[h1][c].size(); i1++) {
+					int i = points_hc[h1][c][idx1];
+					if (dist(i,0) < dist1) {
+						dist1 = dist(i,0);
+						p1 = i;
+						idx_p1 = i1;
+					}
+				}
+
+				for (int idx2 = idx1+1; idx2 < p; idx2++) {
+					int h2 = worst_p[idx2];
+					int idx_p2 = 0;
+					for (int p2 : points_hc[h2][c]) {
+						arma::mat new_antic_sol = antic_sol;
+						new_antic_sol(p1,h1)=0;
+						new_antic_sol(p1,h2)=1;
+						new_antic_sol(p2,h1)=1;
+						new_antic_sol(p2,h2)=0;
+						arma::mat new_sol(n,k);
+						arma::mat new_W_hc = evaluate_antic(data, new_antic_sol, results.heu_sol, centroids_heu, new_sol, 0);
+						double W = arma::accu(arma::sum(new_W_hc, 1));
+						if (W > best_W) {
+							best_W = W;
+							ub_sol = new_sol;
+							antic_sol = new_antic_sol;
+							W_hc = new_W_hc;
+							points_hc[h1][c].erase(points_hc[h1][c].begin() + idx_p1);
+							points_hc[h1][c].push_back(p2);
+							points_hc[h2][c].erase(points_hc[h2][c].begin() + idx_p2);
+							points_hc[h2][c].push_back(p1);
+							best_GAP = (results.heu_mss - best_W) / results.heu_mss * 100;
+							std::printf("%d | %f | %f\n", l, best_W, best_GAP);
+							break;
+						}
+						idx_p2++;
+					}
+				}
+			}
+		}
+    }
+
+    std::vector<std::vector<int>> sol(p);
+    for (int h = 0; h < p; h++) {
+		int points = floor(n/p);
+		if (h < n % p)
+			points += 1;
+		sol[h].reserve(points);
+		for (int i = 0; i < n; i++) {
+        	if (antic_sol(i,h) == 1)
+        		sol[h].push_back(i);
+        }
+	}
+
+	// save heuristic time
+	auto end_time_h = std::chrono::high_resolution_clock::now();
+	results.h_time += std::chrono::duration_cast<std::chrono::seconds>(end_time_h - start_time_h).count();
+
+	// create true lower bound
 	auto start_time_lb = std::chrono::high_resolution_clock::now();
 
     auto *shared_data_part = new SharedDataPartition();
@@ -1004,5 +1124,97 @@ void heuristic_new(arma::mat &data, HResult &results) {
 	results.heu_mss = new_ub;
 	results.heu_sol = sol_ub;
 	save_to_file(sdp_sol, "UB");
+
+}
+
+arma::mat evaluate_antic(arma::mat &data, arma::mat &antic_sol, arma::mat &heu_sol, arma::mat &centroids_heu, arma::mat &ub_sol, bool ub) {
+
+	UserConstraints constraints;
+	arma::mat obj(p,k);
+    for (int h = 0; h < p; h++) {
+    	std::vector<int> antic;
+    	antic.reserve(n);
+    	arma::mat data_antic(n,d);
+    	int nh = 0;
+		for (int i = 0; i < n; ++i) {
+    		if (antic_sol(i,h) == 1) {
+				data_antic.row(nh) = data.row(i);
+				antic.push_back(i);
+    			nh++;
+    		}
+    	}
+        data_antic = data_antic.rows(0, nh-1);
+
+		arma::mat cls_sol(nh,k);
+    	Kmeans kmeans(data_antic, k, kmeans_verbose);
+    	kmeans.start(1, kmeans_permut, centroids_heu);
+    	cls_sol = kmeans.getAssignments();
+    	obj.row(h) = kmeans.objectiveFunctionCls().t();
+
+
+    	if (ub) {
+    		log_file << "\n\nGenerate new UB (Must Link constraints Init Sol Heu\n";
+    		for (int c = 0; c < k; c++) {
+        		std::list<int> cls_points = {};
+        		for (int i = 0; i < nh; i++) {
+            		if (cls_sol(i,c)==1) {
+                		for (auto& j : cls_points) {
+                    		std::pair<int,int> ab_pair(antic[i],antic[j]);
+                    		constraints.ml_pairs.push_back(ab_pair);
+                		}
+                		cls_points.push_back(i);
+            		}
+        		}
+        	}
+    	}
+
+    }
+
+
+    if (ub) {
+
+    	double ub_mss;
+    	sdp_branch_and_bound(k, data, ub_mss, constraints, ub_sol);
+
+    	arma::vec count_ub = arma::zeros(k);
+    	arma::mat centroids_ub = arma::zeros(k, d);
+    	for (int i = 0; i < n; i++)
+        	for (int c = 0; c < k; c++)
+            	if (ub_sol(i,c) == 1) {
+                	centroids_ub.row(c) += data.row(i);
+                	++count_ub(c);
+            	}
+    	for (int c = 0; c < k; c++) {
+        	// empty cluster
+        	if (count_ub(c) == 0)
+            	std::printf("read_data(): cluster %d is empty!\n", c);
+        	centroids_ub.row(c) /= count_ub(c);
+    	}
+
+    	//Map the two solutions and create a comparable sol
+    	std::vector<int> mapping(k, -1);  // Cluster mapping from heu_sol to ub_sol
+    	for (int c1 = 0; c1 < k; ++c1) {
+        	double min_distance = std::numeric_limits<double>::max();
+        	int best_match = -1;
+        	for (int c2 = 0; c2 < k; ++c2) {
+            	// Calculate the Euclidean distance between centroids
+            	double distance = std::pow(arma::norm(centroids_heu.row(c1).t() - centroids_ub.row(c2).t(), 2), 2);
+            	if (distance < min_distance) {
+                	min_distance = distance;
+                	best_match = c2;
+            	}
+        	}
+			mapping[c1] = best_match;
+    	}
+
+		// Create a new matrix with reordered columns based on the mapping
+		arma::mat reordered_mat = arma::zeros(n,k);
+    	for (int i = 0; i < k; ++i)
+        	reordered_mat.col(i) = ub_sol.col(mapping[i]);
+		ub_sol = reordered_mat;
+
+    }
+
+    return obj;
 
 }
