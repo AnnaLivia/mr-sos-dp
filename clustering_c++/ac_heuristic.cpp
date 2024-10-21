@@ -801,41 +801,41 @@ void heuristic_kmeans(arma::mat &data, HResult &results) {
 		}
     }
 
-    int l = 0;
-	std::printf("\n\nAnticlustering Heuristic\niter | W | GAP\n");
-	std::printf("%d | %f | %f\n", l, best_W, best_GAP);
-
 
 	//Start swap heuristic
-    //Find points to be swapped
+	//Find points to be swapped
 	std::vector<int> changes;
 	changes.reserve(n);
 	for (int i = 0; i < n; i++)
 		for (int c = 0; c < k; ++c)
-    		if (results.heu_sol(i,c) == 1 and ub_sol(i,c) == 0)
-    			changes.push_back(i);
-    std::cout << "\n\nNum of swaps " << changes.size();
+			if (results.heu_sol(i,c) == 1 and ub_sol(i,c) == 0)
+				changes.push_back(i);
+	std::cout << "\n\nNum of swaps " << changes.size();
 
+    int l = 0;
+	std::printf("\n\nAnticlustering Heuristic\niter | W | GAP \n");
+	std::printf("\n%d | %.2f | %.2f\n", l, best_W, best_GAP);
 
 	for (int l = 1; l < 100; l++) {
 
-		if (best_GAP < 0.005) {
+		if (best_GAP < 0.1) {
 			std::cout << "Min GAP reached\n";
 			break;
 		}
 		arma::mat dist = arma::square(data - ub_sol * centroids_heu);
 		double max_d = arma::max(dist.col(0));
+		bool found_better = false;
 
 		for (int c = 0; c < k; c++) {
 			arma::mat W_c = arma::sum(W_hc, 0);
 			std::vector<int> worst_p =  arma::conv_to<std::vector<int>>::from(arma::sort_index(W_c));
-			for (int idx1 = 0; idx1 < p-1; idx1++) {
+			for (int idx1 = 0; idx1 < p-1 && !found_better; idx1++) {
 				int h1 = worst_p[idx1];
 				int p1 = 0;
 				int idx_p1 = 0;
 				double dist1 = max_d;
 				for (int i1 = 0; i1 < points_hc[h1][c].size(); i1++) {
-					int i = points_hc[h1][c][idx1];
+					int i = points_hc[h1][c][i1];
 					if (dist(i,0) < dist1) {
 						dist1 = dist(i,0);
 						p1 = i;
@@ -843,10 +843,10 @@ void heuristic_kmeans(arma::mat &data, HResult &results) {
 					}
 				}
 
-				for (int idx2 = idx1+1; idx2 < p; idx2++) {
+				for (int idx2 = idx1+1; idx2 < p && !found_better; idx2++) {
 					int h2 = worst_p[idx2];
-					int idx_p2 = 0;
-					for (int p2 : points_hc[h2][c]) {
+					for (int idx_p2 = 0; idx_p2 < points_hc[h2][c].size(); idx_p2++) {
+						int p2 = points_hc[h2][c][idx_p2];
 						arma::mat new_antic_sol = antic_sol;
 						new_antic_sol(p1,h1)=0;
 						new_antic_sol(p1,h2)=1;
@@ -865,14 +865,22 @@ void heuristic_kmeans(arma::mat &data, HResult &results) {
 							points_hc[h2][c].erase(points_hc[h2][c].begin() + idx_p2);
 							points_hc[h2][c].push_back(p1);
 							best_GAP = (results.heu_mss - best_W) / results.heu_mss * 100;
-							std::printf("%d | %f | %f\n", l, best_W, best_GAP);
+
+							std::printf("%d | %.2f | %.2f\n", l, best_W, best_GAP);
+
+							found_better = true;
 							break;
 						}
-						idx_p2++;
 					}
 				}
 			}
 		}
+
+		if (!found_better) {
+			std::cout << "\nNo better sol at " << l << "\n\n";
+			break;
+		}
+
     }
 
     std::vector<std::vector<int>> sol(p);
