@@ -94,6 +94,41 @@ std::map<std::string, std::string> read_params(std::string &config_file) {
     return config_map;
 }
 
+void sort_all(arma::mat &data, arma::mat &sol) {
+
+    //reorder data e init_sol
+    arma::mat centroids(k, d);
+    arma::vec count(k);
+    for (int i = 0; i < n; i++) {
+        for (int c = 0; c < k; ++c)
+            if (sol(i, c) == 1) {
+        		centroids.row(c) += data.row(i);
+        		count(c) += 1;
+        	}
+    }
+    for (int c = 0; c < k; ++c)
+    	centroids.row(c) /= count(c);
+
+    arma::vec distances(n);
+    for (int i = 0; i < n; ++i)
+        for (int c = 0; c < k; ++c)
+            if (sol(i, c) == 1) {
+                distances(i) = std::pow(norm(data.row(i) - centroids.row(c), 2), 2);
+                break;
+            }
+
+	// Sort distances and get the sorted indices
+    arma::uvec sorted_indices = arma::sort_index(distances, "ascend");
+    arma::mat sorted_data = data.rows(sorted_indices);
+    arma::mat sorted_sol = sol.rows(sorted_indices);
+
+    data = sorted_data;
+    sol = sorted_sol;
+    save_to_file(sol, "KM");
+    save_to_file(data, "DATA");
+
+}
+
 // write log preamble for instance
 void write_log_preamble(double opt_mss, double init_mss) {
 
@@ -202,6 +237,47 @@ arma::mat read_sol(const char *filename) {
     return sol;
 }
 
+
+// compute mss for a given solution
+double compute_mss(arma::mat &data, arma::mat &sol) {
+
+    int data_n = data.n_rows;
+    int data_d = data.n_cols;
+    int data_k = sol.n_cols;
+
+    if (data_n != sol.n_rows) {
+        std::printf("compute_mss() - ERROR: inconsistent data and sol!\n");
+        exit(EXIT_FAILURE);
+    }
+
+    arma::mat assignment_mat = arma::zeros(data_n, data_k);
+    arma::vec count = arma::zeros(data_k);
+    arma::mat centroids = arma::zeros(data_k, data_d);
+    for (int i = 0; i < data_n; i++) {
+        for (int j = 0; j < data_k; j++) {
+            if (sol(i,j) == 1) {
+                assignment_mat(i, j) = 1;
+                ++count(j);
+                centroids.row(j) += data.row(i);
+            }
+        }
+    }
+
+    // compute clusters' centroids
+    for (int c = 0; c < data_k; c++) {
+        // empty cluster
+        if (count(c) == 0) {
+            std::printf("read_data(): cluster %d is empty!\n", c);
+            return false;
+        }
+        centroids.row(c) = centroids.row(c) / count(c);
+    }
+
+    arma::mat m = data - assignment_mat * centroids;
+
+    return arma::dot(m.as_col(), m.as_col());
+}
+
 /*
 std::vector<int> read_assignment(const char *filename) {
     std::ifstream file(filename);
@@ -304,19 +380,15 @@ void run(int argc, char **argv) {
     //arma::mat opt_sol = arma::mat(n, k);
     //double opt_mss;
 
-    std::map<int, std::set<int>> ml_map = {};
-    std::vector <std::pair<int, int>> local_cl = {};
-    std::vector <std::pair<int, int>> global_ml = {};
-    std::vector <std::pair<int, int>> global_cl = {};
     arma::mat init_sol(n,k);
-    Kmeans kmeans(Ws, k, ml_map, local_cl, global_ml, global_cl, kmeans_verbose);
+    Kmeans kmeans(Ws, k, kmeans_verbose);
     kmeans.start(kmeans_max_it, kmeans_start, kmeans_permut);
-    init_sol= kmeans.getAssignments();
+    init_sol = kmeans.getAssignments();
 
     // init_sol = read_sol("../instances/h_sol/ruspini.txt");
     // sol_f = std::move(arma::join_horiz(Ws, init_sol));
-    save_to_file(init_sol, "KM");
     double init_mss = compute_mss(Ws, init_sol);
+	sort_all(Ws, init_sol);
 
     std::cout << std::endl << "---------------------------------------------------------------------" << std::endl;
     std::cout << "Instance " << inst_name << std::endl;
@@ -334,6 +406,7 @@ void run(int argc, char **argv) {
 
     double new_gap = 100.00;
     double best_lb = 0;
+    double best_lb_plus = 0;
     double best_ub = init_mss;
 
 	// printing results
@@ -348,22 +421,24 @@ void run(int argc, char **argv) {
 
     HResult results;
     results.heu_sol = init_sol;
+    results.init_sol = init_sol;
     results.heu_mss = init_mss;
     results.lb_time = 0;
     results.h_time = 0;
     results.m_time = 0;
 	
 	int it = 0;
+	bool exit = false;
 	
-    for (it = 1; it < max_it; it++) {
+    for (it = 1; it < max_it && !exit; it++) {
 
     	log_file << "\n---------------------------------------------------------------------\n";
     	log_file << "Iteration " << it;
     	log_file << "\n---------------------------------------------------------------------\n";
 
-    	//heuristic(Ws, results);
-    	//heuristic_no_sol(Ws, results);
     	heuristic_kmeans(Ws, results);
+    	//exact(Ws, results);
+    	//heuristic_no_sol(Ws, results);
     	//heuristic_new(Ws, results);
 
     	std::cout << std::endl << "---------------------------------------------------------------------";
@@ -373,18 +448,13 @@ void run(int argc, char **argv) {
     	std::cout << "INIT: " << init_mss << std::endl;
     	std::cout << "NEW UB: " << results.heu_mss << std::endl;
     	std::cout << "LB: " << results.lb_mss << std::endl;
+    	std::cout << "LB+: " << results.ub_mss << std::endl;
+    	std::cout << "ANTI OBJ: " << results.anti_obj << std::endl;
     	std::cout << std::endl << "UB - LB " << results.heu_mss - results.lb_mss << std::endl;
     	std::cout << "GAP UB-LB " <<  (results.heu_mss - results.lb_mss) / results.heu_mss * 100 << "%" << std::endl;
     	std::cout << "---------------------------------------------------------------------" << std::endl;
     	std::cout << "GAP UB-LB+ " <<  (results.heu_mss - results.ub_mss) / results.heu_mss * 100 << "%" << std::endl;
     	std::cout << "---------------------------------------------------------------------" << std::endl;
-
-		if ((results.heu_mss - best_ub) / best_ub < - 0.001)
-			best_ub = results.heu_mss;
-		else {
-			std::cout << "\n\n- NON DECREASING UB - CLOSE -\n";
-			break;
-		}
 
 		if (it == 1)
 			best_lb = results.lb_mss;
@@ -392,28 +462,55 @@ void run(int argc, char **argv) {
 			best_lb = results.lb_mss;
 		else {
 			std::cout << "\n\n- NON INCREASING LB - CLOSE -\n";
-			break;
+			exit = true;
+		}
+
+		if (it == 1)
+			best_lb_plus = results.ub_mss;
+		else if ((results.ub_mss - best_lb_plus) / best_lb_plus > 0.001)
+			best_lb_plus = results.ub_mss;
+
+		if (results.heu_mss < best_ub and (best_ub - results.heu_mss) / best_ub > 0.0001) {
+			best_ub = results.heu_mss;
+			sort_all(Ws, results.heu_sol);
+		} else {
+			std::cout << "\n\n- NON DECREASING UB - CLOSE -\n";
+			exit = true;
 		}
 
 		if ((results.heu_mss - results.lb_mss) / results.heu_mss * 100 < min_gap) {
 			std::cout << "\n\n- TOLERANCE GAP REACHED - CLOSE -\n";
-			break;
+			exit = true;
 		}
 
 	}
 
-	test_SUMMARY << best_ub << "\t"
+    std::cout << std::endl << "---------------------------------------------------------------------" << std::endl;
+    std::cout << "Final results\n";
+    std::cout << "INIT: " << init_mss << std::endl;
+    std::cout << "UB: " << best_ub << std::endl;
+    std::cout << "LB: " << best_lb << std::endl;
+    std::cout << "LB+: " << best_lb_plus << std::endl;
+    std::cout << std::endl << "UB - LB " << best_ub - best_lb << std::endl;
+    std::cout << "GAP UB-LB " <<  (best_ub - best_lb) / best_ub * 100 << "%" << std::endl;
+    std::cout << "---------------------------------------------------------------------" << std::endl;
+    std::cout << "GAP UB-LB+ " <<  (best_ub - best_lb_plus) / best_ub * 100 << "%" << std::endl;
+    std::cout << "---------------------------------------------------------------------" << std::endl;
+
+	test_SUMMARY
+	<< best_ub << "\t"
 	<< best_lb << "\t"
     << (best_ub - best_lb) / best_ub * 100 << "%\t"
 	//<< results.ub_mss << "\t"
     //<< (results.heu_mss - results.ub_mss) / results.heu_mss * 100 << "%\t"
     //<< results.heu_mss << "\t"
-    << (init_mss - best_lb) / init_mss * 100 << "%\t"
+		<< (best_ub - best_lb_plus) / best_ub * 100 << "%\t"
     << results.h_time << "\t"
     << results.m_time << "\t"
     << results.lb_time << "\t"
     << (results.h_time + results.m_time + results.lb_time)/60 << "\t"
-    << it << "\n";
+    << results.it-1 << "\t"
+    << it-1 << "\n";
 
     log_file.close();
 	test_SUMMARY.close();

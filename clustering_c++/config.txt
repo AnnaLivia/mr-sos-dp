@@ -6,13 +6,13 @@ RESULT_FOLDER = ../datasets/results
 # algorithm maximum iteration stop criterion
 ALGORITHM_MAX_ITERATIONS_CRITERION = 5
 # algorithm minimum gap lb-ub stop criterion (%)
-ALGORITHM_MIN_GAP_CRITERION = 0.05
+ALGORITHM_MIN_GAP_CRITERION = 0.001
 # weight of diversity objective in anticlustering heuristic
 ANTICLUSTERING_DIVERSITY = 1
 # weight of dispersion objective in anticlustering heuristic
 ANTICLUSTERING_DISPERSION = 0
 # number of anticlustering repetitions
-ANTICLUSTERING_REP = 50
+ANTICLUSTERING_REP = 100
 # number of threads for anticlustering
 ANTICLUSTERING_THREADS = 1
 # number of threads for computing the partitions
@@ -65,4 +65,4 @@ SDP_SOLVER_PAIR_PERC = 0.05
 # maximum number of violated triangle inequalities to separate
 SDP_SOLVER_MAX_TRIANGLE_INEQ = 100000
 # fraction of the most violated triangle inequalities to add
-SDP_SOLVER_TRIANGLE_PERC = 0.05
+SDP_SOLVER_TRIANGLE_PERC = 0.10

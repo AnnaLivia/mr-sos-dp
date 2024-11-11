@@ -15,25 +15,22 @@ typedef struct HResult {
 	double h_time;
 	double m_time;
 	double lb_time;
+	arma::mat init_sol;
 	arma::mat heu_sol;
+	int it;
 
 } HResult;
 
+arma::mat save_ub(arma::mat &data, arma::mat &sol);
 void save_to_file(arma::mat &X, std::string name);
-double compute_mss(arma::mat &data, arma::mat &sol);
-
-// compute lb and compute ub, print lb and ub sol
-//double compute_lb(std::map<int, arma::mat> &sol_map);
 double compute_ub(arma::mat &Ws, arma::mat &sol, std::map<int, arma::mat> &sol_map);
 int generate_part_constraints(std::map<int, arma::mat> &sol_map, UserConstraints &constraints);
-arma::mat save_lb(std::map<int, arma::mat> &sol_map);
-arma::mat save_ub(arma::mat &data, arma::mat &sol);
-arma::mat evaluate_antic(arma::mat &data, arma::mat &antic_sol, arma::mat &heu_sol, arma::mat &centroids_heu, arma::mat &ub_sol, bool ub);
 
-std::pair<double,  std::vector<std::vector<int>>> compute_anti_cls(std::vector<int> &cls_points, std::vector<std::vector<double>> &all_dist);
-void heuristic(arma::mat &Ws, HResult &results);
-void heuristic_no_sol(arma::mat &Ws, HResult &results);
 void heuristic_kmeans(arma::mat &Ws, HResult &results);
-void heuristic_new(arma::mat &Ws, HResult &results);
+void exact(arma::mat &Ws, HResult &results);
+arma::mat create_first_sol(arma::mat &data, arma::mat &antic_sol, arma::mat &centroids_heu, arma::mat &ub_sol, std::vector<std::vector<std::vector<int>>> &points, std::vector<std::vector<int>> &sizes);
+arma::mat evaluate_swap(arma::mat &data, arma::mat &antic_sol, arma::mat &centroids_heu, arma::mat &new_sol);
+void update(arma::mat &antic_sol, arma::mat &ub_sol, std::vector<std::vector<std::vector<int>>> &points, std::vector<std::vector<int>> &sizes);
+
 
 #endif //CLUSTERING_AC_HEURISTICS_H

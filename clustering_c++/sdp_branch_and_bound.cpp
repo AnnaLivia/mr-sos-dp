@@ -171,7 +171,8 @@ std::pair<JobData *, JobData *> create_cl_ml_jobs(double node_gap, SDPNode *node
 
         const std::lock_guard<std::mutex> lock(shared_data->queueMutex);
 
-        log_file << "PRUNING BY OPTIMALITY " << node->id << "\n";
+    	if (shared_data->print)
+        	log_file << "PRUNING BY OPTIMALITY " << node->id << "\n";
         if (node->lb - shared_data->global_ub <= -branch_and_bound_tol) {
             // update global upper bound, run the heuristic instead of setting global_ub = node->lb
 			arma::sp_mat assignment_X;
@@ -355,7 +356,8 @@ std::pair<JobData *, JobData *> build_cl_problem(MatlabStruct *matlab_struct, No
         auto duration = std::chrono::duration_cast<std::chrono::seconds>(end_time - start_time);
         double time = duration.count();
 
-        print_log_sdp(log_file, cl_node->Ws.n_rows, parent->id, cl_node->id, parent->lb, cl_node->lb,
+    	if (shared_data->print)
+        	print_log_sdp(log_file, cl_node->Ws.n_rows, parent->id, cl_node->id, parent->lb, cl_node->lb,
                       flag, time, cp_iter, cp_flag, n_ineq, n_pair, n_triangle, n_clique, cl_node->ub,
 					  shared_data->global_ub, node_data->i, node_data->j, node_gap, shared_data->gap, open, ub_updated);
 
@@ -419,7 +421,8 @@ std::pair<JobData *, JobData *> build_ml_problem(MatlabStruct *matlab_struct, No
 
         shared_data->gap = gap;
 
-        print_log_sdp(log_file, ml_node->Ws.n_rows, parent->id, ml_node->id, parent->lb,
+    	if (shared_data->print)
+        	print_log_sdp(log_file, ml_node->Ws.n_rows, parent->id, ml_node->id, parent->lb,
                       ml_node->lb,0, 0, 0, 0, 0, 0, 0, 0, ml_node->ub,
                       shared_data->global_ub, node_data->i, node_data->j, node_gap, shared_data->gap, open, ub_updated);
 
@@ -535,8 +538,9 @@ std::pair<JobData *, JobData *> build_ml_problem(MatlabStruct *matlab_struct, No
         auto duration = std::chrono::duration_cast<std::chrono::seconds>(end_time - start_time);
         double time = duration.count();
 
-        //std::cout << '\r';
-        print_log_sdp(log_file, ml_node->Ws.n_rows, parent->id, ml_node->id, parent->lb, ml_node->lb,
+
+    	if (shared_data->print)
+        	print_log_sdp(log_file, ml_node->Ws.n_rows, parent->id, ml_node->id, parent->lb, ml_node->lb,
                       flag, time, cp_iter, cp_flag, n_ineq, n_pair, n_triangle, n_clique, ml_node->ub,
 					  shared_data->global_ub, node_data->i, node_data->j, node_gap, shared_data->gap, open, ub_updated);
 
@@ -737,8 +741,8 @@ std::pair<JobData *, JobData *> build_root_problem(MatlabStruct *matlab_struct,
     auto duration = std::chrono::duration_cast<std::chrono::seconds>(end_time - start_time);
     double time = duration.count();
 
-    // std::cout << '\r';
-    print_log_sdp(log_file, n, -1, root->id, -std::numeric_limits<double>::infinity(), root->lb,
+	if (shared_data->print)
+    	print_log_sdp(log_file, n, -1, root->id, -std::numeric_limits<double>::infinity(), root->lb,
                   flag, time, cp_iter, cp_flag, n_ineq, n_pair, n_triangle, n_clique, root->ub,
 				  shared_data->global_ub, -1, -1, node_gap, node_gap, open, true);
     
@@ -758,7 +762,7 @@ bool is_thread_pool_working(std::vector<bool> &thread_state) {
 }
 
 
-double sdp_branch_and_bound(int k, arma::mat &Ws, double &ub, UserConstraints &constraints, arma::mat &sol) {
+double sdp_branch_and_bound(int k, arma::mat &Ws, double &ub, UserConstraints &constraints, arma::mat &sol, bool print) {
 
     if (Ws.n_rows == k) {
         sol = arma::mat(k, k, arma::fill::eye);
@@ -791,6 +795,7 @@ double sdp_branch_and_bound(int k, arma::mat &Ws, double &ub, UserConstraints &c
     shared_data->sum_ineq = 0.0;
     shared_data->sum_cp_iter = 0.0;
     shared_data->queue = queue;
+    shared_data->print = print;
 
     shared_data->threadStates.reserve(n_thread);
     for (int i = 0; i < n_thread; i++) {
@@ -808,8 +813,8 @@ double sdp_branch_and_bound(int k, arma::mat &Ws, double &ub, UserConstraints &c
 
     ThreadPool pool(shared_data, input_data, n_thread);
 
-    
-    print_header_sdp(log_file);
+	if (shared_data->print)
+    	print_header_sdp(log_file);
 
     auto start_all = std::chrono::high_resolution_clock::now();
     
@@ -851,16 +856,139 @@ double sdp_branch_and_bound(int k, arma::mat &Ws, double &ub, UserConstraints &c
     if (queue->empty())
         shared_data->gap = 0.0;
 
-    log_file << "\n";
-    log_file << "WALL_TIME: " << duration_all.count() << " sec\n";
-    log_file << "N_NODES: " << shared_data->n_nodes << "\n";
-    log_file << "AVG_INEQ: " << (double) shared_data->sum_ineq / shared_data->n_nodes << "\n";
-    log_file << "AVG_CP_ITER: " << (double) shared_data->sum_cp_iter / shared_data->n_nodes << "\n";
-    log_file << "ROOT_GAP: " << std::max(0.0, root_gap) << "\n";
-    log_file << "GAP: " << std::max(0.0, shared_data->gap) << "\n";
-    log_file << "ROOT_LB: " << shared_data->root_lb << "\n";
-    log_file << "BEST_UB: " << shared_data->global_ub << "\n";
-    log_file << "BEST_LB: " << shared_data->best_lb << "\n\n";
+	if (shared_data->print) {
+	    log_file << "\n";
+	    log_file << "WALL_TIME: " << duration_all.count() << " sec\n";
+	    log_file << "N_NODES: " << shared_data->n_nodes << "\n";
+	    log_file << "AVG_INEQ: " << (double) shared_data->sum_ineq / shared_data->n_nodes << "\n";
+	    log_file << "AVG_CP_ITER: " << (double) shared_data->sum_cp_iter / shared_data->n_nodes << "\n";
+	    log_file << "ROOT_GAP: " << std::max(0.0, root_gap) << "\n";
+	    log_file << "GAP: " << std::max(0.0, shared_data->gap) << "\n";
+	    log_file << "ROOT_LB: " << shared_data->root_lb << "\n";
+	    log_file << "BEST_UB: " << shared_data->global_ub << "\n";
+	    log_file << "BEST_LB: " << shared_data->best_lb << "\n\n";
+    }
+
+    sol = shared_data->global_X;
+
+    ub = shared_data->global_ub;
+    double lb = shared_data->best_lb;
+
+    // free memory
+    delete (input_data);
+    delete (queue);
+    delete (shared_data);
+
+    return lb;
+
+}
+
+double sdp_branch_and_bound(int k, arma::mat &Ws, double &ub, UserConstraints &constraints, arma::mat &sol, double init_ub, bool print) {
+
+    if (Ws.n_rows == k) {
+        sol = arma::mat(k, k, arma::fill::eye);
+        return 0.0;
+    }
+
+    int n_thread = branch_and_bound_parallel;
+
+    JobAbstractQueue *queue = nullptr;
+    switch (branch_and_bound_visiting_strategy) {
+        case DEPTH_FIRST:
+            queue = new JobStack();
+            break;
+        case BEST_FIRST:
+            queue = new JobPriorityQueue();
+            break;
+        case BREADTH_FIRST:
+            queue = new JobQueue();
+            break;
+        default:
+            queue = nullptr;
+    }
+
+    auto *shared_data = new SharedData();
+    shared_data->best_lb = -std::numeric_limits<double>::infinity();
+    shared_data->root_lb = -std::numeric_limits<double>::infinity();
+    shared_data->global_ub = init_ub;
+    shared_data->gap = std::numeric_limits<double>::infinity();
+    shared_data->n_nodes = 0;
+    shared_data->sum_ineq = 0.0;
+    shared_data->sum_cp_iter = 0.0;
+    shared_data->queue = queue;
+    shared_data->print = print;
+
+    shared_data->threadStates.reserve(n_thread);
+    for (int i = 0; i < n_thread; i++) {
+        shared_data->threadStates.push_back(false);
+    }
+
+    arma::mat C = Ws * Ws.t();
+    double C_trace = arma::trace(C);
+
+    auto *input_data = new InputData();
+    input_data->Ws = Ws;
+    input_data->C_trace = C_trace;
+    input_data->k = k;
+	//input_data->distances = compute_distances(Ws);
+
+    ThreadPool pool(shared_data, input_data, n_thread);
+
+	if (shared_data->print)
+    	print_header_sdp(log_file);
+
+    auto start_all = std::chrono::high_resolution_clock::now();
+
+    auto *matlab_struct = new MatlabStruct();
+    matlab_struct->matlabPtr = start_matlab(sdp_solver_folder);
+
+    std::pair<JobData *, JobData *> jobs = build_root_problem(matlab_struct, input_data, shared_data, constraints);
+
+    delete (matlab_struct);
+
+    double root_gap = shared_data->gap;
+
+    JobData *cl_job = jobs.first;
+    JobData *ml_job = jobs.second;
+    if (cl_job != nullptr && ml_job != nullptr) {
+        pool.addJob(cl_job);
+        pool.addJob(ml_job);
+    }
+
+    while (true) {
+
+        {
+            std::unique_lock<std::mutex> l(shared_data->queueMutex);
+            while (is_thread_pool_working(shared_data->threadStates) && shared_data->n_nodes < branch_and_bound_max_nodes) {
+                shared_data->mainConditionVariable.wait(l);
+            }
+
+            if (shared_data->queue->empty() || shared_data->n_nodes >= branch_and_bound_max_nodes)
+                break;
+        }
+
+    }
+
+    auto end_all = std::chrono::high_resolution_clock::now();
+    auto duration_all = std::chrono::duration_cast<std::chrono::seconds>(end_all - start_all);
+
+    pool.quitPool();
+
+    if (queue->empty())
+        shared_data->gap = 0.0;
+
+	if (shared_data->print) {
+	    log_file << "\n";
+	    log_file << "WALL_TIME: " << duration_all.count() << " sec\n";
+	    log_file << "N_NODES: " << shared_data->n_nodes << "\n";
+	    log_file << "AVG_INEQ: " << (double) shared_data->sum_ineq / shared_data->n_nodes << "\n";
+	    log_file << "AVG_CP_ITER: " << (double) shared_data->sum_cp_iter / shared_data->n_nodes << "\n";
+	    log_file << "ROOT_GAP: " << std::max(0.0, root_gap) << "\n";
+	    log_file << "GAP: " << std::max(0.0, shared_data->gap) << "\n";
+	    log_file << "ROOT_LB: " << shared_data->root_lb << "\n";
+	    log_file << "BEST_UB: " << shared_data->global_ub << "\n";
+	    log_file << "BEST_LB: " << shared_data->best_lb << "\n\n";
+    }
 
     sol = shared_data->global_X;
 

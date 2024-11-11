@@ -42,6 +42,7 @@ typedef struct SharedData {
     int n_nodes;
     double sum_ineq;
     double sum_cp_iter;
+    bool print;
 
 } SharedData;
 
@@ -55,7 +56,8 @@ typedef struct InputData {
 } InputData;
 
 
-double sdp_branch_and_bound(int k, arma::mat &Ws, double &ub, UserConstraints &constraints, arma::mat &sol);
+double sdp_branch_and_bound(int k, arma::mat &Ws, double &ub, UserConstraints &constraints, arma::mat &sol, bool print);
+double sdp_branch_and_bound(int k, arma::mat &Ws, double &ub, UserConstraints &constraints, arma::mat &sol, double init_ub, bool print);
 std::pair<JobData *, JobData *> build_root_problem(MatlabStruct *matlab_struct, InputData *input_data, SharedData *shared_data);
 std::pair<JobData *, JobData *> build_cl_problem(MatlabStruct *matlab_struct, NodeData *job_data, InputData *input_data, SharedData *shared_data);
 std::pair<JobData *, JobData *> build_ml_problem(MatlabStruct *matlab_struct, NodeData *job_data, InputData *input_data, SharedData *shared_data);

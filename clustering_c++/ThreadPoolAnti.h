@@ -11,6 +11,7 @@ typedef struct AntiJob {
     int cls_id;
     std::vector<int> cls_points;
     std::vector<double> center;
+    arma::mat data_cls;
 
 } AntiJob;
 

@@ -109,7 +109,7 @@ void ThreadPoolPartition::doWork(int id) {
         else
         */
         double ub_mssc = 0;
-        double lb_mssc = sdp_branch_and_bound(k, job->part_data, ub_mssc, constraints, sol);
+        double lb_mssc = sdp_branch_and_bound(k, job->part_data, ub_mssc, constraints, sol, job->max_ub, shared_data->print);
         arma::mat sol_f = std::move(arma::join_horiz(job->part_data, sol));
         //save_to_file(sol_f, "LB_" + std::to_string(job->part_id + 1));
 
