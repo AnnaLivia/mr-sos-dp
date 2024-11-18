@@ -1,6 +1,5 @@
 function LB = safe_bound(blk, At, C, b, y, Z2, Bt, y2, l, X)
 
-  mu = 1.1;
   Aty = sdpnalAtyfun(blk, At, y);
   Znew = ops(C, '-', Aty);
   if ~isempty(Bt)
@@ -15,12 +14,11 @@ function LB = safe_bound(blk, At, C, b, y, Z2, Bt, y2, l, X)
   pert = 0; 
 
   eigtmp = eig(full(Znew{1})); 
-  idx = find(eigtmp < -1e-6); 
-  Xbar = mu * max(eig(full(X{1})));
+  idx = find(eigtmp < -1e-8); 
   numneg = length(idx); 
   
   if (numneg) 
-     pert = pert + Xbar * sum(eigtmp(idx)); 
+     pert = pert + sum(eigtmp(idx)); 
   end
       
   LB = LB0 + pert; 
