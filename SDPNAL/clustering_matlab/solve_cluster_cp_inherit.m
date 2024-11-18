@@ -7,6 +7,8 @@ function [best_bound, best_Xopt, best_flag, best_ineq, cp_iter, cp_flag, ...
 
 % note that Z1 is the psd matrix and Z2 is the non-negative matrix.
 
+%addpath(genpath('/home/antonio/gurobi1100'));
+
 warning off;
 
 %disp(' N_THREADS: ')
