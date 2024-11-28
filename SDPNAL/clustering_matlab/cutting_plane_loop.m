@@ -79,6 +79,8 @@ for i=1:max_cp_iter
     bound = safe_bound(blk, At, C, b, y, Z2, Bt, y2, l, X); 
     
     [~, bound_lp, ~] = safe_bound_lp(blk, Z1, At, Bt, C, b, l, n_threads);
+    %disp(' BOUND LP: ')
+	%disp(bound_lp)
     bound = max(bound, bound_lp);
            
     avg_n_pair = avg_n_pair + n_pair;

@@ -5,8 +5,7 @@ function [best_bound, best_Xopt, best_flag, best_ineq, cp_iter, cp_flag, ...
     eps_ineq, eps_active, max_ineq, max_pair_ineq, pair_perc, max_triangle_ineq, triangle_perc)
 
 % note that Z1 is the psd matrix and Z2 is the non-negative matrix.
-
-%addpath(genpath('/home/antonio/gurobi1100'));
+addpath('/Library/gurobi1200/macos_universal2/matlab');
 
 warning off;
 

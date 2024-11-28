@@ -1,12 +1,11 @@
-# log path
-LOG_FOLDER = ../datasets/log
 # result path
-RESULT_FOLDER = ../datasets/results
+RESULT_FOLDER = ../artificial/results
 
 # algorithm maximum iteration stop criterion
 ALGORITHM_MAX_ITERATIONS_CRITERION = 5
-# algorithm minimum gap lb-ub stop criterion (%)
-ALGORITHM_MIN_GAP_CRITERION = 0.001
+# algorithm minimum gap lb-ub stop
+ criterion (%)
+ALGORITHM_MIN_GAP_CRITERION = 0.0001
 # weight of diversity objective in anticlustering heuristic
 ANTICLUSTERING_DIVERSITY = 1
 # weight of dispersion objective in anticlustering heuristic
@@ -39,7 +38,7 @@ SDP_SOLVER_SESSION_THREADS_ROOT = 2
 # number of threads for the matlab session (must-link and cannot-link)
 SDP_SOLVER_SESSION_THREADS = 1
 # sdp solver path
-SDP_SOLVER_FOLDER = ../SDPNAL
+SDP_SOLVER_FOLDER = /home/aelle/mr-sos-sdp/SDPNAL
 # precision of the sdp solver
 SDP_SOLVER_TOL = 1e-4
 # do not display sdp log (0), display log (1)

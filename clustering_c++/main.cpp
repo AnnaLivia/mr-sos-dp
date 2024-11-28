@@ -9,7 +9,7 @@
 
 // data file
 const char *data_path;
-const char *opt_path;
+const char *init_path;
 
 // log and result path
 std::string result_folder;
@@ -130,7 +130,7 @@ void sort_all(arma::mat &data, arma::mat &sol) {
 }
 
 // write log preamble for instance
-void write_log_preamble(double opt_mss, double init_mss) {
+void write_log_preamble(double init_mss) {
 
 	log_file << "DATA_FILE, n, d, k, p:\n";
     log_file << data_path << " " << n << " " << d << " " << k << " " << p << "\n";
@@ -161,7 +161,6 @@ void write_log_preamble(double opt_mss, double init_mss) {
     log_file << "SDP_SOLVER_MAX_TRIANGLE_INEQ: " << sdp_solver_max_triangle_ineq << "\n";
     log_file << "SDP_SOLVER_TRIANGLE_PERC: " << sdp_solver_triangle_perc << "\n\n";
     log_file << std::fixed <<  std::setprecision(2);
-    log_file << "Optimal MSS: " << opt_mss << "\n";
     log_file << "Initial Heuristic MSS: " << init_mss << "\n";
 
 }
@@ -210,7 +209,7 @@ arma::mat read_sol(const char *filename) {
         std::cerr << strerror(errno) << "\n";
         exit(EXIT_FAILURE);
     }
-    
+
     std::ifstream filecheck(filename);
     std::string line;
     getline(filecheck, line);
@@ -233,7 +232,7 @@ arma::mat read_sol(const char *filename) {
                 file >> sol(i, j);
         }
     }
-    
+
     return sol;
 }
 
@@ -267,7 +266,7 @@ double compute_mss(arma::mat &data, arma::mat &sol) {
     for (int c = 0; c < data_k; c++) {
         // empty cluster
         if (count(c) == 0) {
-            std::printf("read_data(): cluster %d is empty!\n", c);
+            std::printf("compute_mss(): cluster %d is empty!\n", c);
             return false;
         }
         centroids.row(c) = centroids.row(c) / count(c);
@@ -350,8 +349,7 @@ void run(int argc, char **argv) {
     }
     
     data_path = argv[1];
-    opt_path = argv[2];
-    //double opt_mss = argv[2];
+    init_path = argv[2];
 
     k = std::stoi(argv[3]);
     p = std::stoi(argv[4]);
@@ -373,20 +371,9 @@ void run(int argc, char **argv) {
     result_path += "/" + inst_name + "_" + std::to_string(k);
 
     arma::mat Ws = read_data(data_path);
-    arma::mat opt_sol = read_sol(opt_path);
-    double opt_mss = compute_mss(Ws, opt_sol);
-    arma::mat sol_f = std::move(arma::join_horiz(Ws, opt_sol));
-    //save_to_file(sol_f, "OPT");
-    //arma::mat opt_sol = arma::mat(n, k);
-    //double opt_mss;
 
-    arma::mat init_sol(n,k);
-    Kmeans kmeans(Ws, k, kmeans_verbose);
-    kmeans.start(kmeans_max_it, kmeans_start, kmeans_permut);
-    init_sol = kmeans.getAssignments();
-
-    // init_sol = read_sol("../instances/h_sol/ruspini.txt");
-    // sol_f = std::move(arma::join_horiz(Ws, init_sol));
+    // read init sol
+	arma::mat init_sol = read_sol(init_path);
     double init_mss = compute_mss(Ws, init_sol);
 	sort_all(Ws, init_sol);
 
@@ -397,12 +384,11 @@ void run(int argc, char **argv) {
     std::cout << "Num Partitions " << p << std::endl;
     std::cout << "Num Clusters " << k << std::endl << std::endl;
     std::cout << std::fixed << std::setprecision(2);
-    std::cout << "Optimal MSS:" << opt_mss << std::endl;
-    std::cout << "Initial Heuristic MSS: " << init_mss << "  (num_starts " << kmeans_start << ")" << std::endl;
+    std::cout << "Initial Heuristic MSS: " << init_mss << std::endl;
     std::cout << "---------------------------------------------------------------------" << std::endl << std::endl;
 
     log_file.open(result_path + "_LOG.txt");
-    write_log_preamble(opt_mss, init_mss);
+    write_log_preamble(init_mss);
 
     double new_gap = 100.00;
     double best_lb = 0;
@@ -416,7 +402,6 @@ void run(int argc, char **argv) {
     << d << "\t"
     << k << "\t"
     << p << "\t"
-    << opt_mss << "\t"
     << init_mss << "\t";
 
     HResult results;
@@ -444,7 +429,6 @@ void run(int argc, char **argv) {
     	std::cout << std::endl << "---------------------------------------------------------------------";
     	std::cout << std::endl << "Iteration " << it;
     	std::cout << std::endl << "---------------------------------------------------------------------";
-    	std::cout << std::endl << "OPT: " << opt_mss << std::endl;
     	std::cout << "INIT: " << init_mss << std::endl;
     	std::cout << "NEW UB: " << results.heu_mss << std::endl;
     	std::cout << "LB: " << results.lb_mss << std::endl;

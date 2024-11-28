@@ -34,8 +34,9 @@ mount_gurobi_model::mount_gurobi_model(GRBEnv *env, int m, std::vector<std::vect
 	this->env = env;
 	this->X = create_X_variables(this->model);
 	this->Y = create_Y_variables(this->model);
-    this->model.set("OutputFlag", "0");
+    this->model.set("OutputFlag", "1");
 	this->model.set("OptimalityTol", "1e-4");
+    this->model.set("TimeLimit", "300");
 }
 
 Matrix<GRBVar> mount_gurobi_model::create_X_variables(GRBModel &model) {
@@ -57,21 +58,19 @@ Matrix<GRBVar> mount_gurobi_model::create_Y_variables(GRBModel &model) {
     Matrix<GRBVar> Y(m, p);
     int s = 0;
     for (int c1 = 0; c1 < k-1; c1++) {
-    	for (int h1=0; h1 < p-1; ++h1) {
+    	for (int h1=0; h1 < p; ++h1) {
     		for (int c2 = c1+1; c2 < k; c2++) {
-    			if (c1!=c2) {
-    				for (int h2=h1+1; h2 < p; ++h2) {
-    					double obj = 0;
-    					for (int i : sol_cls[c1][h1])
-    						for (int j : sol_cls[c2][h2])
-    							obj += dist[i][j];
-    					for (int t=0; t < p; ++t) {
-    						std::string name = get_y_variable_name(c1, h1, c2, h2, t);
-    						Y(s, t) = model.addVar(0.0, 1, -obj, GRB_BINARY, name);
-    					}
-    					s++;
+    			for (int h2=h1; h2 < p; ++h2) {
+    				double obj = 0;
+    				for (int i : sol_cls[c1][h1])
+    					for (int j : sol_cls[c2][h2])
+    						obj += dist[i][j];
+    				for (int t=0; t < p; ++t) {
+    					std::string name = get_y_variable_name(c1, h1, c2, h2, t);
+    					Y(s, t) = model.addVar(0.0, 1, -obj, GRB_BINARY, name);
     				}
-				}
+    				s++;
+    			}
 			}
 		}
 	}
@@ -98,6 +97,8 @@ void mount_gurobi_model::add_cls_constraints() {
         	GRBLinExpr lhs_sum = 0;
 			for (int h1=0; h1 < p; ++h1) {
             	lhs_sum += X(s, t);
+            	if (s == 0 and t == 0)
+            		model.addConstr(X(s, t) == 1);
 				s++;
 			}
     		model.addConstr(lhs_sum == 1);
@@ -110,17 +111,15 @@ void mount_gurobi_model::add_edge_constraints() {
 		int s = 0;
 		int s1 = 0;
 		for (int c1 = 0; c1 < k-1; c1++) {
-			for (int h1=0; h1 < p-1; ++h1) {
+			for (int h1=0; h1 < p; ++h1) {
 				int s2 = 0;
 				for (int c2 = c1+1; c2 < k; c2++) {
-					if (c1!=c2) {
-						for (int h2=h1+1; h2 < p; ++h2) {
-							model.addConstr(Y(s, t) <= X(s1, t));
-							model.addConstr(Y(s, t) <= X(s2, t));
-							model.addConstr(Y(s, t) >= X(s1, t) + X(s2, t)  - 1 );
-							s2++;
-							s++;
-						}
+					for (int h2=h1; h2 < p; ++h2) {
+						model.addConstr(Y(s, t) <= X(s1, t));
+						model.addConstr(Y(s, t) <= X(s2, t));
+						model.addConstr(Y(s, t) >= X(s1, t) + X(s2, t)  - 1 );
+						s2++;
+						s++;
 					}
 				}
 				s1++;

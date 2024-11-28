@@ -3,6 +3,7 @@
 //
 
 #include <armadillo>
+#include <iomanip>
 #include "Kmeans.h"
 #include "Kmeans_max.h"
 #include "kmeans_util.h"
@@ -190,6 +191,15 @@ void heuristic_kmeans(arma::mat &data, HResult &results) {
 	double best_W = arma::accu(W_hc);
 	double best_GAP = (results.heu_mss - best_W) / results.heu_mss * 100;
 
+	/*// print first ub
+	arma::mat sdp_sol1 = save_ub(data, ub_sol);
+	for (int i = 0; i < n; i++)
+		for (int h = 0; h < p; h++)
+			if (antic_sol(i, h) == 1)
+				sdp_sol1(i,0) = h;
+	save_to_file(sdp_sol1, "first_UB");
+	*/
+
 	log_file << "\n---------------------------------------------------------------------\n";
 	log_file << "\n\nAnticlustering Heuristic\n";
 
@@ -205,11 +215,11 @@ void heuristic_kmeans(arma::mat &data, HResult &results) {
 	std::cout << "\n\nNum of swaps " << changes.size();
 	log_file << "\n\nNum of swaps " << changes.size();
 
-	log_file << "\n\niter | k | W | GAP";
-	log_file << "\n" << l << " | " << 0 << " | " << best_W << " | " << best_GAP;
+	log_file << "\n\niter | k | W | GAP perc";
+	log_file << "\n" << l << " | " << 0 << " | " << std::setprecision(2) << best_W << " | " << std::setprecision(5) <<  best_GAP;
 
-	std::printf("\n\nAnticlustering Heuristic\niter | k | W | GAP");
-	std::printf("\n%d | %d | %.2f | %.2f", 0, 0, best_W, best_GAP);
+	std::printf("\n\nAnticlustering Heuristic\niter | k | W | GAP perc");
+	std::printf("\n%d | %d | %.2f | %.6f", 0, 0, best_W, best_GAP);
 
 
 	std::ofstream f;
@@ -322,6 +332,14 @@ void heuristic_kmeans(arma::mat &data, HResult &results) {
 	auto end_time_h = std::chrono::high_resolution_clock::now();
 	results.h_time += std::chrono::duration_cast<std::chrono::seconds>(end_time_h - start_time_h).count();
 
+	/*// print post heu ub
+	arma::mat sdp_sol2 = save_ub(data, ub_sol);
+	for (int i = 0; i < n; i++)
+		for (int h = 0; h < p; h++)
+			if (antic_sol(i, h) == 1)
+				sdp_sol2(i,0) = h;
+	save_to_file(sdp_sol2, "post_heu_UB");
+	*/
 
 	// create true lower bound
 	auto start_time_lb = std::chrono::high_resolution_clock::now();
@@ -335,12 +353,14 @@ void heuristic_kmeans(arma::mat &data, HResult &results) {
     for (int h = 0; h < p; ++h) {
         auto *job = new PartitionJob();
         job->part_id = h;
-        job->max_ub = arma::accu(W_hc.row(h));
 
         arma::mat data_part(sol[h].size(), d);
 		for (int i = 0; i < sol[h].size(); i++)
 			data_part.row(i) = data.row(sol[h][i]);
 
+    	Kmeans kmeans(data_part, k, kmeans_verbose);
+    	kmeans.start(1000, 100, 1);
+    	job->max_ub = kmeans.objectiveFunction();
         job->part_data = data_part;
         shared_data_part->queue.push_back(job);
         shared_data_part->print = true;
@@ -538,7 +558,7 @@ void exact(arma::mat &data, HResult &results) {
 
     try {
     	GRBEnv *env = new GRBEnv();
-    	mount_model *model = new mount_gurobi_model(env, k*(k-1)*p*p/2, all_dist, sol_cls);
+    	mount_model *model = new mount_gurobi_model(env, k*k*p*p/2, all_dist, sol_cls);
 
     	model->add_point_constraints();
     	model->add_cls_constraints();

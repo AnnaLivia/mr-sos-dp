@@ -361,8 +361,8 @@ void print_header_sdp(std::ostream &log_file) {
               std::setw(12) << "GUB" << "|" <<
               std::setw(6) << "I" << " " <<
               std::setw(6) << "J" << "|" <<
-              std::setw(13) << "NODE_GAP" << "|" <<
-              std::setw(13) << "GAP" << "|" <<
+              std::setw(13) << "NODE_GAP(%)" << "|" <<
+              std::setw(13) << "GAP(%)" << "|" <<
               std::setw(6) << "OPEN" << "|"
               << std::endl;
 
@@ -392,8 +392,8 @@ void print_log_sdp(std::ostream &log_file, int n, int node_parent, int node, dou
                   std::setw(12) << gub << "|" <<
                   std::setw(6) << i << " " <<
                   std::setw(6) << j << "|" <<
-                  std::setw(13) << node_gap << "|" <<
-                  std::setw(13) << gap << "|" <<
+                  std::setw(13) << node_gap*100 << "|" <<
+                  std::setw(13) << gap*100 << "|" <<
                   std::setw(6) << open << "|"
                   << std::endl;
 
@@ -417,8 +417,8 @@ void print_log_sdp(std::ostream &log_file, int n, int node_parent, int node, dou
                   std::setw(11) << gub << "*|" <<
                   std::setw(6) << i << " " <<
                   std::setw(6) << j << "|" <<
-                  std::setw(13) << node_gap << "|" <<
-                  std::setw(13) << gap << "|" <<
+                  std::setw(13) << node_gap*100 << "|" <<
+                  std::setw(13) << gap*100 << "|" <<
                   std::setw(6) << open << "|"
                   << std::endl;
 
