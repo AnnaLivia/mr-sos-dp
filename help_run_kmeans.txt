@@ -1,0 +1,16 @@
+	std::vector<int> init_assignment;
+
+        std::string command = "python run_kmeans.py "; # qui lo chiami come se fosse uno script python
+        std::string out_assignment = "./initial_assignment/" + dname + "_" + std::to_string(k) + ".txt"; # modifica dove e come salvare l'assignment
+        std::string args = p + " " + std::to_string(k) + " " + std::to_string(n_init) + " " + out_assignment;
+        command += args;
+        std::cout << command << "\n";
+        int system_val = system(command.c_str()); # chiama lo script python
+        if (system_val == -1) {
+            // The system method failed
+            std::cout << "Failed to call Python script" << "\n";
+            exit(EXIT_FAILURE);
+        }
+
+        std::string s = "./initial_assignment/" + dname + "_" + std::to_string(k) + ".txt";
+        init_assignment = 'leggi l'assignment dal disco'
