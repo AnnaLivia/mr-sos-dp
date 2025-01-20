@@ -1,5 +1,5 @@
-﻿## ANTICLUSTERING-SDP </br>
-A Heuristic Solver for Semi-supervised Minimum Sum-of-Squares Clustering Using Anticlustering
+﻿## AVOC - Anticlustering Validation Of Clustering </br>
+A Heuristic Approach for Optimality Guarantees in Large-Scale Minimum Sum-of-Squares Clustering
 
 <p align="center">
   <img src="https://github.com/antoniosudoso/pc-sos-sdp/blob/main/logo.svg" width="200" height="200" />
@@ -11,4 +11,4 @@ A Heuristic Solver for Semi-supervised Minimum Sum-of-Squares Clustering Using A
 
 
 **﻿Acknowledgements** </br>
-The work of Anna Livia Croella is supported by the FAIR (Future Artificial Intelligence Research) project, funded by the NextGenerationEU program within the PNRR-PE-AI scheme (M4C2, investment 1.3, line on Artificial Intelligence).
+The work of Anna Livia Croella and Veronica Piccialli is supported by the FAIR (Future Artificial Intelligence Research) project, funded by the NextGenerationEU program within the PNRR-PE-AI scheme (M4C2, investment 1.3, line on Artificial Intelligence).
